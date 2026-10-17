@@ -69,14 +69,14 @@ CREATE TABLE "project_status_criteria" (
 CREATE TABLE "project_role" (
     "project_id" TEXT NOT NULL,
     "role_id" TEXT NOT NULL,
-    "filled_amount" INTEGER NOT NULL DEFAULT 0,
-    "maximum_capacity" INTEGER NOT NULL,
+    "slots_available" INTEGER NOT NULL,
 
     CONSTRAINT "project_role_pkey" PRIMARY KEY ("project_id","role_id")
 );
 
 -- CreateTable
 CREATE TABLE "application" (
+    "id" TEXT NOT NULL,
     "project_id" TEXT NOT NULL,
     "applicant_id" TEXT NOT NULL,
     "role_id" TEXT NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE "application" (
     "portfolio_link" TEXT,
     "status" "application_status" NOT NULL DEFAULT 'PENDING',
 
-    CONSTRAINT "application_pkey" PRIMARY KEY ("project_id","applicant_id")
+    CONSTRAINT "application_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -104,10 +104,14 @@ CREATE TABLE "peer_review" (
     "commitment_score" INTEGER NOT NULL,
     "role_validated" BOOLEAN NOT NULL DEFAULT true,
     "feedback" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "peer_review_pkey" PRIMARY KEY ("project_id","reviewer_id","reviewee_id")
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "application_project_id_applicant_id_key" ON "application"("project_id", "applicant_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "peer_review_project_id_reviewer_id_reviewee_id_key" ON "peer_review"("project_id", "reviewer_id", "reviewee_id");
 
 -- AddForeignKey
 ALTER TABLE "user" ADD CONSTRAINT "user_status_id_fkey" FOREIGN KEY ("status_id") REFERENCES "status"("id") ON DELETE SET NULL ON UPDATE CASCADE;

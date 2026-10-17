@@ -1,13 +1,20 @@
 import { cookies } from "next/headers";
 import { prisma } from "../lib/prisma";
-import { LoginFormData, SignupFormData } from "../types/auth";
 import { createClient } from "../utils/supabase/server";
+import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
 
-export async function signup(formData: SignupFormData) {
+export async function signup(formData: SignupForm) {
+    const result = SignupValidator.safeParse(formData);
+
+    if (!result.success) {
+        throw new Error(result.error.message);
+    }
+
+    const data = result.data;
     const supabase = createClient(await cookies());
-    const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+    const { data: userData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
     });
 
     if (error) {
@@ -16,16 +23,23 @@ export async function signup(formData: SignupFormData) {
 
     await prisma.user.create({
         data: {
-            id: data.user?.id,
+            id: userData.user?.id,
         }
     });
 }
 
-export async function login(formData: LoginFormData) {
+export async function login(formData: LoginForm) {
+    const result = LoginValidator.safeParse(formData);
+
+    if (!result.success) {
+        throw new Error(result.error.message);
+    }
+
+    const data = result.data;
     const supabase = createClient(await cookies());
     const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+        email: data.email,
+        password: data.password,
     });
 
     if (error) {

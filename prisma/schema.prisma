@@ -116,8 +116,7 @@ model ProjectStatusCriteria {
 model ProjectRole {
   projectId       String  @map("project_id")
   roleId          String  @map("role_id")
-  filledAmount    Int     @default(0) @map("filled_amount")
-  maximumCapacity Int     @map("maximum_capacity")
+  slotsAvailable  Int     @map("slots_available")
 
   project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   role            Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -127,6 +126,7 @@ model ProjectRole {
 }
 
 model Application {
+  id            String            @id @default(uuid())
   projectId     String            @map("project_id")
   applicantId   String            @map("applicant_id")
   roleId        String            @map("role_id")
@@ -138,7 +138,7 @@ model Application {
   applicant     User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
   role          Role              @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@id([projectId, applicantId])
+  @@unique([projectId, applicantId])
   @@map("application")
 }
 
@@ -168,6 +168,6 @@ model PeerReview {
   reviewer        User     @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
   reviewee        User     @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
 
-  @@id([projectId, reviewerId, revieweeId])
+  @@unique([projectId, reviewerId, revieweeId])
   @@map("peer_review")
 }
