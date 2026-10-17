@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -12,9 +10,164 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ProjectStatus {
+  DRAFT
+  OPEN_RECRUITMENT
+  IN_PROGRESS
+  COMPLETED
+
+  @@map("project_status")
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+
+  @@map("application_status")
+}
+
 model User {
-  id        Int   @id @default(autoincrement())
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String          @id @default(uuid())
+  name                   String?
+  instance               String?
+  statusId               String?         @map("status_id")
+  bio                    String?
+  totalProjectsCompleted Int             @default(0) @map("total_projects_completed")
+  avgCommitmentScore     Float           @default(0) @map("avg_commitment_score")
+  createdAt              DateTime        @default(now()) @map("created_at")
+  updatedAt              DateTime        @updatedAt @map("updated_at")
+
+  status                 Status?         @relation(fields: [statusId], references: [id], onDelete: SetNull)
+  userRoles              UserRole[]
+  ownedProjects          Project[]       @relation("ProjectOwner")
+  applications           Application[]
+  projectMembers         ProjectMember[]
+  reviewsGiven           PeerReview[]    @relation("Reviewer")
+  reviewsReceived        PeerReview[]    @relation("Reviewee")
+
+  @@map("user")
+}
+
+model Status {
+  id                    String                  @id @default(uuid())
+  statusName            String                  @map("status_name")
+
+  users                 User[]
+  projectStatusCriteria ProjectStatusCriteria[]
+
+  @@map("status")
+}
+
+model Role {
+  id             String          @id @default(uuid())
+  roleName       String          @map("role_name")
+
+  userRoles      UserRole[]
+  projectRoles   ProjectRole[]
+  applications   Application[]
+  projectMembers ProjectMember[]
+
+  @@map("role")
+}
+
+model UserRole {
+  userId String @map("user_id")
+  roleId String @map("role_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_role")
+}
+
+model Project {
+  id                    String                  @id @default(uuid())
+  ownerId               String                  @map("owner_id")
+  title                 String
+  description           String
+  deadline              DateTime?
+  status                ProjectStatus           @default(OPEN_RECRUITMENT)
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+
+  owner                 User                    @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  projectStatusCriteria ProjectStatusCriteria[]
+  projectRoles          ProjectRole[]
+  applications          Application[]
+  projectMembers        ProjectMember[]
+  peerReviews           PeerReview[]
+
+  @@map("project")
+}
+
+model ProjectStatusCriteria {
+  projectId String  @map("project_id")
+  statusId  String  @map("status_id")
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status    Status  @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, statusId])
+  @@map("project_status_criteria")
+}
+
+model ProjectRole {
+  projectId       String  @map("project_id")
+  roleId          String  @map("role_id")
+  filledAmount    Int     @default(0) @map("filled_amount")
+  maximumCapacity Int     @map("maximum_capacity")
+
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role            Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, roleId])
+  @@map("project_role")
+}
+
+model Application {
+  projectId     String            @map("project_id")
+  applicantId   String            @map("applicant_id")
+  roleId        String            @map("role_id")
+  message       String?
+  portfolioLink String?           @map("portfolio_link")
+  status        ApplicationStatus @default(PENDING)
+
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  applicant     User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  role          Role              @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, applicantId])
+  @@map("application")
+}
+
+model ProjectMember {
+  projectId String  @map("project_id")
+  userId    String  @map("user_id")
+  roleId    String  @map("role_id")
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@map("project_member")
+}
+
+model PeerReview {
+  projectId       String   @map("project_id")
+  reviewerId      String   @map("reviewer_id")
+  revieweeId      String   @map("reviewee_id")
+  commitmentScore Int      @map("commitment_score")
+  roleValidated   Boolean  @default(true) @map("role_validated")
+  feedback        String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviewer        User     @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee        User     @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, reviewerId, revieweeId])
+  @@map("peer_review")
 }
