@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function guestnavbar(){
     return(
         
-        <nav className="sticky top-0 p-4 border-b-2 border-gray-200">
+        <nav className="sticky top-0 p-4 border-b-2 border-gray-200 bg-white z-10">
             <ul className="flex flex-row justify-between list-none text-[14px]">
             <li className="text=[#182230] flex flex-row align-middle">
                 <Image
