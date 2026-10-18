@@ -9,8 +9,66 @@ import {
     ProjectValidator,
 } from "../lib/validator/project";
 import authWrapper from "../utils/authWrapper";
-import z from "zod";
 import { IdValidator } from "../lib/validator/global";
+
+export async function fetchProject(projectId: string) {
+    const idResult = IdValidator.safeParse(projectId);
+
+    if (!idResult.success) {
+        throw new Error(idResult.error.message);
+    }
+
+    const project = await prisma.project.findUnique({
+        where: { id: idResult.data },
+        include: {
+            owner: {
+                select: {
+                    id: true,
+                    name: true,
+                    instance: true,
+                    bio: true,
+                    status: true,
+                    userRoles: {
+                        include: { role: true },
+                    },
+                    avgCommitmentScore: true,
+                    totalProjectsCompleted: true,
+                },
+            },
+            projectStatusCriteria: {
+                include: { status: true },
+            },
+            projectRoles: {
+                include: { role: true },
+            },
+            projectMembers: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            instance: true,
+                            bio: true,
+                            status: true,
+                            userRoles: {
+                                include: { role: true },
+                            },
+                            avgCommitmentScore: true,
+                            totalProjectsCompleted: true,
+                        },
+                    },
+                    role: true,
+                },
+            },
+        },
+    });
+
+    if (!project) {
+        throw new Error("Project not found");
+    }
+
+    return project;
+}
 
 export const createProject = authWrapper(async (user: User, formData: ProjectForm) => {
     const result = ProjectValidator.safeParse(formData);

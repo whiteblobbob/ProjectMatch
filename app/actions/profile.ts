@@ -3,6 +3,24 @@ import { prisma } from "../lib/prisma";
 import { ProfileForm, ProfileValidator } from "../lib/validator/profile";
 import authWrapper from "../utils/authWrapper";
 
+export const fetchProfile = authWrapper(async (user: User) => {
+    const profile = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+            status: true,
+            userRoles: {
+                include: { role: true },
+            },
+        },
+    });
+
+    if (!profile) {
+        throw new Error("Profile not found");
+    }
+
+    return profile;
+});
+
 export const updateProfile = authWrapper(async (user: User, formData: Partial<ProfileForm>) => {
     const result = ProfileValidator.partial().safeParse(formData);
 
@@ -13,7 +31,7 @@ export const updateProfile = authWrapper(async (user: User, formData: Partial<Pr
     const data = result.data;
 
     await prisma.user.update({
-        where: { id: "1" }, // TODO Replace with the actual user ID
+        where: { id: user.id },
         data: {
             name: data.name,
             instance: data.instance,
