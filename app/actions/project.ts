@@ -385,41 +385,39 @@ export const createPeerReview = authWrapper(async (user: User, formData: PeerRev
         throw new Error("You cannot review yourself");
     }
 
-    await prisma.$transaction(async transaction => {
-        const existingReview = await transaction.peerReview.findUnique({
-            where: {
-                projectId_reviewerId_revieweeId: {
-                    projectId: data.projectId,
-                    reviewerId: user.id,
-                    revieweeId: data.revieweeId,
-                },
-            },
-        });
-
-        if (existingReview) {
-            throw new Error("You have already reviewed this participant for this project");
-        }
-
-        await transaction.peerReview.create({
-            data: {
+    const existingReview = await prisma.peerReview.findUnique({
+        where: {
+            projectId_reviewerId_revieweeId: {
                 projectId: data.projectId,
                 reviewerId: user.id,
                 revieweeId: data.revieweeId,
-                commitmentScore: data.commitmentScore,
-                feedback: data.feedback,
             },
-        });
+        },
+    });
 
-        const reviewSummary = await transaction.peerReview.aggregate({
-            where: { revieweeId: data.revieweeId },
-            _avg: { commitmentScore: true },
-        });
+    if (existingReview) {
+        throw new Error("You have already reviewed this participant for this project");
+    }
 
-        await transaction.user.update({
-            where: { id: data.revieweeId },
-            data: {
-                avgCommitmentScore: reviewSummary._avg.commitmentScore ?? 0,
-            },
-        });
+    await prisma.peerReview.create({
+        data: {
+            projectId: data.projectId,
+            reviewerId: user.id,
+            revieweeId: data.revieweeId,
+            commitmentScore: data.commitmentScore,
+            feedback: data.feedback,
+        },
+    });
+
+    const reviewSummary = await prisma.peerReview.aggregate({
+        where: { revieweeId: data.revieweeId },
+        _avg: { commitmentScore: true },
+    });
+    
+    await prisma.user.update({
+        where: { id: data.revieweeId },
+        data: {
+            avgCommitmentScore: reviewSummary._avg.commitmentScore ?? 0,
+        },
     });
 });

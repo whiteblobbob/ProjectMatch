@@ -21,6 +21,27 @@ export const fetchProfile = authWrapper(async (user: User) => {
     return profile;
 });
 
+export const fetchReviews = authWrapper(async (user: User) => {
+    const reviews = await prisma.peerReview.findMany({
+        where: { revieweeId: user.id },
+        include: {
+            reviewer: {
+                select: {
+                    name: true,
+                    instance: true,
+                },
+            },
+            project: {
+                select: {
+                    title: true,
+                },
+            },
+        },
+    });
+
+    return reviews;
+});
+
 export const updateProfile = authWrapper(async (user: User, formData: Partial<ProfileForm>) => {
     const result = ProfileValidator.partial().safeParse(formData);
 

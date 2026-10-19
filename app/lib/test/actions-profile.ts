@@ -9,6 +9,7 @@ vi.mock("../../utils/authWrapper", () => ({
 const mocks = vi.hoisted(() => ({
   userFindUnique: vi.fn(),
   userUpdate: vi.fn(),
+  peerReviewFindMany: vi.fn(),
 }));
 
 vi.mock("../prisma", () => ({
@@ -17,10 +18,13 @@ vi.mock("../prisma", () => ({
       findUnique: mocks.userFindUnique,
       update: mocks.userUpdate,
     },
+    peerReview: {
+      findMany: mocks.peerReviewFindMany,
+    },
   },
 }));
 
-import { fetchProfile, updateProfile } from "../../actions/profile";
+import { fetchProfile, fetchReviews, updateProfile } from "../../actions/profile";
 
 const profile: Partial<ProfileForm> = {
   name: "Test User",
@@ -58,6 +62,38 @@ describe("fetchProfile", () => {
   });
 });
 
+describe("fetchReviews", () => {
+  it("fetches reviews received by the authenticated user with reviewer and project details", async () => {
+    const reviews = [{ id: "review-id", feedback: "Great teammate" }];
+    mocks.peerReviewFindMany.mockResolvedValue(reviews);
+
+    await expect(fetchReviews()).resolves.toBe(reviews);
+
+    expect(mocks.peerReviewFindMany).toHaveBeenCalledWith({
+      where: { revieweeId: "test-user-id" },
+      include: {
+        reviewer: {
+          select: {
+            name: true,
+            instance: true,
+          },
+        },
+        project: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+  });
+
+  it("returns an empty list when the user has no reviews", async () => {
+    mocks.peerReviewFindMany.mockResolvedValue([]);
+
+    await expect(fetchReviews()).resolves.toEqual([]);
+  });
+});
+
 describe("updateProfile", () => {
   it("updates the authenticated user's profile and roles", async () => {
     await expect(updateProfile(profile)).resolves.toBeUndefined();
@@ -68,6 +104,7 @@ describe("updateProfile", () => {
         name: "Test User",
         instance: "Test University",
         bio: "A test profile",
+        contactInfo: undefined,
         statusId: "status-id",
         userRoles: {
           deleteMany: {},
@@ -86,6 +123,26 @@ describe("updateProfile", () => {
         name: undefined,
         instance: undefined,
         bio: "Updated bio",
+        contactInfo: undefined,
+        statusId: undefined,
+        userRoles: {
+          deleteMany: {},
+          create: undefined,
+        },
+      },
+    });
+  });
+
+  it("updates contact information", async () => {
+    await expect(updateProfile({ contactInfo: "contact@example.com" })).resolves.toBeUndefined();
+
+    expect(mocks.userUpdate).toHaveBeenCalledWith({
+      where: { id: "test-user-id" },
+      data: {
+        name: undefined,
+        instance: undefined,
+        bio: undefined,
+        contactInfo: "contact@example.com",
         statusId: undefined,
         userRoles: {
           deleteMany: {},

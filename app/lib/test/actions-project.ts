@@ -12,6 +12,7 @@ vi.mock("../../utils/authWrapper", () => ({
 
 const mocks = vi.hoisted(() => ({
   projectFindUnique: vi.fn(),
+  projectFindMany: vi.fn(),
   projectCreate: vi.fn(),
   projectUpdate: vi.fn(),
   projectDelete: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     project: {
       findUnique: mocks.projectFindUnique,
+      findMany: mocks.projectFindMany,
       create: mocks.projectCreate,
       update: mocks.projectUpdate,
       delete: mocks.projectDelete,
@@ -64,6 +66,7 @@ import {
   createProject,
   deleteProject,
   fetchProject,
+  queryProjects,
   rejectApplication,
   sendApplication,
   updateProject,
@@ -73,6 +76,9 @@ const project = (): ProjectForm => ({
   title: "Test Project",
   description: "A test project",
   deadline: new Date("2030-01-01"),
+  categoryId: "category-id",
+  onSite: true,
+  workHoursPerWeek: 10,
   projectStatusCriteria: [{ statusId: "status-id" }],
   projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
 });
@@ -142,6 +148,53 @@ describe("fetchProject", () => {
   });
 });
 
+describe("queryProjects", () => {
+  it("queries projects by category, statuses, and roles", async () => {
+    const projects = [{ id: "project-id" }];
+    mocks.projectFindMany.mockResolvedValue(projects);
+
+    await expect(queryProjects({
+      categoryId: "category-id",
+      projectStatusCriteria: [{ statusId: "status-id" }],
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+    })).resolves.toBe(projects);
+
+    expect(mocks.projectFindMany).toHaveBeenCalledWith({
+      where: {
+        categoryId: "category-id",
+        projectStatusCriteria: {
+          some: { statusId: { in: ["status-id"] } },
+        },
+        projectRoles: {
+          some: { roleId: { in: ["role-id"] } },
+        },
+      },
+    });
+  });
+
+  it("supports an empty query without filters", async () => {
+    mocks.projectFindMany.mockResolvedValue([]);
+
+    await expect(queryProjects({})).resolves.toEqual([]);
+
+    expect(mocks.projectFindMany).toHaveBeenCalledWith({
+      where: {
+        categoryId: undefined,
+        projectStatusCriteria: undefined,
+        projectRoles: undefined,
+      },
+    });
+  });
+
+  it("rejects invalid query filter data", async () => {
+    await expect(queryProjects({
+      projectRoles: [{ roleId: "", slotsAvailable: 1 }],
+    })).rejects.toThrow("Role ID is required");
+
+    expect(mocks.projectFindMany).not.toHaveBeenCalled();
+  });
+});
+
 describe("createProject", () => {
   it("creates a project owned by the authenticated user", async () => {
     await expect(createProject(project())).resolves.toBeUndefined();
@@ -152,6 +205,9 @@ describe("createProject", () => {
         title: "Test Project",
         description: "A test project",
         deadline: new Date("2030-01-01"),
+        categoryId: "category-id",
+        onSite: true,
+        workHoursPerWeek: 10,
         projectStatusCriteria: {
           create: [{ status: { connect: { id: "status-id" } } }],
         },
@@ -313,6 +369,8 @@ describe("updateProject", () => {
         title: "Test Project",
         description: "A test project",
         deadline: new Date("2030-01-01"),
+        workHoursPerWeek: 10,
+        onSite: true,
         projectStatusCriteria: {
           deleteMany: {},
           create: [{ status: { connect: { id: "status-id" } } }],
@@ -375,6 +433,8 @@ describe("createPeerReview", () => {
 
     await expect(createPeerReview(peerReview())).resolves.toBeUndefined();
 
+    expect(mocks.transaction).not.toHaveBeenCalled();
+
     expect(mocks.peerReviewCreate).toHaveBeenCalledWith({
       data: {
         projectId: "project-id",
@@ -432,7 +492,7 @@ describe("createPeerReview", () => {
       .rejects.toThrow("You cannot review yourself");
   });
 
-  it("rejects duplicate reviews inside the transaction", async () => {
+  it("rejects duplicate reviews before creating a new review", async () => {
     mocks.projectFindUnique.mockResolvedValue({
       ownerId: "owner-id",
       projectMembers: [{ userId: "test-user-id" }, { userId: "reviewee-id" }],

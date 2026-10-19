@@ -21,6 +21,8 @@ const project = (): ProjectForm => ({
   title: "Test Project",
   description: "This is a test project",
   deadline: new Date(),
+  categoryId: "category-id",
+  workHoursPerWeek: 10,
   projectStatusCriteria: [
     {
       statusId: "status-id",
