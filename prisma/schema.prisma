@@ -33,6 +33,7 @@ model User {
   instance               String?
   statusId               String?         @map("status_id")
   bio                    String?
+  contactInfo            String?         @map("contact_info")
   totalProjectsCompleted Int             @default(0) @map("total_projects_completed")
   avgCommitmentScore     Float           @default(0) @map("avg_commitment_score")
   createdAt              DateTime        @default(now()) @map("created_at")
@@ -57,6 +58,15 @@ model Status {
   projectStatusCriteria ProjectStatusCriteria[]
 
   @@map("status")
+}
+
+model Category {
+  id           String    @id @default(uuid())
+  categoryName String    @map("category_name")
+
+  projects     Project[]
+
+  @@map("category")
 }
 
 model Role {
@@ -85,14 +95,18 @@ model UserRole {
 model Project {
   id                    String                  @id @default(uuid())
   ownerId               String                  @map("owner_id")
+  categoryId            String                  @map("category_id")
   title                 String
   description           String
   deadline              DateTime?
+  onSite                Boolean                 @default(false) @map("on_site")
+  workHoursPerWeek      Int                     @map("work_hours_per_week")
   status                ProjectStatus           @default(OPEN_RECRUITMENT)
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
 
   owner                 User                    @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  category              Category                @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   projectStatusCriteria ProjectStatusCriteria[]
   projectRoles          ProjectRole[]
   applications          Application[]

@@ -36,6 +36,7 @@ export const updateProfile = authWrapper(async (user: User, formData: Partial<Pr
             name: data.name,
             instance: data.instance,
             bio: data.bio,
+            contactInfo: data.contactInfo,
             statusId: data.statusId,
             userRoles: {
                 deleteMany: {}, // Remove existing roles

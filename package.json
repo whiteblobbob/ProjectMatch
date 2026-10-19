@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "db:generate": "prisma generate",
+    "db:reset": "dotenv -e .env.development -- prisma migrate reset",
     "db:dev": "dotenv -e .env.development -- prisma migrate dev",
     "db:deploy": "dotenv -e .env.production -- prisma migrate deploy",
     "db:studio:dev": "dotenv -e .env.development -- prisma studio",

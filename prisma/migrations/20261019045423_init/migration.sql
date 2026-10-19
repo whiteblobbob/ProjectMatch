@@ -11,6 +11,7 @@ CREATE TABLE "user" (
     "instance" TEXT,
     "status_id" TEXT,
     "bio" TEXT,
+    "contact_info" TEXT,
     "total_projects_completed" INTEGER NOT NULL DEFAULT 0,
     "avg_commitment_score" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,6 +26,14 @@ CREATE TABLE "status" (
     "status_name" TEXT NOT NULL,
 
     CONSTRAINT "status_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "category" (
+    "id" TEXT NOT NULL,
+    "category_name" TEXT NOT NULL,
+
+    CONSTRAINT "category_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -47,9 +56,12 @@ CREATE TABLE "user_role" (
 CREATE TABLE "project" (
     "id" TEXT NOT NULL,
     "owner_id" TEXT NOT NULL,
+    "category_id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "deadline" TIMESTAMP(3),
+    "on_site" BOOLEAN NOT NULL DEFAULT false,
+    "work_hours_per_week" INTEGER NOT NULL,
     "status" "project_status" NOT NULL DEFAULT 'OPEN_RECRUITMENT',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -124,6 +136,9 @@ ALTER TABLE "user_role" ADD CONSTRAINT "user_role_role_id_fkey" FOREIGN KEY ("ro
 
 -- AddForeignKey
 ALTER TABLE "project" ADD CONSTRAINT "project_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "project" ADD CONSTRAINT "project_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "project_status_criteria" ADD CONSTRAINT "project_status_criteria_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;

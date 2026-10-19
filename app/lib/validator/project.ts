@@ -4,6 +4,9 @@ export const ProjectValidator = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(1, "Description is required"),
     deadline: z.date(),
+    categoryId: z.string().min(1, "Category ID is required"),
+    onSite: z.boolean().optional(),
+    workHoursPerWeek: z.number().int().positive("Work hours per week must be a positive integer"),
     projectStatusCriteria: z.array(z.object({
         statusId: z.string().min(1, "Status ID is required"),
     })).min(1, "At least one project status criteria is required"),

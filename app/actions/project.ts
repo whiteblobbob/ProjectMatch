@@ -10,6 +10,45 @@ import {
 } from "../lib/validator/project";
 import authWrapper from "../utils/authWrapper";
 import { IdValidator } from "../lib/validator/global";
+import z from "zod";
+
+const QueryProjectsValidator = ProjectValidator.pick({
+    categoryId: true,
+    projectStatusCriteria: true,
+    projectRoles: true,
+}).partial();
+
+export async function queryProjects(formData: z.infer<typeof QueryProjectsValidator>) {
+    const result = QueryProjectsValidator.safeParse(formData);
+
+    if (!result.success) {
+        throw new Error(result.error.message);
+    }
+
+    const data = result.data;
+
+    const projects = await prisma.project.findMany({
+        where: {
+            categoryId: data.categoryId,
+            projectStatusCriteria: data.projectStatusCriteria ? {
+                some: {
+                    statusId: {
+                        in: data.projectStatusCriteria.map(criteria => criteria.statusId)
+                    }
+                }
+            } : undefined,
+            projectRoles: data.projectRoles ? {
+                some: {
+                    roleId: {
+                        in: data.projectRoles.map(role => role.roleId)
+                    }
+                }
+            } : undefined,
+        }
+    });
+
+    return projects;
+}
 
 export async function fetchProject(projectId: string) {
     const idResult = IdValidator.safeParse(projectId);
@@ -23,7 +62,6 @@ export async function fetchProject(projectId: string) {
         include: {
             owner: {
                 select: {
-                    id: true,
                     name: true,
                     instance: true,
                     bio: true,
@@ -85,6 +123,9 @@ export const createProject = authWrapper(async (user: User, formData: ProjectFor
             title: data.title,
             description: data.description,
             deadline: data.deadline,
+            categoryId: data.categoryId,
+            onSite: data.onSite,
+            workHoursPerWeek: data.workHoursPerWeek,
             projectStatusCriteria: {
                 create: data.projectStatusCriteria.map(criteria => ({
                     status: {
@@ -263,6 +304,8 @@ export const updateProject = authWrapper(async (user: User, projectId: string, f
             title: data.title,
             description: data.description,
             deadline: data.deadline,
+            workHoursPerWeek: data.workHoursPerWeek,
+            onSite: data.onSite,
             projectStatusCriteria: {
                 deleteMany: {},
                 create: data.projectStatusCriteria?.map(criteria => ({
