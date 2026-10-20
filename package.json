@@ -6,16 +6,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "db:generate": "prisma generate",
+    "db:reset": "dotenv -e .env.development -- prisma migrate reset",
+    "db:dev": "dotenv -e .env.development -- prisma migrate dev",
+    "db:deploy": "dotenv -e .env.production -- prisma migrate deploy",
+    "db:studio:dev": "dotenv -e .env.development -- prisma studio",
+    "db:studio:prod": "dotenv -e .env.production -- prisma studio"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
     "dotenv": "^18.0.8",
     "next": "16.4.1",
     "pg": "^8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
@@ -23,10 +33,13 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
     "prisma": "^7.10.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
   }
 }
