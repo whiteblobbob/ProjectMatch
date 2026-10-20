@@ -29,6 +29,11 @@ const mocks = vi.hoisted(() => ({
   peerReviewAggregate: vi.fn(),
   userUpdate: vi.fn(),
   userUpdateMany: vi.fn(),
+  createNotification: vi.fn(),
+}));
+
+vi.mock("../notification", () => ({
+  createNotification: mocks.createNotification,
 }));
 
 vi.mock("../prisma", () => ({
@@ -119,6 +124,7 @@ beforeEach(() => {
   mocks.peerReviewAggregate.mockResolvedValue({ _avg: { commitmentScore: 4.5 } });
   mocks.userUpdate.mockResolvedValue({});
   mocks.userUpdateMany.mockResolvedValue({ count: 1 });
+  mocks.createNotification.mockResolvedValue(undefined);
   mocks.transaction.mockImplementation(async (callback) => callback({
     peerReview: {
       findUnique: mocks.peerReviewFindUnique,
@@ -236,9 +242,10 @@ describe("createProject", () => {
 });
 
 describe("sendApplication", () => {
-  it("creates an application for an available role", async () => {
+  it("creates an application for an available role and notifies the owner", async () => {
     mocks.projectFindUnique.mockResolvedValue({
       id: "project-id",
+      title: "Test Project",
       ownerId: "owner-id",
       projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
     });
@@ -254,18 +261,25 @@ describe("sendApplication", () => {
         portfolioLink: "https://example.com/portfolio",
       },
     });
+    expect(mocks.createNotification).toHaveBeenCalledWith({
+      userId: "owner-id",
+      title: "New Application Received",
+      message: 'You have received a new application for project "Test Project".',
+    });
   });
 
-  it("rejects invalid project IDs and application data", async () => {
+  it("rejects invalid project IDs and application data without sending notifications", async () => {
     await expect(sendApplication("", application())).rejects.toThrow("ID is required");
     await expect(sendApplication("project-id", { roleId: "" })).rejects.toThrow("Role ID is required");
     expect(mocks.projectFindUnique).not.toHaveBeenCalled();
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
   it("rejects a missing project", async () => {
     mocks.projectFindUnique.mockResolvedValue(null);
 
     await expect(sendApplication("project-id", application())).rejects.toThrow("Project not found");
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
   it("rejects applications to the user's own project", async () => {
@@ -276,6 +290,7 @@ describe("sendApplication", () => {
 
     await expect(sendApplication("project-id", application()))
       .rejects.toThrow("You cannot apply to your own project");
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
   it("rejects applications for unavailable roles", async () => {
@@ -286,6 +301,7 @@ describe("sendApplication", () => {
 
     await expect(sendApplication("project-id", application()))
       .rejects.toThrow("The selected role is not available for this project");
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
   it("rejects applications when the selected role has no slots", async () => {
@@ -296,6 +312,7 @@ describe("sendApplication", () => {
 
     await expect(sendApplication("project-id", application()))
       .rejects.toThrow("The selected role is not available for this project");
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 });
 
@@ -306,12 +323,14 @@ describe.each([
   it("rejects an invalid application ID", async () => {
     await expect(action("")).rejects.toThrow("ID is required");
     expect(mocks.applicationFindUnique).not.toHaveBeenCalled();
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
   it("rejects a missing application", async () => {
     mocks.applicationFindUnique.mockResolvedValue(null);
 
     await expect(action("application-id")).rejects.toThrow("Application not found");
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
   it("rejects a non-owner", async () => {
@@ -325,16 +344,17 @@ describe.each([
     await expect(action("application-id")).rejects.toThrow(
       `You are not authorized to ${verb} this application`,
     );
+    expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 });
 
 describe("acceptApplication", () => {
-  it("decrements the role, accepts the application, and adds the member", async () => {
+  it("decrements the role, accepts the application, adds the member, and notifies the applicant", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
       roleId: "role-id",
       projectId: "project-id",
-      project: { id: "project-id", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
+      project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
     mocks.projectRoleCount.mockResolvedValue(1);
 
@@ -358,6 +378,11 @@ describe("acceptApplication", () => {
       },
     });
     expect(mocks.projectUpdate).not.toHaveBeenCalled();
+    expect(mocks.createNotification).toHaveBeenCalledWith({
+      userId: "applicant-id",
+      title: "Application Accepted",
+      message: 'Your application for project "Test Project" has been accepted.',
+    });
   });
 
   it("automatically updates project status to IN_PROGRESS when all slots are filled", async () => {
@@ -365,7 +390,7 @@ describe("acceptApplication", () => {
       applicantId: "applicant-id",
       roleId: "role-id",
       projectId: "project-id",
-      project: { id: "project-id", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
+      project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
     mocks.projectRoleCount.mockResolvedValue(0);
 
@@ -375,6 +400,11 @@ describe("acceptApplication", () => {
       where: { id: "project-id" },
       data: { status: "IN_PROGRESS" },
     });
+    expect(mocks.createNotification).toHaveBeenCalledWith({
+      userId: "applicant-id",
+      title: "Application Accepted",
+      message: 'Your application for project "Test Project" has been accepted.',
+    });
   });
 
   it("does not update project status if project is not OPEN_RECRUITMENT", async () => {
@@ -382,20 +412,26 @@ describe("acceptApplication", () => {
       applicantId: "applicant-id",
       roleId: "role-id",
       projectId: "project-id",
-      project: { id: "project-id", ownerId: "test-user-id", status: "IN_PROGRESS" },
+      project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "IN_PROGRESS" },
     });
     mocks.projectRoleCount.mockResolvedValue(0);
 
     await expect(acceptApplication("application-id")).resolves.toBeUndefined();
 
     expect(mocks.projectUpdate).not.toHaveBeenCalled();
+    expect(mocks.createNotification).toHaveBeenCalledWith({
+      userId: "applicant-id",
+      title: "Application Accepted",
+      message: 'Your application for project "Test Project" has been accepted.',
+    });
   });
 });
 
 describe("rejectApplication", () => {
-  it("marks an owner's application as rejected", async () => {
+  it("marks an owner's application as rejected and notifies the applicant", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
-      project: { ownerId: "test-user-id" },
+      applicantId: "applicant-id",
+      project: { ownerId: "test-user-id", title: "Test Project" },
     });
 
     await expect(rejectApplication("application-id")).resolves.toBeUndefined();
@@ -403,6 +439,11 @@ describe("rejectApplication", () => {
     expect(mocks.applicationUpdate).toHaveBeenCalledWith({
       where: { id: "application-id" },
       data: { status: "REJECTED" },
+    });
+    expect(mocks.createNotification).toHaveBeenCalledWith({
+      userId: "applicant-id",
+      title: "Application Rejected",
+      message: 'Your application for project "Test Project" has been rejected.',
     });
   });
 });

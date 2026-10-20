@@ -15,6 +15,7 @@ import {
 } from "../lib/validator/project";
 import authWrapper from "../utils/authWrapper";
 import { IdValidator } from "../lib/validator/global";
+import { createNotification } from "../lib/notification";
 
 export async function queryProjects(formData: QueryProjectsForm) {
     const result = QueryProjectsValidator.safeParse(formData);
@@ -197,6 +198,12 @@ export const sendApplication = authWrapper(async (user: User, projectId: string,
             portfolioLink: data.portfolioLink,
         }
     });
+
+    await createNotification({
+        userId: project.ownerId,
+        title: "New Application Received",
+        message: `You have received a new application for project "${project.title}".`,
+    });
 });
 
 // FLOW: Fetch application -> Check owner -> Accept -> Add member
@@ -257,6 +264,12 @@ export const acceptApplication = authWrapper(async (user: User, applicationId: s
             data: { status: "IN_PROGRESS" },
         });
     }
+
+    await createNotification({
+        userId: application.applicantId,
+        title: "Application Accepted",
+        message: `Your application for project "${project.title}" has been accepted.`,
+    });
 });
 
 export const rejectApplication = authWrapper(async (user: User, applicationId: string) => {
@@ -284,6 +297,12 @@ export const rejectApplication = authWrapper(async (user: User, applicationId: s
     await prisma.application.update({
         where: { id: result.data },
         data: { status: "REJECTED" }
+    });
+
+    await createNotification({
+        userId: application.applicantId,
+        title: "Application Rejected",
+        message: `Your application for project "${project.title}" has been rejected.`,
     });
 });
 
