@@ -1,3 +1,4 @@
+"use server"
 import { cookies } from "next/headers";
 import { prisma } from "../lib/prisma";
 import { createClient } from "../utils/supabase/server";
