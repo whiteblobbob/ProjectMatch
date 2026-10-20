@@ -7,19 +7,16 @@ import {
     PeerReviewForm,
     PeerReviewValidator,
     ProjectForm,
-    ProjectValidator,
+    CreateProjectValidator,
+    UpdateProjectForm,
+    UpdateProjectValidator,
+    QueryProjectsForm,
+    QueryProjectsValidator,
 } from "../lib/validator/project";
 import authWrapper from "../utils/authWrapper";
 import { IdValidator } from "../lib/validator/global";
-import z from "zod";
 
-const QueryProjectsValidator = ProjectValidator.pick({
-    categoryId: true,
-    projectStatusCriteria: true,
-    projectRoles: true,
-}).partial();
-
-export async function queryProjects(formData: z.infer<typeof QueryProjectsValidator>) {
+export async function queryProjects(formData: QueryProjectsForm) {
     const result = QueryProjectsValidator.safeParse(formData);
 
     if (!result.success) {
@@ -31,6 +28,8 @@ export async function queryProjects(formData: z.infer<typeof QueryProjectsValida
     const projects = await prisma.project.findMany({
         where: {
             categoryId: data.categoryId,
+            ownerId: data.ownerId,
+            onSite: data.onSite,
             projectStatusCriteria: data.projectStatusCriteria ? {
                 some: {
                     statusId: {
@@ -110,7 +109,7 @@ export async function fetchProject(projectId: string) {
 }
 
 export const createProject = authWrapper(async (user: User, formData: ProjectForm) => {
-    const result = ProjectValidator.safeParse(formData);
+    const result = CreateProjectValidator.safeParse(formData);
 
     if (!result.success) {
         throw new Error(result.error.message);
@@ -244,6 +243,20 @@ export const acceptApplication = authWrapper(async (user: User, applicationId: s
             roleId: application.roleId,
         }
     });
+
+    const openRolesCount = await prisma.projectRole.count({
+        where: {
+            projectId: project.id,
+            slotsAvailable: { gt: 0 },
+        },
+    });
+
+    if (openRolesCount === 0 && project.status === "OPEN_RECRUITMENT") {
+        await prisma.project.update({
+            where: { id: project.id },
+            data: { status: "IN_PROGRESS" },
+        });
+    }
 });
 
 export const rejectApplication = authWrapper(async (user: User, applicationId: string) => {
@@ -274,9 +287,9 @@ export const rejectApplication = authWrapper(async (user: User, applicationId: s
     });
 });
 
-export const updateProject = authWrapper(async (user: User, projectId: string, formData: Partial<ProjectForm>) => {
+export const updateProject = authWrapper(async (user: User, projectId: string, formData: UpdateProjectForm) => {
     const idResult = IdValidator.safeParse(projectId);
-    const result = ProjectValidator.partial().safeParse(formData);
+    const result = UpdateProjectValidator.safeParse(formData);
 
     if (!idResult.success) {
         throw new Error(idResult.error.message);
@@ -421,4 +434,93 @@ export const createPeerReview = authWrapper(async (user: User, formData: PeerRev
             avgCommitmentScore: reviewSummary._avg.commitmentScore ?? 0,
         },
     });
+});
+
+export const completeProject = authWrapper(async (user: User, projectId: string) => {
+    const result = IdValidator.safeParse(projectId);
+
+    if (!result.success) {
+        throw new Error(result.error.message);
+    }
+
+    const project = await prisma.project.findUnique({
+        where: { id: result.data },
+        include: { projectMembers: true },
+    });
+
+    if (!project) {
+        throw new Error("Project not found");
+    }
+
+    if (project.ownerId !== user.id) {
+        throw new Error("You are not authorized to complete this project");
+    }
+
+    if (project.status !== "IN_PROGRESS") {
+        throw new Error("Project must be in progress to be marked as completed");
+    }
+
+    await prisma.project.update({
+        where: { id: result.data },
+        data: { status: "COMPLETED" },
+    });
+
+    const participantIds = Array.from(new Set([
+        project.ownerId,
+        ...project.projectMembers.map((member) => member.userId),
+    ]));
+
+    await prisma.user.updateMany({
+        where: { id: { in: participantIds } },
+        data: {
+            totalProjectsCompleted: {
+                increment: 1,
+            },
+        },
+    });
+});
+
+export const fetchProjectApplications = authWrapper(async (user: User, projectId: string) => {
+    const result = IdValidator.safeParse(projectId);
+
+    if (!result.success) {
+        throw new Error(result.error.message);
+    }
+
+    const project = await prisma.project.findUnique({
+        where: { id: result.data },
+        select: { ownerId: true },
+    });
+
+    if (!project) {
+        throw new Error("Project not found");
+    }
+
+    if (project.ownerId !== user.id) {
+        throw new Error("You are not authorized to view applications for this project");
+    }
+
+    const applications = await prisma.application.findMany({
+        where: { projectId: result.data },
+        include: {
+            applicant: {
+                select: {
+                    id: true,
+                    name: true,
+                    instance: true,
+                    bio: true,
+                    contactInfo: true,
+                    status: true,
+                    userRoles: {
+                        include: { role: true },
+                    },
+                    avgCommitmentScore: true,
+                    totalProjectsCompleted: true,
+                },
+            },
+            role: true,
+        },
+    });
+
+    return applications;
 });

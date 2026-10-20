@@ -1,6 +1,7 @@
 import z from "zod";
 
-export const ProjectValidator = z.object({
+// Project Validators
+export const CreateProjectValidator = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(1, "Description is required"),
     deadline: z.date(),
@@ -15,7 +16,27 @@ export const ProjectValidator = z.object({
         slotsAvailable: z.number().int().positive("Slots left must be a positive integer"),
     })).min(1, "At least one project role is required"),
 });
-export type ProjectForm = z.infer<typeof ProjectValidator>;
+export type ProjectForm = z.infer<typeof CreateProjectValidator>;
+
+export const UpdateProjectValidator = CreateProjectValidator
+    .omit({
+        categoryId: true,
+
+    })
+    .partial();
+export type UpdateProjectForm = z.infer<typeof UpdateProjectValidator>;
+
+export const QueryProjectsValidator = CreateProjectValidator.pick({
+    categoryId: true,
+    projectStatusCriteria: true,
+    projectRoles: true,
+    onSite: true,
+}).extend({
+    ownerId: z.string().min(1, "Owner ID is required").optional(),
+}).partial();
+export type QueryProjectsForm = z.infer<typeof QueryProjectsValidator>;
+
+// Other Project Related Validators
 
 export const ApplicationValidator = z.object({
     roleId: z.string().min(1, "Role ID is required"),

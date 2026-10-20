@@ -17,15 +17,18 @@ const mocks = vi.hoisted(() => ({
   projectUpdate: vi.fn(),
   projectDelete: vi.fn(),
   applicationFindUnique: vi.fn(),
+  applicationFindMany: vi.fn(),
   applicationCreate: vi.fn(),
   applicationUpdate: vi.fn(),
   projectRoleUpdate: vi.fn(),
+  projectRoleCount: vi.fn(),
   projectMemberCreate: vi.fn(),
   transaction: vi.fn(),
   peerReviewFindUnique: vi.fn(),
   peerReviewCreate: vi.fn(),
   peerReviewAggregate: vi.fn(),
   userUpdate: vi.fn(),
+  userUpdateMany: vi.fn(),
 }));
 
 vi.mock("../prisma", () => ({
@@ -39,11 +42,13 @@ vi.mock("../prisma", () => ({
     },
     application: {
       findUnique: mocks.applicationFindUnique,
+      findMany: mocks.applicationFindMany,
       create: mocks.applicationCreate,
       update: mocks.applicationUpdate,
     },
     projectRole: {
       update: mocks.projectRoleUpdate,
+      count: mocks.projectRoleCount,
     },
     projectMember: {
       create: mocks.projectMemberCreate,
@@ -55,6 +60,7 @@ vi.mock("../prisma", () => ({
     },
     user: {
       update: mocks.userUpdate,
+      updateMany: mocks.userUpdateMany,
     },
     $transaction: mocks.transaction,
   },
@@ -62,10 +68,12 @@ vi.mock("../prisma", () => ({
 
 import {
   acceptApplication,
+  completeProject,
   createPeerReview,
   createProject,
   deleteProject,
   fetchProject,
+  fetchProjectApplications,
   queryProjects,
   rejectApplication,
   sendApplication,
@@ -103,11 +111,14 @@ beforeEach(() => {
   mocks.projectDelete.mockResolvedValue({});
   mocks.applicationCreate.mockResolvedValue({});
   mocks.applicationUpdate.mockResolvedValue({});
+  mocks.applicationFindMany.mockResolvedValue([]);
   mocks.projectRoleUpdate.mockResolvedValue({});
+  mocks.projectRoleCount.mockResolvedValue(1);
   mocks.projectMemberCreate.mockResolvedValue({});
   mocks.peerReviewCreate.mockResolvedValue({});
   mocks.peerReviewAggregate.mockResolvedValue({ _avg: { commitmentScore: 4.5 } });
   mocks.userUpdate.mockResolvedValue({});
+  mocks.userUpdateMany.mockResolvedValue({ count: 1 });
   mocks.transaction.mockImplementation(async (callback) => callback({
     peerReview: {
       findUnique: mocks.peerReviewFindUnique,
@@ -323,8 +334,9 @@ describe("acceptApplication", () => {
       applicantId: "applicant-id",
       roleId: "role-id",
       projectId: "project-id",
-      project: { id: "project-id", ownerId: "test-user-id" },
+      project: { id: "project-id", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
+    mocks.projectRoleCount.mockResolvedValue(1);
 
     await expect(acceptApplication("application-id")).resolves.toBeUndefined();
 
@@ -339,6 +351,44 @@ describe("acceptApplication", () => {
     expect(mocks.projectMemberCreate).toHaveBeenCalledWith({
       data: { userId: "applicant-id", projectId: "project-id", roleId: "role-id" },
     });
+    expect(mocks.projectRoleCount).toHaveBeenCalledWith({
+      where: {
+        projectId: "project-id",
+        slotsAvailable: { gt: 0 },
+      },
+    });
+    expect(mocks.projectUpdate).not.toHaveBeenCalled();
+  });
+
+  it("automatically updates project status to IN_PROGRESS when all slots are filled", async () => {
+    mocks.applicationFindUnique.mockResolvedValue({
+      applicantId: "applicant-id",
+      roleId: "role-id",
+      projectId: "project-id",
+      project: { id: "project-id", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
+    });
+    mocks.projectRoleCount.mockResolvedValue(0);
+
+    await expect(acceptApplication("application-id")).resolves.toBeUndefined();
+
+    expect(mocks.projectUpdate).toHaveBeenCalledWith({
+      where: { id: "project-id" },
+      data: { status: "IN_PROGRESS" },
+    });
+  });
+
+  it("does not update project status if project is not OPEN_RECRUITMENT", async () => {
+    mocks.applicationFindUnique.mockResolvedValue({
+      applicantId: "applicant-id",
+      roleId: "role-id",
+      projectId: "project-id",
+      project: { id: "project-id", ownerId: "test-user-id", status: "IN_PROGRESS" },
+    });
+    mocks.projectRoleCount.mockResolvedValue(0);
+
+    await expect(acceptApplication("application-id")).resolves.toBeUndefined();
+
+    expect(mocks.projectUpdate).not.toHaveBeenCalled();
   });
 });
 
@@ -504,5 +554,131 @@ describe("createPeerReview", () => {
 
     expect(mocks.peerReviewCreate).not.toHaveBeenCalled();
     expect(mocks.userUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("completeProject", () => {
+  it("completes an in-progress project and increments totalProjectsCompleted for owner and members", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      ownerId: "test-user-id",
+      status: "IN_PROGRESS",
+      projectMembers: [{ userId: "member-1" }, { userId: "member-2" }],
+    });
+
+    await expect(completeProject("project-id")).resolves.toBeUndefined();
+
+    expect(mocks.projectFindUnique).toHaveBeenCalledWith({
+      where: { id: "project-id" },
+      include: { projectMembers: true },
+    });
+    expect(mocks.projectUpdate).toHaveBeenCalledWith({
+      where: { id: "project-id" },
+      data: { status: "COMPLETED" },
+    });
+    expect(mocks.userUpdateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["test-user-id", "member-1", "member-2"] } },
+      data: { totalProjectsCompleted: { increment: 1 } },
+    });
+  });
+
+  it("rejects an invalid project ID", async () => {
+    await expect(completeProject("")).rejects.toThrow("ID is required");
+    expect(mocks.projectFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects when the project does not exist", async () => {
+    mocks.projectFindUnique.mockResolvedValue(null);
+
+    await expect(completeProject("project-id")).rejects.toThrow("Project not found");
+    expect(mocks.projectUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects when called by a non-owner", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      ownerId: "other-user-id",
+      status: "IN_PROGRESS",
+      projectMembers: [],
+    });
+
+    await expect(completeProject("project-id"))
+      .rejects.toThrow("You are not authorized to complete this project");
+    expect(mocks.projectUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects when the project is not in progress", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      ownerId: "test-user-id",
+      status: "OPEN_RECRUITMENT",
+      projectMembers: [],
+    });
+
+    await expect(completeProject("project-id"))
+      .rejects.toThrow("Project must be in progress to be marked as completed");
+    expect(mocks.projectUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("fetchProjectApplications", () => {
+  it("fetches applications for the project when called by owner", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      ownerId: "test-user-id",
+    });
+    const sampleApplications = [
+      { id: "app-1", applicant: { name: "Alice" }, role: { roleName: "Developer" } },
+    ];
+    mocks.applicationFindMany.mockResolvedValue(sampleApplications);
+
+    await expect(fetchProjectApplications("project-id")).resolves.toBe(sampleApplications);
+
+    expect(mocks.projectFindUnique).toHaveBeenCalledWith({
+      where: { id: "project-id" },
+      select: { ownerId: true },
+    });
+    expect(mocks.applicationFindMany).toHaveBeenCalledWith({
+      where: { projectId: "project-id" },
+      include: {
+        applicant: {
+          select: {
+            id: true,
+            name: true,
+            instance: true,
+            bio: true,
+            contactInfo: true,
+            status: true,
+            userRoles: {
+              include: { role: true },
+            },
+            avgCommitmentScore: true,
+            totalProjectsCompleted: true,
+          },
+        },
+        role: true,
+      },
+    });
+  });
+
+  it("rejects an invalid project ID", async () => {
+    await expect(fetchProjectApplications("")).rejects.toThrow("ID is required");
+    expect(mocks.projectFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects when the project does not exist", async () => {
+    mocks.projectFindUnique.mockResolvedValue(null);
+
+    await expect(fetchProjectApplications("project-id")).rejects.toThrow("Project not found");
+    expect(mocks.applicationFindMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects when called by a non-owner", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      ownerId: "other-user-id",
+    });
+
+    await expect(fetchProjectApplications("project-id"))
+      .rejects.toThrow("You are not authorized to view applications for this project");
+    expect(mocks.applicationFindMany).not.toHaveBeenCalled();
   });
 });
