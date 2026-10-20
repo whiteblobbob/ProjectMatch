@@ -6,5 +6,7 @@ node_modules
 .env.production
 .env.*.local
 !.env.*.example
+.agents
 /generated/prisma
+
 tsconfig.tsbuildinfo
