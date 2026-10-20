@@ -1,3 +1,4 @@
+"use server";
 import { User } from "@supabase/supabase-js";
 import { prisma } from "../lib/prisma";
 import { ProfileForm, ProfileValidator } from "../lib/validator/profile";
