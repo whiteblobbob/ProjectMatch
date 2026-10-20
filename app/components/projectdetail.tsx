@@ -12,68 +12,101 @@ export default function projectdetail(){
                     <div className="bg-warning-background w-auto">
                     <h1 className="text-center font-bold text-[12px] text-text-warning rounded-sm p-1">Mencari Anggota</h1>
                     </div>
-                    
                 </div>
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5" id="subtitle">UINIC 2026</h3>
-                <div className="flex flex-row justify-between" id="title">
-                <h1 className="pt-1.5">Mencari UI/UX Designer</h1>
+                <h3 className="text-[14px] font-normal text-text-subheading pt-1.5" id="subtitle">UINIC 2026</h3>
+                <div className="flex flex-row" id="title">
+                    <Image
+                    className="h-9 w-auto mt-5 mr-4"
+                    src="/img/inisial-pemilik.png"
+                    alt="Compass logo"
+                    width={80}
+                    height={80}
+                   priority
+                />
+                <div className="flex flex-col" id="title">
+                <h1 className="pt-4.5 text-[12px]">Flow</h1>
+                <h3 className="text-[12px] font-normal text-text-subheading" id="subtitle"><span className="">Universitas Primakara</span> · <span className="">Pemilik tim</span></h3>
                 </div>
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5" id="subtitle"><span className="mr-2">Lingkungan</span> · <span className="ml-2">Remote</span></h3>
-                <div className="flex flex-row justify-between" id="title">
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5">±6 jam/minggu</h3>
-                <h3 className="text-[12px] font-semibold text-text-subheading pt-1.5">Tim 2/3</h3>
                 </div>
-            </div>
-        </div>
-        </div>
+                <div className="flex flex-row mt-2" id="title">
+                    <Image
+                    className="h-3 w-auto flex mt-0.5 mr-1"
+                    src="/img/person.png"
+                    alt="Compass logo"
+                    width={80}
+                    height={80}
+                   priority
+                />
+                <h3 className="text-[12px] font-normal text-text-subheading mr-4">
+                    Tim 2/3</h3>
 
-        <div className="container flex justify-center mt-10">
-            <div className="h-56.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default md:w-300 flex" id="card-content-container">
-                <div className="w-[90%] flex flex-col" id="title-content">
-                    <div className="flex flex-row justify-between gap-30" id="title">
-                        <h1 className="text-[20px]">EcoTrack</h1>
-                    <div className="bg-background w-23">
-                    <h1 className="text-center text-[14px] text-text-subheading rounded-sm p-1">Kompetisi</h1>
-                    </div>
-                    
+                    <Image
+                    className="h-3 w-auto flex mt-0.5 mr-1"
+                    src="/img/calendar-days.png"
+                    alt="Compass logo"
+                    width={80}
+                    height={80}
+                   priority
+                />
+                <h3 className="text-[12px] font-semibold text-text-warning">Tenggat 30 Okt</h3>
                 </div>
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5" id="subtitle">UINIC 2026</h3>
-                <h1 className="pt-1.5">Mencari UI/UX Designer</h1>
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5" id="subtitle"><span className="mr-2">Lingkungan</span> · <span className="ml-2">Remote</span></h3>
-                <div className="flex flex-row justify-between" id="title">
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5">±6 jam/minggu</h3>
-                <h3 className="text-[12px] font-semibold text-text-subheading pt-1.5">Tim 2/3</h3>
-                </div>
-                <h3 className="text-[12px] font-normal text-text-warning pt-1.5">Tenggat 30 Okt</h3>
-                <hr className="border-border-default mt-1.5" />
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5">Pemilik: Raka Aditya</h3>
             </div>
         </div>
         </div>
+        
+        <hr className="border-border-default mt-8.5" />
 
-        <div className="container flex justify-center mt-10">
-            <div className="h-56.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default md:w-300 flex" id="card-content-container">
+            <div className="container flex justify-center mt-10">
+            <div className="h-45.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default md:w-300 flex" id="card-content-container">
                 <div className="w-[90%] flex flex-col" id="title-content">
-                    <div className="flex flex-row justify-between gap-30" id="title">
-                        <h1 className="text-[20px]">EcoTrack</h1>
-                    <div className="bg-background w-23">
-                    <h1 className="text-center text-[14px] text-text-subheading rounded-sm p-1">Kompetisi</h1>
-                    </div>
-                    
-                </div>
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5" id="subtitle">UINIC 2026</h3>
-                <h1 className="pt-1.5">Mencari UI/UX Designer</h1>
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5" id="subtitle"><span className="mr-2">Lingkungan</span> · <span className="ml-2">Remote</span></h3>
+                <h1 className="text-[12px] text-text-warning">1 posisi terbuka</h1>
                 <div className="flex flex-row justify-between" id="title">
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5">±6 jam/minggu</h3>
-                <h3 className="text-[12px] font-semibold text-text-subheading pt-1.5">Tim 2/3</h3>
+                <h1 className="text-[20px] font-bold pt-2">UI/UX Designer</h1>
                 </div>
-                <h3 className="text-[12px] font-normal text-text-warning pt-1.5">Tenggat 30 Okt</h3>
-                <hr className="border-border-default mt-1.5" />
-                <h3 className="text-[12px] font-normal text-text-subheading pt-1.5">Pemilik: Raka Aditya</h3>
+                <h1 className="pt-2 text-[14px]">Rancang user flow dan tiga layar utama untuk website lingkungan.</h1>
+                <div className="flex flex-row mt-2" id="title">
+                    <Image
+                    className="h-3 w-auto flex mt-0.5 mr-1"
+                    src="/img/laptop.png"
+                    alt="Compass logo"
+                    width={80}
+                    height={80}
+                   priority
+                />
+                <h3 className="text-[12px] font-normal text-text-subheading mr-4">
+                    Remote</h3>
+
+                    <Image
+                    className="h-3 w-auto flex mt-0.5 mr-1"
+                    src="/img/clock.png"
+                    alt="Compass logo"
+                    width={80}
+                    height={80}
+                   priority
+                />
+                <h3 className="text-[12px] text-text-subheading mr-4">±6 jam/minggu</h3>
+
+                <Image
+                    className="h-3 w-auto flex mt-0.5 mr-1"
+                    src="/img/figma.png"
+                    alt="Compass logo"
+                    width={80}
+                    height={80}
+                   priority
+                />
+                <h3 className="text-[12px] text-text-subheading">Figma</h3>
+                </div>
             </div>
-        </div>
-        </div>
+
+            </div>
+            </div>
+
+             <div className="container flex justify-center mt-10">
+                <a href="" className="w-[80vw] h-12 text-center content-center bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded">
+                    Ajukan Bergabung
+                </a>
+             </div>
+
         </>
     )
 }

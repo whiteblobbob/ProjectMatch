@@ -3,7 +3,7 @@ export default function projectcard(){
         <>
         <a href="/projectdetail">
         <div className="container flex justify-center mt-10">
-            <div className="h-56.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default hover:bg-warning-background transition duration-300 md:w-300 flex" id="card-content-container">
+            <div className="h-56.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default hover:bg-brand-soft transition duration-300 md:w-300 flex" id="card-content-container">
                 <div className="w-[90%] flex flex-col" id="title-content">
                     <div className="flex flex-row justify-between gap-30" id="title">
                         <h1 className="text-[20px]">EcoTrack</h1>
