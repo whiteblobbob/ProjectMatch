@@ -1,8 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 5, "column": 0}, "map": {"version":3,"sources":["file:///C:/Project/lomba/ProjectMatch/app/components/guestnavbar.tsx"],"sourcesContent":["export default function guestnavbar(){\r\n    return(\r\n        \r\n        <nav className=\"flex flex-row gap-50 p-4 list-none md:gap-330 border-b-2 border-gray-300\">\r\n            <li className=\"\">ProjectMatch</li>\r\n            <li className=\"\"><a href=\"#\" className=\"text-blue-500 transition duration-300 hover:text-black\">Login</a></li>\r\n        </nav>\r\n    )\r\n        \r\n}"],"names":["guestnavbar","className","href"],"mappings":";;;;;;AAAe,SAASA;IACpB,qBAEI,8OAAC;QAAIC,WAAU;;0BACX,8OAAC;gBAAGA,WAAU;0BAAG;;;;;;0BACjB,8OAAC;gBAAGA,WAAU;0BAAG,cAAA,8OAAC;oBAAEC,MAAK;oBAAID,WAAU;8BAAyD;;;;;;;;;;;;;;;;;AAI5G"}},
-    {"offset": {"line": 50, "column": 0}, "map": {"version":3,"sources":["file:///C:/Project/lomba/ProjectMatch/app/favicon.ico.mjs%20(structured%20image%20object)"],"sourcesContent":["import src from \"IMAGE\";\nexport default { src, width: 48, height: 48 }\n"],"names":["src","width","height"],"mappings":";;;;AAAA;;uCACe;IAAEA,KAAAA,mIAAG;IAAEC,OAAO;IAAIC,QAAQ;AAAG"}},
-    {"offset": {"line": 65, "column": 0}, "map": {"version":3,"sources":["file:///C:/Project/lomba/ProjectMatch/app/guest/page.tsx"],"sourcesContent":["import Navbar from \"../components/guestnavbar\";\r\nimport Botnav from \"../components/bottomnav\"\r\n\r\nexport default function guest(){\r\n    return(\r\n        <>\r\n        <Navbar />\r\n        Bot\r\n        </>\r\n    )\r\n        \r\n    \r\n}"],"names":["guest"],"mappings":";;;;;AAAA;;;AAGe,SAASA;IACpB,qBACI;;0BACA,8OAAC,4IAAM;;;;;YAAG;;;;;;;AAMlB"}}]
-}
