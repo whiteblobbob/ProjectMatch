@@ -223,7 +223,7 @@ function guestpage() {
                     id: "header",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                            className: "font-bold text-[28px]",
+                            className: "font-bold text-[28px] md:text-[40px]",
                             children: [
                                 "Temukan tim yang butuh ",
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -231,13 +231,13 @@ function guestpage() {
                                     children: "kamu."
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/guestpage.tsx",
-                                    lineNumber: 8,
-                                    columnNumber: 70
+                                    lineNumber: 9,
+                                    columnNumber: 85
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/components/guestpage.tsx",
-                            lineNumber: 8,
+                            lineNumber: 9,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -245,7 +245,7 @@ function guestpage() {
                             children: "Bangun proyek bersama teman lintas kampus."
                         }, void 0, false, {
                             fileName: "[project]/app/components/guestpage.tsx",
-                            lineNumber: 9,
+                            lineNumber: 10,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -259,7 +259,7 @@ function guestpage() {
                                     height: 20
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/guestpage.tsx",
-                                    lineNumber: 11,
+                                    lineNumber: 12,
                                     columnNumber: 9
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -269,13 +269,13 @@ function guestpage() {
                                     name: "search"
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/guestpage.tsx",
-                                    lineNumber: 19,
+                                    lineNumber: 20,
                                     columnNumber: 9
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/components/guestpage.tsx",
-                            lineNumber: 10,
+                            lineNumber: 11,
                             columnNumber: 8
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -292,14 +292,6 @@ function guestpage() {
                                             children: "Jenis Proyek"
                                         }, void 0, false, {
                                             fileName: "[project]/app/components/guestpage.tsx",
-                                            lineNumber: 28,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                            value: "",
-                                            children: "wasd"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/components/guestpage.tsx",
                                             lineNumber: 29,
                                             columnNumber: 13
                                         }, this),
@@ -310,11 +302,19 @@ function guestpage() {
                                             fileName: "[project]/app/components/guestpage.tsx",
                                             lineNumber: 30,
                                             columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "",
+                                            children: "wasd"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/components/guestpage.tsx",
+                                            lineNumber: 31,
+                                            columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/components/guestpage.tsx",
-                                    lineNumber: 27,
+                                    lineNumber: 28,
                                     columnNumber: 9
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -327,14 +327,6 @@ function guestpage() {
                                             children: "Topik"
                                         }, void 0, false, {
                                             fileName: "[project]/app/components/guestpage.tsx",
-                                            lineNumber: 34,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                            value: "",
-                                            children: "wasd"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/components/guestpage.tsx",
                                             lineNumber: 35,
                                             columnNumber: 13
                                         }, this),
@@ -345,11 +337,19 @@ function guestpage() {
                                             fileName: "[project]/app/components/guestpage.tsx",
                                             lineNumber: 36,
                                             columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "",
+                                            children: "wasd"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/components/guestpage.tsx",
+                                            lineNumber: 37,
+                                            columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/components/guestpage.tsx",
-                                    lineNumber: 33,
+                                    lineNumber: 34,
                                     columnNumber: 9
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -362,14 +362,6 @@ function guestpage() {
                                             children: "Lokasi & Mode"
                                         }, void 0, false, {
                                             fileName: "[project]/app/components/guestpage.tsx",
-                                            lineNumber: 40,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                            value: "",
-                                            children: "wasd"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/components/guestpage.tsx",
                                             lineNumber: 41,
                                             columnNumber: 13
                                         }, this),
@@ -380,42 +372,76 @@ function guestpage() {
                                             fileName: "[project]/app/components/guestpage.tsx",
                                             lineNumber: 42,
                                             columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                            value: "",
+                                            children: "wasd"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/components/guestpage.tsx",
+                                            lineNumber: 43,
+                                            columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/components/guestpage.tsx",
-                                    lineNumber: 39,
+                                    lineNumber: 40,
                                     columnNumber: 9
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/components/guestpage.tsx",
-                            lineNumber: 26,
+                            lineNumber: 27,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/components/guestpage.tsx",
-                    lineNumber: 7,
+                    lineNumber: 8,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "h-400",
-                    id: "Base"
+                    className: "h-400 font-semibold",
+                    id: "Base",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "flex flex-row justify-around",
+                        id: "projectheader",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
+                                className: "w-70",
+                                children: "Posisi terbuka"
+                            }, void 0, false, {
+                                fileName: "[project]/app/components/guestpage.tsx",
+                                lineNumber: 49,
+                                columnNumber: 9
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
+                                className: "text-[#576477] border-1",
+                                children: "Terbaru"
+                            }, void 0, false, {
+                                fileName: "[project]/app/components/guestpage.tsx",
+                                lineNumber: 50,
+                                columnNumber: 9
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/app/components/guestpage.tsx",
+                        lineNumber: 48,
+                        columnNumber: 9
+                    }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/components/guestpage.tsx",
-                    lineNumber: 46,
+                    lineNumber: 47,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/components/guestpage.tsx",
-            lineNumber: 6,
+            lineNumber: 7,
             columnNumber: 9
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/components/guestpage.tsx",
-        lineNumber: 5,
+        lineNumber: 6,
         columnNumber: 9
     }, this);
 }
