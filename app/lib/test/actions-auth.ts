@@ -33,12 +33,14 @@ beforeEach(() => {
   });
   mocks.signUp.mockResolvedValue({ data: { user: { id: "user-id" } }, error: null });
   mocks.signInWithPassword.mockResolvedValue({ error: null });
+  mocks.userCreate.mockResolvedValue({});
 });
 
 describe("signup", () => {
   it("creates a Supabase account and local user", async () => {
-    await expect(signup({ email: "user@example.com", password: "password123" })).resolves.toBeUndefined();
+    const result = await signup({ email: "user@example.com", password: "password123" });
 
+    expect(result).toEqual({ success: true });
     expect(mocks.signUp).toHaveBeenCalledWith({
       email: "user@example.com",
       password: "password123",
@@ -47,8 +49,12 @@ describe("signup", () => {
   });
 
   it("rejects invalid form data without calling external services", async () => {
-    await expect(signup({ email: "not-an-email", password: "short" })).rejects.toThrow();
+    const result = await signup({ email: "not-an-email", password: "short" });
 
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBeDefined();
+    }
     expect(mocks.signUp).not.toHaveBeenCalled();
     expect(mocks.userCreate).not.toHaveBeenCalled();
   });
@@ -59,17 +65,18 @@ describe("signup", () => {
       error: { message: "Email already registered" },
     });
 
-    await expect(signup({ email: "user@example.com", password: "password123" }))
-      .rejects.toThrow("Email already registered");
+    const result = await signup({ email: "user@example.com", password: "password123" });
 
+    expect(result).toEqual({ success: false, error: "Email already registered" });
     expect(mocks.userCreate).not.toHaveBeenCalled();
   });
 });
 
 describe("login", () => {
   it("signs in with valid credentials", async () => {
-    await expect(login({ email: "user@example.com", password: "password123" })).resolves.toBeUndefined();
+    const result = await login({ email: "user@example.com", password: "password123" });
 
+    expect(result).toEqual({ success: true });
     expect(mocks.signInWithPassword).toHaveBeenCalledWith({
       email: "user@example.com",
       password: "password123",
@@ -77,8 +84,12 @@ describe("login", () => {
   });
 
   it("rejects invalid form data without calling Supabase", async () => {
-    await expect(login({ email: "not-an-email", password: "short" })).rejects.toThrow();
+    const result = await login({ email: "not-an-email", password: "short" });
 
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBeDefined();
+    }
     expect(mocks.signInWithPassword).not.toHaveBeenCalled();
   });
 
@@ -87,7 +98,8 @@ describe("login", () => {
       error: { message: "Invalid credentials" },
     });
 
-    await expect(login({ email: "user@example.com", password: "password123" }))
-      .rejects.toThrow("Invalid credentials");
+    const result = await login({ email: "user@example.com", password: "password123" });
+
+    expect(result).toEqual({ success: false, error: "Invalid credentials" });
   });
 });

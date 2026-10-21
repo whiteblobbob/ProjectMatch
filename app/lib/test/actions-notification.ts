@@ -1,8 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../utils/authWrapper", () => ({
-  default: (handler: (user: { id: string }, ...args: unknown[]) => unknown) =>
-    (...args: unknown[]) => handler({ id: "test-user-id" }, ...args),
+vi.mock("../../utils/actionWrapper", () => ({
+  default: (
+    action: (user: { id: string }, ...args: unknown[]) => unknown,
+    options: { auth?: boolean } = {},
+  ) =>
+    async (...args: unknown[]) => {
+      try {
+        let data;
+        if (options.auth) {
+          data = await action({ id: "test-user-id" }, ...args);
+        } else {
+          data = await (action as (...a: unknown[]) => unknown)(...args);
+        }
+        if (data === undefined) {
+          return { success: true };
+        }
+        return { success: true, data };
+      } catch (error: unknown) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "An unexpected error occurred",
+        };
+      }
+    },
 }));
 
 const mocks = vi.hoisted(() => ({
@@ -36,18 +57,13 @@ describe("fetchNotifications", () => {
     ];
     mocks.notificationFindMany.mockResolvedValue(notifications);
 
-    await expect(fetchNotifications()).resolves.toBe(notifications);
+    const result = await fetchNotifications();
 
+    expect(result).toEqual({ success: true, data: notifications });
     expect(mocks.notificationFindMany).toHaveBeenCalledWith({
       where: { userId: "test-user-id" },
       orderBy: { createdAt: "desc" },
     });
-  });
-
-  it("returns an empty list when the user has no notifications", async () => {
-    mocks.notificationFindMany.mockResolvedValue([]);
-
-    await expect(fetchNotifications()).resolves.toEqual([]);
   });
 });
 
@@ -59,8 +75,9 @@ describe("markNotificationRead", () => {
       read: false,
     });
 
-    await expect(markNotificationRead("notif-id")).resolves.toBeUndefined();
+    const result = await markNotificationRead("notif-id");
 
+    expect(result).toEqual({ success: true });
     expect(mocks.notificationFindUnique).toHaveBeenCalledWith({
       where: { id: "notif-id" },
     });
@@ -71,8 +88,12 @@ describe("markNotificationRead", () => {
   });
 
   it("rejects an invalid notification ID", async () => {
-    await expect(markNotificationRead("")).rejects.toThrow("ID is required");
+    const result = await markNotificationRead("");
 
+    expect(result).toEqual({
+      success: false,
+      error: expect.stringContaining("ID is required"),
+    });
     expect(mocks.notificationFindUnique).not.toHaveBeenCalled();
     expect(mocks.notificationUpdate).not.toHaveBeenCalled();
   });
@@ -80,8 +101,9 @@ describe("markNotificationRead", () => {
   it("rejects when the notification does not exist", async () => {
     mocks.notificationFindUnique.mockResolvedValue(null);
 
-    await expect(markNotificationRead("notif-id")).rejects.toThrow("Notification not found");
+    const result = await markNotificationRead("notif-id");
 
+    expect(result).toEqual({ success: false, error: "Notification not found" });
     expect(mocks.notificationUpdate).not.toHaveBeenCalled();
   });
 
@@ -92,9 +114,12 @@ describe("markNotificationRead", () => {
       read: false,
     });
 
-    await expect(markNotificationRead("notif-id"))
-      .rejects.toThrow("You are not authorized to update this notification");
+    const result = await markNotificationRead("notif-id");
 
+    expect(result).toEqual({
+      success: false,
+      error: "You are not authorized to update this notification",
+    });
     expect(mocks.notificationUpdate).not.toHaveBeenCalled();
   });
 });

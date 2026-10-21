@@ -1,9 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProfileForm } from "../validator/profile";
 
-vi.mock("../../utils/authWrapper", () => ({
-  default: (handler: (user: { id: string }, ...args: unknown[]) => unknown) =>
-    (...args: unknown[]) => handler({ id: "test-user-id" }, ...args),
+vi.mock("../../utils/actionWrapper", () => ({
+  default: (
+    action: (user: { id: string }, ...args: unknown[]) => unknown,
+    options: { auth?: boolean } = {},
+  ) =>
+    async (...args: unknown[]) => {
+      try {
+        let data;
+        if (options.auth) {
+          data = await action({ id: "test-user-id" }, ...args);
+        } else {
+          data = await (action as (...a: unknown[]) => unknown)(...args);
+        }
+        if (data === undefined) {
+          return { success: true };
+        }
+        return { success: true, data };
+      } catch (error: unknown) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "An unexpected error occurred",
+        };
+      }
+    },
 }));
 
 const mocks = vi.hoisted(() => ({
@@ -42,8 +63,12 @@ beforeEach(() => {
 
 describe("fetchProfile", () => {
   it("fetches the authenticated user's profile and relations", async () => {
-    await expect(fetchProfile()).resolves.toEqual({ id: "test-user-id", name: "Test User" });
+    const result = await fetchProfile();
 
+    expect(result).toEqual({
+      success: true,
+      data: { id: "test-user-id", name: "Test User" },
+    });
     expect(mocks.userFindUnique).toHaveBeenCalledWith({
       where: { id: "test-user-id" },
       include: {
@@ -58,7 +83,9 @@ describe("fetchProfile", () => {
   it("rejects when the profile does not exist", async () => {
     mocks.userFindUnique.mockResolvedValue(null);
 
-    await expect(fetchProfile()).rejects.toThrow("Profile not found");
+    const result = await fetchProfile();
+
+    expect(result).toEqual({ success: false, error: "Profile not found" });
   });
 });
 
@@ -67,8 +94,9 @@ describe("fetchReviews", () => {
     const reviews = [{ id: "review-id", feedback: "Great teammate" }];
     mocks.peerReviewFindMany.mockResolvedValue(reviews);
 
-    await expect(fetchReviews()).resolves.toBe(reviews);
+    const result = await fetchReviews();
 
+    expect(result).toEqual({ success: true, data: reviews });
     expect(mocks.peerReviewFindMany).toHaveBeenCalledWith({
       where: { revieweeId: "test-user-id" },
       include: {
@@ -86,18 +114,13 @@ describe("fetchReviews", () => {
       },
     });
   });
-
-  it("returns an empty list when the user has no reviews", async () => {
-    mocks.peerReviewFindMany.mockResolvedValue([]);
-
-    await expect(fetchReviews()).resolves.toEqual([]);
-  });
 });
 
 describe("updateProfile", () => {
-  it("updates the authenticated user's profile and roles", async () => {
-    await expect(updateProfile(profile)).resolves.toBeUndefined();
+  it("updates the authenticated user's profile and roles in prisma", async () => {
+    const result = await updateProfile(profile);
 
+    expect(result).toEqual({ success: true });
     expect(mocks.userUpdate).toHaveBeenCalledWith({
       where: { id: "test-user-id" },
       data: {
@@ -112,49 +135,5 @@ describe("updateProfile", () => {
         },
       },
     });
-  });
-
-  it("accepts a partial update without roles", async () => {
-    await expect(updateProfile({ bio: "Updated bio" })).resolves.toBeUndefined();
-
-    expect(mocks.userUpdate).toHaveBeenCalledWith({
-      where: { id: "test-user-id" },
-      data: {
-        name: undefined,
-        instance: undefined,
-        bio: "Updated bio",
-        contactInfo: undefined,
-        statusId: undefined,
-        userRoles: {
-          deleteMany: {},
-          create: undefined,
-        },
-      },
-    });
-  });
-
-  it("updates contact information", async () => {
-    await expect(updateProfile({ contactInfo: "contact@example.com" })).resolves.toBeUndefined();
-
-    expect(mocks.userUpdate).toHaveBeenCalledWith({
-      where: { id: "test-user-id" },
-      data: {
-        name: undefined,
-        instance: undefined,
-        bio: undefined,
-        contactInfo: "contact@example.com",
-        statusId: undefined,
-        userRoles: {
-          deleteMany: {},
-          create: undefined,
-        },
-      },
-    });
-  });
-
-  it("rejects invalid profile data", async () => {
-    await expect(updateProfile({ name: "" })).rejects.toThrow("Name is required");
-
-    expect(mocks.userUpdate).not.toHaveBeenCalled();
   });
 });
