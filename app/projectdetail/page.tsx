@@ -1,6 +1,6 @@
-import Navbar from "../components/guestnavbar";
-import Detail from "../components/projectdetail";
-import Botnav from "../components/bottomnav";
+import Navbar from "../components/navigation-bar/guestnavbar";
+import Detail from "../components/detail/projectdetail";
+import Botnav from "../components/navigation-bar/bottomnav";
 
 export default function detail(){
     return(

@@ -1,6 +1,6 @@
-import Navbar from "./components/guestnavbar";
-import Explore from "./components/guestpage";
-import Botnav from "./components/bottomnav";
+import Navbar from "./components/navigation-bar/guestnavbar";
+import Explore from "./components/page/guestpage";
+import Botnav from "./components/navigation-bar/bottomnav";
 
 export default function guest(){
     return(

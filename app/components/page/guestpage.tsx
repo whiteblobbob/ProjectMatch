@@ -1,5 +1,5 @@
 import Image from "next/image"
-import Projectcard from "./projectcard"
+import Projectcard from "../card/projectcard"
 
 export default function guestpage(){
     return(
@@ -18,7 +18,7 @@ export default function guestpage(){
         />
 
         <input
-            className="block w-full rounded-md border border-border-default py-2 pr-3 pl-9 text-text-heading shadow-sm placeholder:text-gray-400 focus:border-sky-500 focus:outline focus:outline-sky-500 sm:text-sm dark:border-gray-600"
+            className="block w-full rounded-md border border-border-input py-2 pr-3 pl-9 text-text-heading shadow-sm placeholder:text-gray-400 focus:border-sky-500 focus:outline focus:outline-sky-500 sm:text-sm"
             placeholder="Cari proyek, peran, atau topik"
             type="text"
             name="search"

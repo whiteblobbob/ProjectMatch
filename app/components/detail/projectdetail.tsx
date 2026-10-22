@@ -1,5 +1,4 @@
 import Image from "next/image"
-import Projectcard from "./projectcard"
 
 export default function projectdetail(){
     return(
@@ -102,7 +101,7 @@ export default function projectdetail(){
             </div>
 
              <div className="container flex justify-center mt-10">
-                <a href="" className="w-[80vw] h-12 text-center content-center bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded">
+                <a href="projectdetail/pengajuanbergabung" className="w-[80vw] h-12 text-center content-center bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded">
                     Ajukan Bergabung
                 </a>
              </div>
