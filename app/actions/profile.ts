@@ -61,7 +61,7 @@ export const updateProfile = actionWrapper(async (user: User, formData: Partial<
       contactInfo: data.contactInfo,
       statusId: data.statusId,
       userRoles: {
-        deleteMany: {}, // Remove existing roles
+        deleteMany: (data.userRoles) ? {} : undefined,
         create: data.userRoles?.map(role => ({
           role: {
             connect: { id: role.roleId }

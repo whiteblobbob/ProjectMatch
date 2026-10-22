@@ -19,14 +19,6 @@ enum ProjectStatus {
   @@map("project_status")
 }
 
-enum ApplicationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-
-  @@map("application_status")
-}
-
 model User {
   id                     String          @id @default(uuid())
   name                   String?
@@ -147,7 +139,6 @@ model Application {
   roleId        String            @map("role_id")
   message       String?
   portfolioLink String?           @map("portfolio_link")
-  status        ApplicationStatus @default(PENDING)
 
   project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   applicant     User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)

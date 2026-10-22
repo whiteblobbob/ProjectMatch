@@ -1,9 +1,6 @@
 -- CreateEnum
 CREATE TYPE "project_status" AS ENUM ('DRAFT', 'OPEN_RECRUITMENT', 'IN_PROGRESS', 'COMPLETED');
 
--- CreateEnum
-CREATE TYPE "application_status" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
-
 -- CreateTable
 CREATE TABLE "user" (
     "id" TEXT NOT NULL,
@@ -94,7 +91,6 @@ CREATE TABLE "application" (
     "role_id" TEXT NOT NULL,
     "message" TEXT,
     "portfolio_link" TEXT,
-    "status" "application_status" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "application_pkey" PRIMARY KEY ("id")
 );

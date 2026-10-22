@@ -25,8 +25,13 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
   }
 
   const data = result.data;
+  const page = data.page;
+  const pageSize = data.pageSize;
 
-  const projects = await prisma.project.findMany({
+  // Deterministic ordering keeps paginated pages stable between requests
+  // (the id tiebreaks rows created in the same second).
+  // One extra row is fetched purely to detect whether a next page exists.
+  const rows = await prisma.project.findMany({
     where: {
       categoryId: data.categoryId,
       ownerId: data.ownerId,
@@ -45,10 +50,21 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
           }
         }
       } : undefined,
-    }
+    },
+    orderBy: [
+      { createdAt: "desc" },
+      { id: "asc" },
+    ],
+    skip: (page - 1) * pageSize,
+    take: pageSize + 1,
   });
 
-  return projects;
+  const hasMore = rows.length > pageSize;
+
+  return {
+    projects: hasMore ? rows.slice(0, pageSize) : rows,
+    hasMore,
+  };
 }, { auth: false });
 
 export const fetchProject = actionWrapper(async (projectId: string) => {
@@ -172,6 +188,10 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
     throw new Error("Project not found");
   }
 
+  if (project.status !== "OPEN_RECRUITMENT") {
+    throw new Error("This project is not open for applications");
+  }
+
   if (project.ownerId === user.id) {
     throw new Error("You cannot apply to your own project");
   }
@@ -233,10 +253,6 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
     throw new Error("Application not found");
   }
 
-  if (application.status !== "PENDING") {
-    throw new Error("Application is not pending");
-  }
-
   const project = application.project;
 
   if (project.ownerId !== user.id) {
@@ -283,27 +299,24 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
     });
 
     if (role && role.slotsAvailable <= 0) {
-      const otherPendingApplications = await tx.application.findMany({
+      // The role just filled up: remove all remaining applications for it
+      // (the accepted one is already deleted above) and notify their owners.
+      const otherApplications = await tx.application.findMany({
         where: {
           projectId: project.id,
           roleId: application.roleId,
-          status: "PENDING",
         },
       });
 
-      if (otherPendingApplications.length > 0) {
-        await tx.application.updateMany({
+      if (otherApplications.length > 0) {
+        await tx.application.deleteMany({
           where: {
             projectId: project.id,
             roleId: application.roleId,
-            status: "PENDING",
-          },
-          data: {
-            status: "REJECTED",
           },
         });
 
-        for (const otherApp of otherPendingApplications) {
+        for (const otherApp of otherApplications) {
           await createNotification(tx, {
             userId: otherApp.applicantId,
             title: "Application Rejected",
@@ -351,21 +364,17 @@ export const rejectApplication = actionWrapper(async (user: User, applicationId:
     throw new Error("Application not found");
   }
 
-  if (application.status !== "PENDING") {
-    throw new Error("Application is not pending");
-  }
-
   const project = application.project;
 
   if (project.ownerId !== user.id) {
     throw new Error("You are not authorized to reject this application");
   }
 
-  // All-or-nothing: the rejection and the applicant notification commit together.
+  // All-or-nothing: the rejection (row deletion — applications have no status
+  // anymore) and the applicant notification commit together.
   await prisma.$transaction(async (tx) => {
-    await tx.application.update({
+    await tx.application.delete({
       where: { id: result.data },
-      data: { status: "REJECTED" }
     });
 
     await createNotification(tx, {
@@ -410,7 +419,7 @@ export const updateProject = actionWrapper(async (user: User, projectId: string,
       workHoursPerWeek: data.workHoursPerWeek,
       onSite: data.onSite,
       projectStatusCriteria: {
-        deleteMany: {},
+        deleteMany: (data.projectStatusCriteria) ? {} : undefined,
         create: data.projectStatusCriteria?.map(criteria => ({
           status: {
             connect: { id: criteria.statusId }
@@ -418,7 +427,7 @@ export const updateProject = actionWrapper(async (user: User, projectId: string,
         })),
       },
       projectRoles: {
-        deleteMany: {},
+        deleteMany: (data.projectRoles) ? {} : undefined,
         create: data.projectRoles?.map(role => ({
           slotsAvailable: role.slotsAvailable,
           role: {
@@ -610,6 +619,11 @@ export const fetchProjectApplications = actionWrapper(async (user: User, project
 
   const applications = await prisma.application.findMany({
     where: { projectId: result.data },
+    orderBy: {
+      applicant: {
+        avgCommitmentScore: "desc",
+      },
+    },
     include: {
       applicant: {
         select: {

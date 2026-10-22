@@ -33,8 +33,16 @@ export const QueryProjectsValidator = CreateProjectValidator.pick({
   onSite: true,
 }).extend({
   ownerId: z.string().min(1, "Owner ID is required").optional(),
-}).partial();
-export type QueryProjectsForm = z.infer<typeof QueryProjectsValidator>;
+}).partial().extend({
+  page: z.number().int().min(1, "Page must be at least 1").default(1),
+  pageSize: z
+    .number()
+    .int()
+    .min(1, "Page size must be at least 1")
+    .max(50, "Page size must be at most 50")
+    .default(10),
+});
+export type QueryProjectsForm = z.input<typeof QueryProjectsValidator>;
 
 // Other Project Related Validators
 
