@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
-vi.mock("../../utils/supabase/server", () => ({
+vi.mock("../../lib/supabase/server", () => ({
   createClient: mocks.createClient,
 }));
 vi.mock("../prisma", () => ({

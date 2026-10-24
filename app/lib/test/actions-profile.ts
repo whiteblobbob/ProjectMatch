@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProfileForm } from "../validator/profile";
 
-vi.mock("../../utils/actionWrapper", () => ({
+vi.mock("../../lib/actionWrapper", () => ({
   default: (
     action: (user: { id: string }, ...args: unknown[]) => unknown,
     options: { auth?: boolean } = {},

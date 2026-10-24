@@ -1,7 +1,22 @@
+"use client";
 import Image from "next/image"
-import Projectcard from "../card/projectcard"
+import { useEffect, useState } from "react"
+import { queryProjects } from "@/app/actions/project";
+import ProjectCard from "../card/projectcard";
 
-export default function guestpage(){
+export default function GuestPage(){
+    const [projects, setProjects] = useState<any[]>([]);
+
+    useEffect(() => {
+        const init = async () => {
+            const projects = await queryProjects({ status: "OPEN_RECRUITMENT" });
+            console.log(projects);
+            setProjects(projects.data.projects || []);
+        };
+
+        init();
+    }, []);
+
     return(
         <>
         <div className="h-auto flex-col" id="wrapper">
@@ -53,7 +68,20 @@ export default function guestpage(){
         <h1 className="text-center content-center text-text-subheading">Terbaru</h1>
         </div>
         </div>
-        <Projectcard />
+        {  projects && projects.map((project) => (
+            <ProjectCard
+                title={project.title}
+                category={project.category.name}
+                roles={project.projectRoles.map((role: any) => role.role.name)}
+                onSite={project.onSite}
+                workHoursPerWeek={project.workHoursPerWeek}
+                deadline={new Date(project.deadline)}
+                slotsAvailable={project.totalAvailableSlot}
+                teamSize={project._count.projectMembers}
+                owner={project.owner.name}
+                key={project.id}
+            />
+        )) }
         </div>
         </div>
         </>

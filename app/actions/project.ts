@@ -6,14 +6,14 @@ import {
   ApplicationValidator,
   PeerReviewForm,
   PeerReviewValidator,
-  ProjectForm,
+  CreateProjectForm,
   CreateProjectValidator,
   UpdateProjectForm,
   UpdateProjectValidator,
   QueryProjectsForm,
   QueryProjectsValidator,
 } from "../lib/validator/project";
-import actionWrapper from "../utils/actionWrapper";
+import actionWrapper from "../lib/actionWrapper";
 import { IdValidator } from "../lib/validator/global";
 import { createNotification } from "../lib/notification";
 
@@ -36,13 +36,7 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
       categoryId: data.categoryId,
       ownerId: data.ownerId,
       onSite: data.onSite,
-      projectStatusCriteria: data.projectStatusCriteria ? {
-        some: {
-          statusId: {
-            in: data.projectStatusCriteria.map(criteria => criteria.statusId)
-          }
-        }
-      } : undefined,
+      status: data.status,
       projectRoles: data.projectRoles ? {
         some: {
           roleId: {
@@ -50,6 +44,33 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
           }
         }
       } : undefined,
+      projectStatusCriteria: data.projectStatusCriteria ? {
+        some: {
+          statusId: {
+            in: data.projectStatusCriteria.map(criteria => criteria.statusId)
+          }
+        }
+      } : undefined,
+    },
+    include: {
+      projectRoles: {
+        include: { role: true },
+      },
+      owner: {
+        select: {
+          name: true,
+        }
+      },
+      category: {
+        select: {
+          name: true,
+        }
+      },
+      _count: {
+        select: {
+          projectMembers: true,
+        }
+      }
     },
     orderBy: [
       { createdAt: "desc" },
@@ -60,9 +81,16 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
   });
 
   const hasMore = rows.length > pageSize;
+  const projects = (hasMore ? rows.slice(0, pageSize) : rows).map(project => ({
+    ...project,
+    totalAvailableSlot: project.projectRoles.reduce(
+      (total, projectRole) => total + projectRole.slotsAvailable,
+      0,
+    ),
+  }));
 
   return {
-    projects: hasMore ? rows.slice(0, pageSize) : rows,
+    projects,
     hasMore,
   };
 }, { auth: false });
@@ -125,7 +153,7 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
   return project;
 }, { auth: false });
 
-export const createProject = actionWrapper(async (user: User, formData: ProjectForm) => {
+export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
   const result = CreateProjectValidator.safeParse(formData);
 
   if (!result.success) {

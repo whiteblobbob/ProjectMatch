@@ -45,7 +45,7 @@ model User {
 
 model Status {
   id                    String                  @id @default(uuid())
-  statusName            String                  @map("status_name")
+  name            String                  @map("name")
 
   users                 User[]
   projectStatusCriteria ProjectStatusCriteria[]
@@ -55,7 +55,7 @@ model Status {
 
 model Category {
   id           String    @id @default(uuid())
-  categoryName String    @map("category_name")
+  name String    @map("name")
 
   projects     Project[]
 
@@ -64,7 +64,7 @@ model Category {
 
 model Role {
   id             String          @id @default(uuid())
-  roleName       String          @map("role_name")
+  name       String          @map("name")
 
   userRoles      UserRole[]
   projectRoles   ProjectRole[]

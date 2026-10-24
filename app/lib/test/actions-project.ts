@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApplicationForm,
   PeerReviewForm,
-  ProjectForm,
+  CreateProjectForm,
+  QueryProjectsForm,
 } from "../validator/project";
 
-vi.mock("../../utils/actionWrapper", () => ({
+vi.mock("../../lib/actionWrapper", () => ({
   default: (
     action: (user: { id: string }, ...args: unknown[]) => unknown,
     options: { auth?: boolean } = {},
@@ -109,7 +110,7 @@ import {
   updateProject,
 } from "../../actions/project";
 
-const project = (): ProjectForm => ({
+const project = (): CreateProjectForm => ({
   title: "Test Project",
   description: "A test project",
   deadline: new Date("2030-01-01"),
@@ -187,19 +188,45 @@ beforeEach(() => {
 
 describe("queryProjects", () => {
   it("queries projects with provided filters and default pagination", async () => {
-    const record = [{ id: "project-id", title: "Test Project" }];
+    const record = [{
+      id: "project-id",
+      title: "Test Project",
+      projectRoles: [
+        { slotsAvailable: 2 },
+        { slotsAvailable: 3 },
+      ],
+    }];
     mocks.projectFindMany.mockResolvedValue(record);
 
-    const result = await queryProjects({ categoryId: "category-id" });
+    const result = await queryProjects({
+      categoryId: "category-id",
+      status: "OPEN_RECRUITMENT",
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+    });
 
     expect(result).toEqual({
       success: true,
-      data: { projects: record, hasMore: false },
+      data: {
+        projects: [{ ...record[0], totalAvailableSlot: 5 }],
+        hasMore: false,
+      },
     });
     expect(mocks.projectFindMany).toHaveBeenCalledWith({
       where: expect.objectContaining({
         categoryId: "category-id",
+        status: "OPEN_RECRUITMENT",
+        projectRoles: {
+          some: {
+            roleId: { in: ["role-id"] },
+          },
+        },
       }),
+      include: {
+        projectRoles: { include: { role: true } },
+        owner: { select: { name: true } },
+        category: { select: { name: true } },
+        _count: { select: { projectMembers: true } },
+      },
       orderBy: [{ createdAt: "desc" }, { id: "asc" }],
       skip: 0,
       take: 11,
@@ -207,7 +234,10 @@ describe("queryProjects", () => {
   });
 
   it("applies custom pagination and trims the probe row when a next page exists", async () => {
-    const rows = Array.from({ length: 16 }, (_, i) => ({ id: `project-${i}` }));
+    const rows = Array.from({ length: 16 }, (_, i) => ({
+      id: `project-${i}`,
+      projectRoles: [{ slotsAvailable: i % 2 }],
+    }));
     mocks.projectFindMany.mockResolvedValue(rows);
 
     const result = await queryProjects({ page: 3, pageSize: 15 });
@@ -215,7 +245,10 @@ describe("queryProjects", () => {
     expect(result).toEqual({
       success: true,
       data: {
-        projects: rows.slice(0, 15),
+        projects: rows.slice(0, 15).map(project => ({
+          ...project,
+          totalAvailableSlot: project.projectRoles[0].slotsAvailable,
+        })),
         hasMore: true,
       },
     });
@@ -232,10 +265,16 @@ describe("queryProjects", () => {
     ["rejects a non-integer page", { page: 2.5 }],
     ["rejects a page size below one", { pageSize: 0 }],
     ["rejects a page size over the cap", { pageSize: 51 }],
-  ])("%s without querying the database", async (_name, pagination) => {
+    ["rejects an unlisted project status", { status: "PENDING" }],
+    ["rejects a draft project status", { status: "DRAFT" }],
+  ] as Array<[string, Record<string, unknown>]>)("%s without querying the database", async (_name, pagination) => {
     mocks.projectFindMany.mockResolvedValue([]);
 
-    const result = await queryProjects({ categoryId: "category-id", ...pagination });
+    // Intentionally invalid shapes (status outside the query enum, out-of-range
+    // pagination) — cast past the input type so the validator is what rejects them.
+    const result = await queryProjects(
+      { categoryId: "category-id", ...pagination } as unknown as QueryProjectsForm,
+    );
 
     expect(result.success).toBe(false);
     expect(mocks.projectFindMany).not.toHaveBeenCalled();

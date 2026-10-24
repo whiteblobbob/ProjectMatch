@@ -16,7 +16,7 @@ export const CreateProjectValidator = z.object({
     slotsAvailable: z.number().int().positive("Slots left must be a positive integer"),
   })).min(1, "At least one project role is required"),
 });
-export type ProjectForm = z.infer<typeof CreateProjectValidator>;
+export type CreateProjectForm = z.infer<typeof CreateProjectValidator>;
 
 export const UpdateProjectValidator = CreateProjectValidator
   .omit({
@@ -33,6 +33,7 @@ export const QueryProjectsValidator = CreateProjectValidator.pick({
   onSite: true,
 }).extend({
   ownerId: z.string().min(1, "Owner ID is required").optional(),
+  status: z.enum(["OPEN_RECRUITMENT", "IN_PROGRESS", "COMPLETED"]).optional(),
 }).partial().extend({
   page: z.number().int().min(1, "Page must be at least 1").default(1),
   pageSize: z

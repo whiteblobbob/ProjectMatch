@@ -1,7 +1,7 @@
 "use server";
 import { User } from "@supabase/supabase-js";
 import { prisma } from "../lib/prisma";
-import actionWrapper from "../utils/actionWrapper";
+import actionWrapper from "../lib/actionWrapper";
 import { IdValidator } from "../lib/validator/global";
 
 /**

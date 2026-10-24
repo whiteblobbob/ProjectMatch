@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../utils/actionWrapper", () => ({
+vi.mock("../../lib/actionWrapper", () => ({
   default: (
     action: (user: { id: string }, ...args: unknown[]) => unknown,
     options: { auth?: boolean } = {},

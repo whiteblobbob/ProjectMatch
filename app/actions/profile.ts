@@ -2,7 +2,7 @@
 import { User } from "@supabase/supabase-js";
 import { prisma } from "../lib/prisma";
 import { ProfileForm, ProfileValidator } from "../lib/validator/profile";
-import actionWrapper from "../utils/actionWrapper";
+import actionWrapper from "../lib/actionWrapper";
 
 export const fetchProfile = actionWrapper(async (user: User) => {
   const profile = await prisma.user.findUnique({

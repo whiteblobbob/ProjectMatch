@@ -1,9 +1,9 @@
 "use server"
 import { cookies } from "next/headers";
 import { prisma } from "../lib/prisma";
-import { createClient } from "../utils/supabase/server";
+import { createClient } from "../lib/supabase/server";
 import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
-import actionWrapper from "../utils/actionWrapper";
+import actionWrapper from "../lib/actionWrapper";
 
 export const signup = actionWrapper(async (formData: SignupForm) => {
   const result = SignupValidator.safeParse(formData);

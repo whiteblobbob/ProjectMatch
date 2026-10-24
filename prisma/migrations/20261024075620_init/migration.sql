@@ -20,7 +20,7 @@ CREATE TABLE "user" (
 -- CreateTable
 CREATE TABLE "status" (
     "id" TEXT NOT NULL,
-    "status_name" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "status_pkey" PRIMARY KEY ("id")
 );
@@ -28,7 +28,7 @@ CREATE TABLE "status" (
 -- CreateTable
 CREATE TABLE "category" (
     "id" TEXT NOT NULL,
-    "category_name" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "category_pkey" PRIMARY KEY ("id")
 );
@@ -36,7 +36,7 @@ CREATE TABLE "category" (
 -- CreateTable
 CREATE TABLE "role" (
     "id" TEXT NOT NULL,
-    "role_name" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "role_pkey" PRIMARY KEY ("id")
 );
