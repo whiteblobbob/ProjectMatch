@@ -4,7 +4,7 @@ export default function aktivitascard(){
     return(
         <>
     <div className="container flex justify-center mt-10">
-            <div className="h-93.5 w-89.5 pt-4 pl-6 bg-border-main border border-border-default md:w-300 flex" id="card-content-container">
+            <div className="h-90.5 w-89.5 pt-4 pl-6 bg-border-main border border-border-default md:w-300 flex" id="card-content-container">
                 <div className="w-[90%] flex flex-col" id="title-content">
                     <div className="flex flex-col justify-between" id="title">
                     <div className="bg-warning-background w-30 rounded-[20px]">
@@ -96,7 +96,7 @@ export default function aktivitascard(){
                 </div>
                 </div>
                 <div className="container flex justify-center mt-3">
-                <a href="projectdetail/pengajuanbergabung" className="w-[80vw] h-12 text-center content-center bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded">
+                <a href="" className="w-[80vw] h-12 text-center content-center bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded">
                     Kelola Postingan
                 </a>
              </div>
