@@ -8,8 +8,8 @@ export default function projectdetail(){
                 <div className="w-[90%] flex flex-col" id="title-content">
                     <div className="flex flex-row justify-between" id="title">
                         <h1 className="text-[20px]">EcoTrack</h1>
-                    <div className="bg-warning-background w-auto">
-                    <h1 className="text-center font-bold text-[12px] text-text-warning rounded-sm p-1">Mencari Anggota</h1>
+                    <div className="bg-warning-background w-auto rounded-lg">
+                    <h1 className="text-center font-bold text-[12px] text-text-warning p-1">Mencari Anggota</h1>
                     </div>
                 </div>
                 <h3 className="text-[14px] font-normal text-text-subheading pt-1.5" id="subtitle">UINIC 2026</h3>
