@@ -4,7 +4,7 @@ import Projectcard from "../card/projectcard"
 export default function guestpage(){
     return(
         <>
-        <div className="h-auto flex-col" id="wrapper">
+        <div className="h-auto min-h-screen flex-col" id="wrapper">
         <div className="h-70 w-[90%] flex flex-col ml-4" id="header">
         <h1 className="font-bold text-[28px] text-text-heading md:text-[40px]">Temukan tim yang butuh <span className="block">kamu.</span></h1>
         <h4 className="text-text-subheading text-[14px]">Bangun proyek bersama teman lintas kampus.</h4>

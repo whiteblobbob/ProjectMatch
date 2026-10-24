@@ -6,7 +6,9 @@ export default function detail(){
     return(
         <>
         <Navbar />
+        <div className="min-h-screen">
         <Detail />
+        </div>
         <Botnav />
         </>
     )

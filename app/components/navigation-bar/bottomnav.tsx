@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function bottomnavbar(){
     return(
         <>
-        <nav className="fixed w-screen bg-white bottom-0 border-t-2 border-border-default">
+        <nav className="sticky w-max-screen bg-white bottom-0 border-t-2 border-border-default">
             <ul className="flex flex-row justify-between text-sm w-[90%] h-15 mx-auto mt-4 text-[12px]">
             <li className="flex flex-col items-center">
                 <a href="../" className="flex flex-col items-center transition duration-300 hover:scale-120">

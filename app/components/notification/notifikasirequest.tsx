@@ -15,7 +15,7 @@ export default function notifikasirequest(){
         </h3>
         </div>
         
-        <a href="" className="text-[13px] font-bold text-white bg-brand-primary p-2 pl-4 pr-4 rounded-lg hover:bg-brand-secondary">
+        <a href="" className="text-[13px] font-bold text-white text-center bg-brand-primary p-2 pl-4 pr-4 rounded-lg hover:bg-brand-secondary md:pt-2.5">
             Tinjau
         </a>
         </div>

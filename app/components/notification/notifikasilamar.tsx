@@ -10,7 +10,7 @@ export default function notifikasilamar(){
         <h1 className="text-sm">
         Tawaran dari <span id="company-name">PanganHub</span>
         </h1>
-        <h3 className="text-[13px] text-text-subheading font-normal">
+        <h3 className="text-[12px] text-text-subheading font-normal">
         Frontend Developer · sebagai pelamar
         </h3>
         </div>
