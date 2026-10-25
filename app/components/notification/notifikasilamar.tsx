@@ -1,7 +1,7 @@
 export default function notifikasilamar(){
     return(
         <>
-    <div className="w-full px-4 mt-10 flex justify-center" id="request-notification">
+    <div className="w-full px-4 mt-2 flex justify-center" id="request-notification">
     <div className="w-full max-w-300 h-24 p-6
         bg-warning-background border rounded-2xl
         border-border-default">

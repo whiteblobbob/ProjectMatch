@@ -1,10 +1,11 @@
 export default function projectcard(){
     return(
         <>
-        <a href="/projectdetail">
+        
         <div className="container flex justify-center mt-10">
+            <a href="/projectdetail">
             <div className="h-56.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default hover:bg-brand-soft transition duration-300 md:w-300 flex" id="card-content-container">
-                <div className="w-[90%] flex flex-col" id="title-content">
+                <div className="w-[97%] flex flex-col" id="title-content">
                     <div className="flex flex-row justify-between gap-30" id="title">
                         <h1 className="text-[20px]">EcoTrack</h1>
                     <div className="bg-background w-23">
@@ -24,8 +25,8 @@ export default function projectcard(){
                 <h3 className="text-[12px] font-normal text-text-subheading pt-1.5">Pemilik: Raka Aditya</h3>
             </div>
         </div>
-        </div>
         </a>
+        </div>       
         </>
     )
 

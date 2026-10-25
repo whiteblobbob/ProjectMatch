@@ -5,7 +5,7 @@ export default function projectdetail(){
         <>
         <div className="container flex justify-center mt-10">
             <div className="h-45.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default md:w-300 flex" id="card-content-container">
-                <div className="w-[90%] flex flex-col" id="title-content">
+                <div className="w-[97%] flex flex-col" id="title-content">
                     <div className="flex flex-row justify-between" id="title">
                         <h1 className="text-[20px]">EcoTrack</h1>
                     <div className="bg-warning-background w-auto rounded-lg">
@@ -57,7 +57,7 @@ export default function projectdetail(){
 
             <div className="container flex justify-center mt-10">
             <div className="h-45.5 w-89.5 pt-6 pl-6 bg-border-main border rounded-2xl border-border-default md:w-300 flex" id="card-content-container">
-                <div className="w-[90%] flex flex-col" id="title-content">
+                <div className="w-[97%] flex flex-col" id="title-content">
                 <h1 className="text-[12px] text-text-warning">1 posisi terbuka</h1>
                 <div className="flex flex-row justify-between" id="title">
                 <h1 className="text-[20px] font-bold pt-2">UI/UX Designer</h1>
