@@ -3,12 +3,12 @@ import Image from "next/image"
 export default function aktivitascard(){
     return(
         <>
-    <div className="container flex justify-center mt-10">
+    <div className="container flex justify-center mt-2 pb-2">
             <div className="h-90.5 w-89.5 pt-4 pl-6 bg-border-main border border-border-default md:w-300 flex" id="card-content-container">
-                <div className="w-[90%] flex flex-col" id="title-content">
+                <div className="w-[97%] flex flex-col" id="title-content">
                     <div className="flex flex-col justify-between" id="title">
                     <div className="bg-warning-background w-30 rounded-[20px]">
-                    <h1 className="text-center font-bold text-[12px] text-text-warning p-0.75">Mencari Anggota</h1>
+                    <h1 className="text-center font-bold text-[12px] text-text-warning p-0.75" id="Status">Mencari Anggota</h1>
                     </div>
                     <h1 className="text-[14px] text-text-subheading pt-5"><span>EcoTrack</span> · <span>UINIC 2026</span></h1>
                 <div className="flex flex-row justify-between" id="title">
@@ -96,7 +96,7 @@ export default function aktivitascard(){
                 </div>
                 </div>
                 <div className="container flex justify-center mt-3">
-                <a href="" className="w-[80vw] h-12 text-center content-center bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded">
+                <a href="../../aktivitas/kelolapostingan" className="w-[80vw] h-12 text-center content-center bg-brand-primary hover:bg-brand-secondary text-white font-bold py-2 px-4 rounded">
                     Kelola Postingan
                 </a>
              </div>

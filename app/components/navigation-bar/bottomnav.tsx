@@ -6,7 +6,7 @@ export default function bottomnavbar(){
         <nav className="sticky w-max-screen bg-white bottom-0 border-t-2 border-border-default">
             <ul className="flex flex-row justify-between text-sm w-[90%] h-15 mx-auto mt-4 text-[12px]">
             <li className="flex flex-col items-center">
-                <a href="../" className="flex flex-col items-center transition duration-300 hover:scale-120">
+                <a href="../../" className="flex flex-col items-center transition duration-300 hover:scale-120">
             <Image
             className="h-6 w-6"
             src="/img/compass.png"
@@ -19,7 +19,7 @@ export default function bottomnavbar(){
                 </a>
                 </li>
             <li>
-            <a href="../aktivitas" className="flex flex-col items-center transition duration-300 hover:scale-120">
+            <a href="../../aktivitas" className="flex flex-col items-center transition duration-300 hover:scale-120">
             <Image
             className="h-6 w-6"
             src="/img/inbox.png"
@@ -32,7 +32,7 @@ export default function bottomnavbar(){
                 </a>
                 </li>
             <li className="flex flex-col items-center">
-                <a href="" className="flex flex-col items-center transition duration-300 hover:scale-120">
+                <a href="../../profil" className="flex flex-col items-center transition duration-300 hover:scale-120">
             <Image
             className="h-6 w-6"
             src="/img/user-round.png"
