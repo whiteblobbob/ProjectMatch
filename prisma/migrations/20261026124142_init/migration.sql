@@ -1,8 +1,5 @@
 -- CreateEnum
-CREATE TYPE "project_status" AS ENUM ('DRAFT', 'OPEN_RECRUITMENT', 'IN_PROGRESS', 'COMPLETED');
-
--- CreateEnum
-CREATE TYPE "application_status" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
+CREATE TYPE "project_status" AS ENUM ('OPEN_RECRUITMENT', 'IN_PROGRESS', 'COMPLETED');
 
 -- CreateTable
 CREATE TABLE "user" (
@@ -23,7 +20,7 @@ CREATE TABLE "user" (
 -- CreateTable
 CREATE TABLE "status" (
     "id" TEXT NOT NULL,
-    "status_name" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "status_pkey" PRIMARY KEY ("id")
 );
@@ -31,7 +28,7 @@ CREATE TABLE "status" (
 -- CreateTable
 CREATE TABLE "category" (
     "id" TEXT NOT NULL,
-    "category_name" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "category_pkey" PRIMARY KEY ("id")
 );
@@ -39,7 +36,7 @@ CREATE TABLE "category" (
 -- CreateTable
 CREATE TABLE "role" (
     "id" TEXT NOT NULL,
-    "role_name" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "role_pkey" PRIMARY KEY ("id")
 );
@@ -94,7 +91,6 @@ CREATE TABLE "application" (
     "role_id" TEXT NOT NULL,
     "message" TEXT,
     "portfolio_link" TEXT,
-    "status" "application_status" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "application_pkey" PRIMARY KEY ("id")
 );
@@ -114,7 +110,6 @@ CREATE TABLE "peer_review" (
     "reviewer_id" TEXT NOT NULL,
     "reviewee_id" TEXT NOT NULL,
     "commitment_score" INTEGER NOT NULL,
-    "role_validated" BOOLEAN NOT NULL DEFAULT true,
     "feedback" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
