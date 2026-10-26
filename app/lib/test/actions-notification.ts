@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ActionError } from "../errors";
 
 vi.mock("../../lib/actionWrapper", () => ({
   default: (
@@ -18,9 +19,15 @@ vi.mock("../../lib/actionWrapper", () => ({
         }
         return { success: true, data };
       } catch (error: unknown) {
+        if (error instanceof ActionError) {
+          return error.fieldErrors
+            ? { success: false, error: error.message, fieldErrors: error.fieldErrors }
+            : { success: false, error: error.message };
+        }
+        console.error("[action error]", error);
         return {
           success: false,
-          error: error instanceof Error ? error.message : "An unexpected error occurred",
+          error: "Something went wrong. Please try again.",
         };
       }
     },
@@ -30,6 +37,7 @@ const mocks = vi.hoisted(() => ({
   notificationFindMany: vi.fn(),
   notificationFindUnique: vi.fn(),
   notificationUpdate: vi.fn(),
+  notificationCreate: vi.fn(),
 }));
 
 vi.mock("../prisma", () => ({
@@ -38,15 +46,39 @@ vi.mock("../prisma", () => ({
       findMany: mocks.notificationFindMany,
       findUnique: mocks.notificationFindUnique,
       update: mocks.notificationUpdate,
+      create: mocks.notificationCreate,
     },
   },
 }));
 
 import { fetchNotifications, markNotificationRead } from "../../actions/notification";
+import { createNotification } from "../notification";
+import { prisma } from "../prisma";
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.notificationUpdate.mockResolvedValue({});
+  mocks.notificationCreate.mockResolvedValue({});
+});
+
+describe("createNotification", () => {
+  it("creates a notification record in prisma with valid data", async () => {
+    await expect(
+      createNotification(prisma, {
+        userId: "user-id",
+        title: "New Notification",
+        message: "You have a new update",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(mocks.notificationCreate).toHaveBeenCalledWith({
+      data: {
+        userId: "user-id",
+        title: "New Notification",
+        message: "You have a new update",
+      },
+    });
+  });
 });
 
 describe("fetchNotifications", () => {

@@ -7,6 +7,7 @@ import {
   ApplicationValidator,
   CreateProjectValidator,
   PeerReviewValidator,
+  QueryProjectsValidator,
 } from "../validator/project";
 
 describe("Validators", () => {
@@ -27,7 +28,7 @@ describe("Validators", () => {
       deadline: new Date("2030-01-01"),
       categoryId: "category-id",
       workHoursPerWeek: 15,
-      projectStatusCriteria: [{ statusId: "status-id" }],
+      projectStatusCriteria: ["status-id"],
       projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
     });
 
@@ -89,5 +90,22 @@ describe("Validators", () => {
     const result = IdValidator.safeParse("valid-entity-id-123");
 
     expect(result.success).toBe(true);
+  });
+
+  it("validates project query filters with role and pagination defaults", () => {
+    const result = QueryProjectsValidator.safeParse({
+      status: "OPEN_RECRUITMENT",
+      projectRoles: ["role-id"],
+    });
+
+    expect(result).toEqual({
+      success: true,
+      data: {
+        status: "OPEN_RECRUITMENT",
+        projectRoles: ["role-id"],
+        page: 1,
+        pageSize: 10,
+      },
+    });
   });
 });

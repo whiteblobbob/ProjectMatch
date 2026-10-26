@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ActionError } from "../errors";
 import { ProfileForm } from "../validator/profile";
 
 vi.mock("../../lib/actionWrapper", () => ({
@@ -19,9 +20,15 @@ vi.mock("../../lib/actionWrapper", () => ({
         }
         return { success: true, data };
       } catch (error: unknown) {
+        if (error instanceof ActionError) {
+          return error.fieldErrors
+            ? { success: false, error: error.message, fieldErrors: error.fieldErrors }
+            : { success: false, error: error.message };
+        }
+        console.error("[action error]", error);
         return {
           success: false,
-          error: error instanceof Error ? error.message : "An unexpected error occurred",
+          error: "Something went wrong. Please try again.",
         };
       }
     },

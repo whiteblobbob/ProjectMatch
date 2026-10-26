@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ActionError } from "../errors";
 import {
   ApplicationForm,
   PeerReviewForm,
@@ -24,9 +25,15 @@ vi.mock("../../lib/actionWrapper", () => ({
         }
         return { success: true, data };
       } catch (error: unknown) {
+        if (error instanceof ActionError) {
+          return error.fieldErrors
+            ? { success: false, error: error.message, fieldErrors: error.fieldErrors }
+            : { success: false, error: error.message };
+        }
+        console.error("[action error]", error);
         return {
           success: false,
-          error: error instanceof Error ? error.message : "An unexpected error occurred",
+          error: "Something went wrong. Please try again.",
         };
       }
     },
@@ -117,8 +124,13 @@ const project = (): CreateProjectForm => ({
   categoryId: "category-id",
   onSite: true,
   workHoursPerWeek: 10,
-  projectStatusCriteria: [{ statusId: "status-id" }],
+  projectStatusCriteria: ["status-id"],
   projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
+});
+
+const queryProject = (): QueryProjectsForm => ({
+  status: "OPEN_RECRUITMENT",
+  projectRoles: ["role-id"],
 });
 
 const application = (): ApplicationForm => ({
@@ -136,9 +148,10 @@ const peerReview = (): PeerReviewForm => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.projectCreate.mockResolvedValue({});
+  mocks.projectCreate.mockResolvedValue({ id: "project-id" });
   mocks.projectUpdate.mockResolvedValue({});
   mocks.projectDelete.mockResolvedValue({});
+  mocks.applicationFindUnique.mockResolvedValue(null);
   mocks.applicationCreate.mockResolvedValue({});
   mocks.applicationDelete.mockResolvedValue({});
   mocks.applicationDeleteMany.mockResolvedValue({ count: 0 });
@@ -198,11 +211,7 @@ describe("queryProjects", () => {
     }];
     mocks.projectFindMany.mockResolvedValue(record);
 
-    const result = await queryProjects({
-      categoryId: "category-id",
-      status: "OPEN_RECRUITMENT",
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
-    });
+    const result = await queryProjects(queryProject());
 
     expect(result).toEqual({
       success: true,
@@ -213,7 +222,6 @@ describe("queryProjects", () => {
     });
     expect(mocks.projectFindMany).toHaveBeenCalledWith({
       where: expect.objectContaining({
-        categoryId: "category-id",
         status: "OPEN_RECRUITMENT",
         projectRoles: {
           some: {
@@ -323,7 +331,7 @@ describe("createProject", () => {
   it("creates a project owned by the authenticated user", async () => {
     const result = await createProject(project());
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, data: { id: "project-id" } });
     expect(mocks.projectCreate).toHaveBeenCalledWith({
       data: {
         ownerId: "test-user-id",
@@ -348,7 +356,8 @@ describe("createProject", () => {
 
     expect(result).toEqual({
       success: false,
-      error: expect.stringContaining("Title is required"),
+      error: "Please check your input",
+      fieldErrors: { title: ["Title is required"] },
     });
     expect(mocks.projectCreate).not.toHaveBeenCalled();
   });
@@ -499,6 +508,48 @@ describe("sendApplication", () => {
       success: false,
       error: "This project is not open for applications",
     });
+    expect(mocks.createNotification).not.toHaveBeenCalled();
+  });
+
+  it("rejects applications when the project deadline has passed", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      title: "Test Project",
+      ownerId: "owner-id",
+      status: "OPEN_RECRUITMENT",
+      deadline: new Date("2020-01-01"),
+      projectMembers: [],
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+    });
+
+    const result = await sendApplication("project-id", application());
+
+    expect(result).toEqual({
+      success: false,
+      error: "The deadline for this project has passed",
+    });
+    expect(mocks.applicationCreate).not.toHaveBeenCalled();
+    expect(mocks.createNotification).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate applications from the same user", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      title: "Test Project",
+      ownerId: "owner-id",
+      status: "OPEN_RECRUITMENT",
+      projectMembers: [],
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+    });
+    mocks.applicationFindUnique.mockResolvedValue({ id: "existing-app-id" });
+
+    const result = await sendApplication("project-id", application());
+
+    expect(result).toEqual({
+      success: false,
+      error: "You have already applied to this project",
+    });
+    expect(mocks.applicationCreate).not.toHaveBeenCalled();
     expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
@@ -843,7 +894,7 @@ describe("rejectApplication", () => {
 
 describe("updateProject", () => {
   it("updates an owned project and replaces its nested records", async () => {
-    mocks.projectFindUnique.mockResolvedValue({ ownerId: "test-user-id" });
+    mocks.projectFindUnique.mockResolvedValue({ ownerId: "test-user-id", status: "OPEN_RECRUITMENT" });
 
     const result = await updateProject("project-id", project());
 
@@ -872,13 +923,14 @@ describe("updateProject", () => {
     const idResult = await updateProject("", project());
     expect(idResult).toEqual({
       success: false,
-      error: expect.stringContaining("ID is required"),
+      error: "ID is required",
     });
 
     const formResult = await updateProject("project-id", { title: "" });
     expect(formResult).toEqual({
       success: false,
-      error: expect.stringContaining("Title is required"),
+      error: "Please check your input",
+      fieldErrors: { title: ["Title is required"] },
     });
 
     expect(mocks.projectFindUnique).not.toHaveBeenCalled();
@@ -903,11 +955,26 @@ describe("updateProject", () => {
     });
     expect(mocks.projectUpdate).not.toHaveBeenCalled();
   });
+
+  it("rejects updating a project that is in progress or completed", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      ownerId: "test-user-id",
+      status: "IN_PROGRESS",
+    });
+
+    const result = await updateProject("project-id", project());
+
+    expect(result).toEqual({
+      success: false,
+      error: "You cannot update a project that is in progress or completed",
+    });
+    expect(mocks.projectUpdate).not.toHaveBeenCalled();
+  });
 });
 
 describe("deleteProject", () => {
   it("deletes an owned project", async () => {
-    mocks.projectFindUnique.mockResolvedValue({ ownerId: "test-user-id" });
+    mocks.projectFindUnique.mockResolvedValue({ ownerId: "test-user-id", status: "OPEN_RECRUITMENT" });
 
     const result = await deleteProject("project-id");
 
@@ -915,6 +982,21 @@ describe("deleteProject", () => {
     expect(mocks.projectDelete).toHaveBeenCalledWith({
       where: { id: "project-id" },
     });
+  });
+
+  it("rejects deleting a project that is in progress or completed", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      ownerId: "test-user-id",
+      status: "COMPLETED",
+    });
+
+    const result = await deleteProject("project-id");
+
+    expect(result).toEqual({
+      success: false,
+      error: "You cannot delete a project that is in progress or completed",
+    });
+    expect(mocks.projectDelete).not.toHaveBeenCalled();
   });
 
   it("rejects invalid IDs, missing projects, and non-owners", async () => {
@@ -972,7 +1054,8 @@ describe("createPeerReview", () => {
 
     expect(result).toEqual({
       success: false,
-      error: expect.stringContaining("Commitment score must be between 1 and 5"),
+      error: "Please check your input",
+      fieldErrors: { commitmentScore: ["Commitment score must be between 1 and 5"] },
     });
     expect(mocks.projectFindUnique).not.toHaveBeenCalled();
   });
