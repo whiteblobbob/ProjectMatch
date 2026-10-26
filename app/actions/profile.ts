@@ -2,6 +2,8 @@
 import { User } from "@supabase/supabase-js";
 import { prisma } from "../lib/prisma";
 import { ProfileForm, ProfileValidator } from "../lib/validator/profile";
+import { parseOrThrow } from "../lib/validator/global";
+import { ActionError } from "../lib/errors";
 import actionWrapper from "../lib/actionWrapper";
 
 export const fetchProfile = actionWrapper(async (user: User) => {
@@ -16,7 +18,7 @@ export const fetchProfile = actionWrapper(async (user: User) => {
   });
 
   if (!profile) {
-    throw new Error("Profile not found");
+    throw new ActionError("Profile not found");
   }
 
   return profile;
@@ -44,13 +46,7 @@ export const fetchReviews = actionWrapper(async (user: User) => {
 }, { auth: true });
 
 export const updateProfile = actionWrapper(async (user: User, formData: Partial<ProfileForm>) => {
-  const result = ProfileValidator.partial().safeParse(formData);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
+  const data = parseOrThrow(ProfileValidator.partial(), formData);
 
   await prisma.user.update({
     where: { id: user.id },
@@ -60,14 +56,14 @@ export const updateProfile = actionWrapper(async (user: User, formData: Partial<
       bio: data.bio,
       contactInfo: data.contactInfo,
       statusId: data.statusId,
-      userRoles: {
-        deleteMany: (data.userRoles) ? {} : undefined,
-        create: data.userRoles?.map(role => ({
+      userRoles: (data.userRoles) ? {
+        deleteMany: {},
+        create: data.userRoles.map(role => ({
           role: {
             connect: { id: role.roleId }
           }
         })),
-      },
+      } : undefined,
     }
   });
 }, { auth: true });

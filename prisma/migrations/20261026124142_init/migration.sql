@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "project_status" AS ENUM ('DRAFT', 'OPEN_RECRUITMENT', 'IN_PROGRESS', 'COMPLETED');
+CREATE TYPE "project_status" AS ENUM ('OPEN_RECRUITMENT', 'IN_PROGRESS', 'COMPLETED');
 
 -- CreateTable
 CREATE TABLE "user" (
@@ -110,7 +110,6 @@ CREATE TABLE "peer_review" (
     "reviewer_id" TEXT NOT NULL,
     "reviewee_id" TEXT NOT NULL,
     "commitment_score" INTEGER NOT NULL,
-    "role_validated" BOOLEAN NOT NULL DEFAULT true,
     "feedback" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

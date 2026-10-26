@@ -8,9 +8,9 @@ export const CreateProjectValidator = z.object({
   categoryId: z.string().min(1, "Category ID is required"),
   onSite: z.boolean().optional(),
   workHoursPerWeek: z.number().int().positive("Work hours per week must be a positive integer"),
-  projectStatusCriteria: z.array(z.object({
-    statusId: z.string().min(1, "Status ID is required"),
-  })).min(1, "At least one project status criteria is required"),
+  projectStatusCriteria: z.array(
+    z.string().min(1, "Status ID is required"),
+  ).min(1, "At least one project status criteria is required"),
   projectRoles: z.array(z.object({
     roleId: z.string().min(1, "Role ID is required"),
     slotsAvailable: z.number().int().positive("Slots left must be a positive integer"),
@@ -21,19 +21,17 @@ export type CreateProjectForm = z.infer<typeof CreateProjectValidator>;
 export const UpdateProjectValidator = CreateProjectValidator
   .omit({
     categoryId: true,
-
   })
   .partial();
 export type UpdateProjectForm = z.infer<typeof UpdateProjectValidator>;
 
 export const QueryProjectsValidator = CreateProjectValidator.pick({
-  categoryId: true,
   projectStatusCriteria: true,
-  projectRoles: true,
   onSite: true,
 }).extend({
-  ownerId: z.string().min(1, "Owner ID is required").optional(),
-  status: z.enum(["OPEN_RECRUITMENT", "IN_PROGRESS", "COMPLETED"]).optional(),
+  projectRoles: z.array(z.string().min(1, "Role ID is required"),).min(1),
+  ownerId: z.string().min(1, "Owner ID is required"),
+  status: z.enum(["OPEN_RECRUITMENT", "IN_PROGRESS", "COMPLETED"]),
 }).partial().extend({
   page: z.number().int().min(1, "Page must be at least 1").default(1),
   pageSize: z

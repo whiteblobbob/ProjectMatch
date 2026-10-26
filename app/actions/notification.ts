@@ -2,7 +2,8 @@
 import { User } from "@supabase/supabase-js";
 import { prisma } from "../lib/prisma";
 import actionWrapper from "../lib/actionWrapper";
-import { IdValidator } from "../lib/validator/global";
+import { IdValidator, parseOrThrow } from "../lib/validator/global";
+import { ActionError } from "../lib/errors";
 
 /**
  * Fetch all notifications for the authenticated user,
@@ -22,26 +23,22 @@ export const fetchNotifications = actionWrapper(async (user: User) => {
  * Verifies the notification belongs to the authenticated user.
  */
 export const markNotificationRead = actionWrapper(async (user: User, notificationId: string) => {
-  const idResult = IdValidator.safeParse(notificationId);
-
-  if (!idResult.success) {
-    throw new Error(idResult.error.message);
-  }
+  const idResult = parseOrThrow(IdValidator, notificationId);
 
   const notification = await prisma.notification.findUnique({
-    where: { id: idResult.data },
+    where: { id: idResult },
   });
 
   if (!notification) {
-    throw new Error("Notification not found");
+    throw new ActionError("Notification not found");
   }
 
   if (notification.userId !== user.id) {
-    throw new Error("You are not authorized to update this notification");
+    throw new ActionError("You are not authorized to update this notification");
   }
 
   await prisma.notification.update({
-    where: { id: idResult.data },
+    where: { id: idResult },
     data: { read: true },
   });
 }, { auth: true });

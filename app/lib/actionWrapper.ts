@@ -1,18 +1,15 @@
 import { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createClient } from "./supabase/server";
+import { ActionError } from "./errors";
 
 export type ActionResult<T> =
   | { success: true; data: T }
   | { success: true }
-  | { success: false; error: string };
+  | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
 type ActionOptions = { auth?: false };
 type AuthenticatedActionOptions = { auth: true };
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "An unexpected error occurred";
-}
 
 export default function actionWrapper<Args extends unknown[], Result>(
   action: (user: User, ...args: Args) => Result | Promise<Result>,
@@ -57,7 +54,17 @@ export default function actionWrapper<Args extends unknown[], Result>(
 
       return { success: true, data };
     } catch (error) {
-      return { success: false, error: getErrorMessage(error) };
+      // ActionError is an expected, user-facing failure: show its message.
+      if (error instanceof ActionError) {
+        return error.fieldErrors
+          ? { success: false, error: error.message, fieldErrors: error.fieldErrors }
+          : { success: false, error: error.message };
+      }
+
+      // Anything else is an unexpected server error: log the details and give
+      // the user a generic message so internals never leak to the client.
+      console.error("[action error]", error);
+      return { success: false, error: "Something went wrong. Please try again." };
     }
   };
 }

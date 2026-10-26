@@ -14,17 +14,12 @@ import {
   QueryProjectsValidator,
 } from "../lib/validator/project";
 import actionWrapper from "../lib/actionWrapper";
-import { IdValidator } from "../lib/validator/global";
+import { IdValidator, parseOrThrow } from "../lib/validator/global";
+import { ActionError } from "../lib/errors";
 import { createNotification } from "../lib/notification";
 
 export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) => {
-  const result = QueryProjectsValidator.safeParse(formData);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
+  const data = parseOrThrow(QueryProjectsValidator, formData);
   const page = data.page;
   const pageSize = data.pageSize;
 
@@ -33,21 +28,20 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
   // One extra row is fetched purely to detect whether a next page exists.
   const rows = await prisma.project.findMany({
     where: {
-      categoryId: data.categoryId,
       ownerId: data.ownerId,
       onSite: data.onSite,
       status: data.status,
       projectRoles: data.projectRoles ? {
         some: {
           roleId: {
-            in: data.projectRoles.map(role => role.roleId)
+            in: data.projectRoles
           }
         }
       } : undefined,
       projectStatusCriteria: data.projectStatusCriteria ? {
         some: {
           statusId: {
-            in: data.projectStatusCriteria.map(criteria => criteria.statusId)
+            in: data.projectStatusCriteria
           }
         }
       } : undefined,
@@ -96,14 +90,10 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
 }, { auth: false });
 
 export const fetchProject = actionWrapper(async (projectId: string) => {
-  const idResult = IdValidator.safeParse(projectId);
-
-  if (!idResult.success) {
-    throw new Error(idResult.error.message);
-  }
+  const idResult = parseOrThrow(IdValidator, projectId);
 
   const project = await prisma.project.findUnique({
-    where: { id: idResult.data },
+    where: { id: idResult },
     include: {
       owner: {
         select: {
@@ -147,22 +137,16 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
   });
 
   if (!project) {
-    throw new Error("Project not found");
+    throw new ActionError("Project not found");
   }
 
   return project;
 }, { auth: false });
 
 export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
-  const result = CreateProjectValidator.safeParse(formData);
+  const data = parseOrThrow(CreateProjectValidator, formData);
 
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
-
-  await prisma.project.create({
+  const project = await prisma.project.create({
     data: {
       ownerId: user.id,
       title: data.title,
@@ -172,11 +156,11 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
       onSite: data.onSite,
       workHoursPerWeek: data.workHoursPerWeek,
       projectStatusCriteria: {
-        create: data.projectStatusCriteria.map(criteria => ({
+        create: data.projectStatusCriteria.map(statusId => ({
           status: {
-            connect: { id: criteria.statusId }
+            connect: { id: statusId }
           }
-        })),
+        }))
       },
       projectRoles: {
         create: data.projectRoles.map(role => ({
@@ -189,23 +173,14 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
     }
   });
 
+  return { id: project.id };
 }, { auth: true });
 
 export const sendApplication = actionWrapper(async (user: User, projectId: string, formData: ApplicationForm) => {
-  const idResult = IdValidator.safeParse(projectId);
-  const result = ApplicationValidator.safeParse(formData);
-
-  if (!idResult.success) {
-    throw new Error(idResult.error.message);
-  }
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
+  const validatedProjectId = parseOrThrow(IdValidator, projectId);
+  const data = parseOrThrow(ApplicationValidator, formData);
   const project = await prisma.project.findUnique({
-    where: { id: idResult.data },
+    where: { id: validatedProjectId },
     include: {
       projectRoles: true,
       projectMembers: true,
@@ -213,19 +188,36 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
   });
 
   if (!project) {
-    throw new Error("Project not found");
+    throw new ActionError("Project not found");
   }
 
   if (project.status !== "OPEN_RECRUITMENT") {
-    throw new Error("This project is not open for applications");
+    throw new ActionError("This project is not open for applications");
+  }
+
+  if (project.deadline && project.deadline < new Date()) {
+    throw new ActionError("The deadline for this project has passed");
   }
 
   if (project.ownerId === user.id) {
-    throw new Error("You cannot apply to your own project");
+    throw new ActionError("You cannot apply to your own project");
+  }
+
+  const application = await prisma.application.findUnique({
+    where: {
+      projectId_applicantId: {
+        applicantId: user.id,
+        projectId: validatedProjectId,
+      }
+    }
+  });
+
+  if (application) {
+    throw new ActionError("You have already applied to this project");
   }
 
   if (project.projectMembers.some(member => member.userId === user.id)) {
-    throw new Error("You are already a member of this project");
+    throw new ActionError("You are already a member of this project");
   }
 
   let isAvailable = false;
@@ -241,7 +233,7 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
   };
 
   if (!isAvailable) {
-    throw new Error("The selected role is not available for this project");
+    throw new ActionError("The selected role is not available for this project");
   }
 
   // All-or-nothing: the application and the owner notification commit together.
@@ -249,7 +241,7 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
     await tx.application.create({
       data: {
         applicantId: user.id,
-        projectId: idResult.data,
+        projectId: validatedProjectId,
         roleId: data.roleId,
         message: data.message,
         portfolioLink: data.portfolioLink,
@@ -266,25 +258,21 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
 
 // FLOW: Fetch application -> Check owner -> Accept -> Add member
 export const acceptApplication = actionWrapper(async (user: User, applicationId: string) => {
-  const result = IdValidator.safeParse(applicationId);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
+  const result = parseOrThrow(IdValidator, applicationId);
   
   const application = await prisma.application.findUnique({
-    where: { id: result.data },
+    where: { id: result },
     include: { project: true }
   });
 
   if (!application) {
-    throw new Error("Application not found");
+    throw new ActionError("Application not found");
   }
 
   const project = application.project;
 
   if (project.ownerId !== user.id) {
-    throw new Error("You are not authorized to accept this application");
+    throw new ActionError("You are not authorized to accept this application");
   }
 
   // All-or-nothing: slots decrement, membership, application lifecycle and all
@@ -307,7 +295,7 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
     });
 
     if (updatedRole.count === 0) {
-      throw new Error("The role for this application no longer has available slots");
+      throw new ActionError("The role for this application no longer has available slots");
     }
 
     await tx.projectMember.create({
@@ -319,7 +307,7 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
     });
 
     await tx.application.delete({
-      where: { id: result.data },
+      where: { id: result },
     });
 
     const role = await tx.projectRole.findUnique({
@@ -377,32 +365,28 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
 }, { auth: true });
 
 export const rejectApplication = actionWrapper(async (user: User, applicationId: string) => {
-  const result = IdValidator.safeParse(applicationId);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
+  const result = parseOrThrow(IdValidator, applicationId);
 
   const application = await prisma.application.findUnique({
-    where: { id: result.data },
+    where: { id: result },
     include: { project: true }
   });
 
   if (!application) {
-    throw new Error("Application not found");
+    throw new ActionError("Application not found");
   }
 
   const project = application.project;
 
   if (project.ownerId !== user.id) {
-    throw new Error("You are not authorized to reject this application");
+    throw new ActionError("You are not authorized to reject this application");
   }
 
   // All-or-nothing: the rejection (row deletion — applications have no status
   // anymore) and the applicant notification commit together.
   await prisma.$transaction(async (tx) => {
     await tx.application.delete({
-      where: { id: result.data },
+      where: { id: result },
     });
 
     await createNotification(tx, {
@@ -414,102 +398,90 @@ export const rejectApplication = actionWrapper(async (user: User, applicationId:
 }, { auth: true });
 
 export const updateProject = actionWrapper(async (user: User, projectId: string, formData: UpdateProjectForm) => {
-  const idResult = IdValidator.safeParse(projectId);
-  const result = UpdateProjectValidator.safeParse(formData);
-
-  if (!idResult.success) {
-    throw new Error(idResult.error.message);
-  }
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
+  const idResult = parseOrThrow(IdValidator, projectId);
+  const data = parseOrThrow(UpdateProjectValidator, formData);
   const record = await prisma.project.findUnique({
-    where: { id: idResult.data }
+    where: { id: idResult }
   });
 
   if (!record) {
-    throw new Error("Project not found");
+    throw new ActionError("Project not found");
   }
 
   if (record.ownerId !== user.id) {
-    throw new Error("You are not authorized to update this project");
+    throw new ActionError("You are not authorized to update this project");
+  }
+
+  if (record.status !== "OPEN_RECRUITMENT") {
+    throw new ActionError("You cannot update a project that is in progress or completed");
   }
 
   await prisma.project.update({
-    where: { id: idResult.data },
+    where: { id: idResult },
     data: {
       title: data.title,
       description: data.description,
       deadline: data.deadline,
       workHoursPerWeek: data.workHoursPerWeek,
       onSite: data.onSite,
-      projectStatusCriteria: {
-        deleteMany: (data.projectStatusCriteria) ? {} : undefined,
-        create: data.projectStatusCriteria?.map(criteria => ({
+      projectStatusCriteria: (data.projectStatusCriteria) ? {
+        deleteMany: {},
+        create: data.projectStatusCriteria.map(statusId => ({
           status: {
-            connect: { id: criteria.statusId }
+            connect: { id: statusId }
           }
         })),
-      },
-      projectRoles: {
-        deleteMany: (data.projectRoles) ? {} : undefined,
-        create: data.projectRoles?.map(role => ({
+      } : undefined,
+      projectRoles: (data.projectRoles) ? {
+        deleteMany: {},
+        create: data.projectRoles.map(role => ({
           slotsAvailable: role.slotsAvailable,
           role: {
             connect: { id: role.roleId }
           }
         })),
-      },
+      } : undefined,
     }
   });
 }, { auth: true });
 
 export const deleteProject = actionWrapper(async (user: User, projectId: string) => {
-  const idResult = IdValidator.safeParse(projectId);
-
-  if (!idResult.success) {
-    throw new Error(idResult.error.message);
-  }
+  const idResult = parseOrThrow(IdValidator, projectId);
 
   const record = await prisma.project.findUnique({
-    where: { id: idResult.data }
+    where: { id: idResult }
   });
 
   if (!record) {
-    throw new Error("Project not found");
+    throw new ActionError("Project not found");
   }
 
   if (record.ownerId !== user.id) {
-    throw new Error("You are not authorized to delete this project");
+    throw new ActionError("You are not authorized to delete this project");
+  }
+
+  if (record.status !== "OPEN_RECRUITMENT") {
+    throw new ActionError("You cannot delete a project that is in progress or completed");
   }
 
   await prisma.project.delete({
-    where: { id: idResult.data }
+    where: { id: idResult }
   });
 }, { auth: true });
 
 export const createPeerReview = actionWrapper(async (user: User, formData: PeerReviewForm) => {
-  const result = PeerReviewValidator.safeParse(formData);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
+  const data = parseOrThrow(PeerReviewValidator, formData);
   const project = await prisma.project.findUnique({
     where: { id: data.projectId },
     include: { projectMembers: true },
   });
 
   if (!project) {
-    throw new Error("Project not found");
+    throw new ActionError("Project not found");
   }
 
   if (project.status !== "COMPLETED") {
-    throw new Error("Peer reviews can only be submitted for completed projects");
+    throw new ActionError("Peer reviews can only be submitted for completed projects");
   }
 
   const participantIds = new Set([
@@ -518,15 +490,15 @@ export const createPeerReview = actionWrapper(async (user: User, formData: PeerR
   ]);
 
   if (!participantIds.has(user.id)) {
-    throw new Error("You are not authorized to submit a review for this project");
+    throw new ActionError("You are not authorized to submit a review for this project");
   }
 
   if (!participantIds.has(data.revieweeId)) {
-    throw new Error("The reviewee is not a participant in this project");
+    throw new ActionError("The reviewee is not a participant in this project");
   }
 
   if (user.id === data.revieweeId) {
-    throw new Error("You cannot review yourself");
+    throw new ActionError("You cannot review yourself");
   }
 
   // All-or-nothing: the duplicate re-check, review creation and the reviewee's
@@ -545,7 +517,7 @@ export const createPeerReview = actionWrapper(async (user: User, formData: PeerR
     });
 
     if (existingReview) {
-      throw new Error("You have already reviewed this participant for this project");
+      throw new ActionError("You have already reviewed this participant for this project");
     }
 
     await tx.peerReview.create({
@@ -573,27 +545,23 @@ export const createPeerReview = actionWrapper(async (user: User, formData: PeerR
 }, { auth: true });
 
 export const completeProject = actionWrapper(async (user: User, projectId: string) => {
-  const result = IdValidator.safeParse(projectId);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
+  const result = parseOrThrow(IdValidator, projectId);
 
   const project = await prisma.project.findUnique({
-    where: { id: result.data },
+    where: { id: result },
     select: { ownerId: true, status: true },
   });
 
   if (!project) {
-    throw new Error("Project not found");
+    throw new ActionError("Project not found");
   }
 
   if (project.ownerId !== user.id) {
-    throw new Error("You are not authorized to complete this project");
+    throw new ActionError("You are not authorized to complete this project");
   }
 
   if (project.status !== "IN_PROGRESS") {
-    throw new Error("Project must be in progress to be marked as completed");
+    throw new ActionError("Project must be in progress to be marked as completed");
   }
 
   // All-or-nothing: completion and the participant counters commit together,
@@ -601,12 +569,12 @@ export const completeProject = actionWrapper(async (user: User, projectId: strin
   // participant set matches committed state.
   await prisma.$transaction(async (tx) => {
     await tx.project.update({
-      where: { id: result.data },
+      where: { id: result },
       data: { status: "COMPLETED" },
     });
 
     const members = await tx.projectMember.findMany({
-      where: { projectId: result.data },
+      where: { projectId: result },
     });
 
     const participantIds = Array.from(new Set([
@@ -626,27 +594,23 @@ export const completeProject = actionWrapper(async (user: User, projectId: strin
 }, { auth: true });
 
 export const fetchProjectApplications = actionWrapper(async (user: User, projectId: string) => {
-  const result = IdValidator.safeParse(projectId);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
+  const result = parseOrThrow(IdValidator, projectId);
 
   const project = await prisma.project.findUnique({
-    where: { id: result.data },
+    where: { id: result },
     select: { ownerId: true },
   });
 
   if (!project) {
-    throw new Error("Project not found");
+    throw new ActionError("Project not found");
   }
 
   if (project.ownerId !== user.id) {
-    throw new Error("You are not authorized to view applications for this project");
+    throw new ActionError("You are not authorized to view applications for this project");
   }
 
   const applications = await prisma.application.findMany({
-    where: { projectId: result.data },
+    where: { projectId: result },
     orderBy: {
       applicant: {
         avgCommitmentScore: "desc",

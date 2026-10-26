@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { NotificationForm, NotificationValidator } from "./validator/notification";
+import { parseOrThrow } from "./validator/global";
 
 /**
  * A Prisma client instance that can be either the top-level client or a
@@ -15,13 +16,7 @@ export type DbClient = PrismaClient | Prisma.TransactionClient;
  * `prisma.$transaction`; defaults to the top-level client.
  */
 export async function createNotification(db: DbClient = prisma, formData: NotificationForm) {
-  const result = NotificationValidator.safeParse(formData);
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
+  const data = parseOrThrow(NotificationValidator, formData);
 
   await db.notification.create({
     data: {

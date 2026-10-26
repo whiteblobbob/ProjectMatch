@@ -1,43 +1,47 @@
 "use server"
 import { cookies } from "next/headers";
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { createClient } from "../lib/supabase/server";
 import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
+import { parseOrThrow } from "../lib/validator/global";
+import { ActionError } from "../lib/errors";
 import actionWrapper from "../lib/actionWrapper";
 
 export const signup = actionWrapper(async (formData: SignupForm) => {
-  const result = SignupValidator.safeParse(formData);
+  const data = parseOrThrow(SignupValidator, formData);
 
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  const data = result.data;
   const supabase = createClient(await cookies());
   const { data: userData, error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
   });
 
+  // Supabase auth messages (invalid credentials, unconfirmed email, ...) are
+  // written for end users.
   if (error) {
-    throw new Error(error.message);
+    throw new ActionError(error.message);
   }
 
-  await prisma.user.create({
-    data: {
-      id: userData.user?.id,
+  try {
+    await prisma.user.create({
+      data: {
+        id: userData.user?.id,
+      }
+    });
+  } catch (error) {
+    // A unique constraint here means the local user row already exists.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ActionError("An account with this email already exists");
     }
-  });
+
+    throw error;
+  }
 });
 
 export const login = actionWrapper(async (formData: LoginForm) => {
-    const result = LoginValidator.safeParse(formData);
+    const data = parseOrThrow(LoginValidator, formData);
 
-    if (!result.success) {
-      throw new Error(result.error.message);
-    }
-
-    const data = result.data;
     const supabase = createClient(await cookies());
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
@@ -45,6 +49,6 @@ export const login = actionWrapper(async (formData: LoginForm) => {
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw new ActionError(error.message);
     }
 });
