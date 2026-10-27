@@ -29,7 +29,7 @@ export const ProfileValidator = z.object({
   instance: z.string().trim().min(2, "Nama sekolah atau kampus minimal 2 karakter").max(120, "Nama sekolah atau kampus maksimal 120 karakter"),
   educationLevel: ProfileEducationLevelValidator,
   bio: z.string().trim().max(500, "Tentang diri maksimal 500 karakter"),
-  contactInfo: z.string().trim().max(160, "Kontak publik maksimal 160 karakter").optional(),
+  contactInfo: z.string().trim().max(2000, "Informasi publik profil terlalu panjang").optional(),
   skills: z.array(
     z.string().trim().min(2, "Nama keahlian minimal 2 karakter").max(50, "Nama keahlian maksimal 50 karakter"),
   ).max(12, "Maksimal 12 keahlian").superRefine((skills, context) => {

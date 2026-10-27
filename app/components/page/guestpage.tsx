@@ -11,6 +11,7 @@ import {
   ProjectFilters,
 } from "../explore/project-filters";
 import ProjectCard from "../card/projectcard";
+import { FilterIcon, XIcon } from "../ui/icons";
 
 type ProjectSummary = {
   id: string;
@@ -217,7 +218,7 @@ export default function GuestPage() {
 
               <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
                 <button ref={filterButtonRef} type="button" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary lg:hidden" aria-expanded={filtersOpen} aria-controls={filterDrawerId} onClick={() => setFiltersOpen(true)}>
-                  <svg aria-hidden="true" viewBox="0 0 20 20" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 5h14M5 10h10M8 15h4" strokeLinecap="round" /></svg>
+                  <FilterIcon className="size-4" />
                   Filter
                   {hasFilters && <span className="size-2 rounded-full bg-blue-600" aria-label="Filter aktif" />}
                 </button>
@@ -272,7 +273,7 @@ export default function GuestPage() {
           <div ref={filterDrawerRef} id={filterDrawerId} className="absolute bottom-0 left-0 right-0 flex max-h-[90dvh] flex-col rounded-t-2xl bg-white shadow-2xl sm:bottom-auto sm:left-auto sm:right-0 sm:top-0 sm:h-dvh sm:max-h-none sm:w-[380px] sm:rounded-none">
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <div><h2 id={`${filterDrawerId}-title`} className="text-lg font-bold text-slate-950">Filter proyek</h2><p className="mt-0.5 text-xs text-slate-500">Persempit peluang yang paling sesuai.</p></div>
-              <button ref={filterCloseRef} type="button" onClick={() => closeFilters()} className="inline-flex size-11 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label="Tutup filter"><svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" /></svg></button>
+              <button ref={filterCloseRef} type="button" onClick={() => closeFilters()} className="inline-flex size-11 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label="Tutup filter"><XIcon className="size-5" /></button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><ProjectFilters idPrefix="mobile-filter" categories={categories} roles={roles} filters={filters} onChange={updateFilter} /></div>
             <div className="flex gap-3 border-t border-slate-200 bg-white p-4">

@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { createProjectPosting } from "@/app/actions/project";
 import type { ProjectFormOptions } from "@/app/lib/project-form";
+import { MapPinIcon, PencilIcon, PlusIcon, TrashIcon, VideoIcon, WarningIcon, XIcon } from "../ui/icons";
 
 type Position = {
   name: string;
   slotsAvailable: number;
 };
+
+type CollaborationMode = "remote" | "onsite" | "hybrid";
 
 const educationLevels = [
   { value: "JUNIOR_SECONDARY", label: "SMP/sederajat" },
@@ -19,13 +22,32 @@ const educationLevels = [
 
 export default function CreateProjectForm({ options }: { options: ProjectFormOptions }) {
   const router = useRouter();
-  const [positions, setPositions] = useState<Position[]>([{ name: "", slotsAvailable: 1 }]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
+  const [workMode, setWorkMode] = useState<CollaborationMode>("remote");
+  const [positionDialogOpen, setPositionDialogOpen] = useState(false);
+  const [editingPositionIndex, setEditingPositionIndex] = useState<number | null>(null);
+  const [hasCustomRequirements, setHasCustomRequirements] = useState(false);
 
-  const updatePosition = (index: number, nextPosition: Position) => {
-    setPositions((current) => current.map((position, itemIndex) => itemIndex === index ? nextPosition : position));
-  };
+  function openAddPositionDialog() {
+    setEditingPositionIndex(null);
+    setPositionDialogOpen(true);
+  }
+
+  function openEditPositionDialog(index: number) {
+    setEditingPositionIndex(index);
+    setPositionDialogOpen(true);
+  }
+
+  function savePosition(position: Position) {
+    if (editingPositionIndex === null) {
+      setPositions((current) => [...current, position]);
+    } else {
+      setPositions((current) => current.map((item, index) => index === editingPositionIndex ? position : item));
+    }
+    setPositionDialogOpen(false);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,6 +98,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-8">
       <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="project-basics">
         <h2 id="project-basics" className="text-lg font-bold text-slate-950">Informasi proyek</h2>
@@ -100,11 +123,15 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
             <input id="project-deadline" name="deadline" type="date" required disabled={isPending} min={new Date().toISOString().slice(0, 10)} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
           </div>
           <fieldset>
-            <legend className="text-sm font-semibold text-slate-900">Mode kerja</legend>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {[{ value: "remote", label: "Remote" }, { value: "onsite", label: "On-site" }].map((mode) => (
+            <legend className="text-sm font-semibold text-slate-900">Mode kolaborasi</legend>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {[
+                { value: "remote", label: "Daring" },
+                { value: "onsite", label: "Luring" },
+                { value: "hybrid", label: "Hybrid" },
+              ].map((mode) => (
                 <label key={mode.value} className="flex min-h-12 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm text-slate-700 has-checked:border-brand-primary has-checked:bg-brand-soft has-checked:text-brand-primary">
-                  <input type="radio" name="workMode" value={mode.value} defaultChecked={mode.value === "remote"} disabled={isPending} className="size-4 accent-blue-600" />
+                  <input type="radio" name="workMode" value={mode.value} checked={workMode === mode.value} onChange={() => setWorkMode(mode.value as CollaborationMode)} disabled={isPending} className="size-4 accent-blue-600" />
                   {mode.label}
                 </label>
               ))}
@@ -120,33 +147,104 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
         </div>
       </section>
 
+      <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="meeting-plan-heading">
+        <div className="flex items-start gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-primary">
+            {workMode === "onsite" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
+          </span>
+          <div>
+            <h2 id="meeting-plan-heading" className="text-lg font-bold text-slate-950">Rencana pertemuan</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Berikan gambaran awal agar calon anggota mengetahui cara dan tempat tim akan berkolaborasi.</p>
+          </div>
+        </div>
+
+        {(workMode === "remote" || workMode === "hybrid") ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-900">Platform pertemuan</span>
+              <select name="meetingPlatform" defaultValue="Google Meet" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100">
+                <option>Google Meet</option><option>Zoom</option><option>Microsoft Teams</option><option>Discord</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-900">Tautan pertemuan</span>
+              <input name="meetingUrl" type="url" required disabled={isPending} placeholder="https://meet.google.com/..." className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+            </label>
+          </div>
+        ) : null}
+
+        {(workMode === "onsite" || workMode === "hybrid") ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-900">Kategori tempat aman</span>
+              <select name="meetingPlaceCategory" defaultValue="" required disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100">
+                <option value="" disabled>Pilih kategori</option>
+                <option>Sekolah</option><option>Kampus</option><option>Ruang publik</option><option>Kafe</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-900">Tautan Google Maps</span>
+              <input name="meetingMapsUrl" type="url" required disabled={isPending} placeholder="https://maps.google.com/..." className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+            </label>
+          </div>
+        ) : null}
+
+        <label className="mt-5 block">
+          <span className="text-sm font-semibold text-slate-900">Deskripsi dan petunjuk pertemuan</span>
+          <span className="mt-1 block text-xs leading-5 text-slate-500">Jelaskan agenda, patokan tempat, atau hal yang perlu disiapkan. Jangan mencantumkan alamat rumah atau data pribadi.</span>
+          <textarea key={workMode} name="meetingDescription" required disabled={isPending} rows={3} placeholder={workMode === "remote" ? "Contoh: Masuk 10 menit lebih awal untuk perkenalan." : "Contoh: Bertemu di taman kampus dekat perpustakaan utama."} className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+        </label>
+
+        <label className="mt-5 block">
+          <span className="text-sm font-semibold text-slate-900">Alat kolaborasi <span className="font-normal text-slate-400">(opsional)</span></span>
+          <span className="mt-1 block text-xs leading-5 text-slate-500">Kosongkan jika belum ditentukan. Kamu dapat mengubahnya nanti.</span>
+          <input name="collaborationTools" disabled={isPending} placeholder="Contoh: Figma, Google Drive, Notion" className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+        </label>
+
+        {(workMode === "onsite" || workMode === "hybrid") ? (
+          <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-amber-900">
+            <WarningIcon className="mt-0.5 size-5 shrink-0" />
+            <p className="text-xs leading-5">Gunakan sekolah, kampus, ruang publik, atau kafe yang mudah diverifikasi. Hindari rumah pribadi dan tempat sepi.</p>
+          </div>
+        ) : null}
+
+      </section>
+
       <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="positions-heading">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 id="positions-heading" className="text-lg font-bold text-slate-950">Posisi yang dicari</h2>
             <p className="mt-1 text-sm text-slate-600">Tulis peran apa pun yang dibutuhkan, dari bidang seni, sosial, sains, bisnis, hingga teknologi.</p>
           </div>
-          <button type="button" disabled={isPending || positions.length >= 10} onClick={() => setPositions((current) => [...current, { name: "", slotsAvailable: 1 }])} className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-brand-primary hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50">
-            Tambah posisi
+          <button type="button" disabled={isPending || positions.length >= 10} onClick={openAddPositionDialog} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-brand-primary hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50">
+            <PlusIcon className="size-4 shrink-0" /> Tambah posisi
           </button>
         </div>
-        <div className="mt-5 space-y-3">
-          {positions.map((position, index) => (
-            <div key={index} className="grid gap-3 rounded-lg bg-slate-50 p-3 sm:grid-cols-[minmax(0,1fr)_130px_auto] sm:items-end">
-              <div>
-                <label htmlFor={`project-role-${index}`} className="block text-xs font-semibold text-slate-700">Nama posisi</label>
-                <input id={`project-role-${index}`} value={position.name} required minLength={2} maxLength={80} disabled={isPending} onChange={(event) => updatePosition(index, { ...position, name: event.target.value })} placeholder="Contoh: Ilustrator, Peneliti sejarah, Bendahara" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
-              </div>
-              <div>
-                <label htmlFor={`project-slots-${index}`} className="block text-xs font-semibold text-slate-700">Jumlah orang</label>
-                <input id={`project-slots-${index}`} type="number" min={1} max={20} required disabled={isPending} value={position.slotsAvailable} onChange={(event) => updatePosition(index, { ...position, slotsAvailable: Number(event.target.value) })} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
-              </div>
-              <button type="button" disabled={isPending || positions.length === 1} onClick={() => setPositions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`Hapus posisi ${index + 1}`} className="inline-flex size-11 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:opacity-30">
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </button>
-            </div>
-          ))}
-        </div>
+        {positions.length === 0 ? (
+          <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-7 text-center">
+            <p className="text-sm font-semibold text-slate-800">Belum ada posisi ditambahkan</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Tambahkan minimal satu peran yang dibutuhkan tim.</p>
+          </div>
+        ) : (
+          <div className="mt-5 space-y-3">
+            {positions.map((position, index) => (
+              <article key={`${position.name}-${index}`} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-950">{position.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">Membutuhkan {position.slotsAvailable} orang</p>
+                </div>
+                <div className="flex gap-2 sm:shrink-0">
+                  <button type="button" disabled={isPending} onClick={() => openEditPositionDialog(index)} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary sm:flex-none">
+                    <PencilIcon className="size-4 shrink-0" /> Ubah
+                  </button>
+                  <button type="button" disabled={isPending} onClick={() => setPositions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`Hapus posisi ${position.name}`} className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">
+                    <TrashIcon className="size-4" />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="criteria-heading">
@@ -162,6 +260,35 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
         </div>
       </section>
 
+      <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="custom-requirements-heading">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 id="custom-requirements-heading" className="text-lg font-bold text-slate-950">Persyaratan tambahan <span className="text-sm font-normal text-slate-400">(opsional)</span></h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Tambahkan hanya jika proyek memiliki ketentuan khusus di luar jenjang pelajar yang sudah dipilih.</p>
+          </div>
+          <label className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-3">
+            <input type="checkbox" checked={hasCustomRequirements} onChange={(event) => setHasCustomRequirements(event.target.checked)} disabled={isPending} className="peer sr-only" />
+            <span className="relative h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-brand-primary peer-focus-visible:ring-2 peer-focus-visible:ring-brand-primary peer-focus-visible:ring-offset-2 after:absolute after:left-1 after:top-1 after:size-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+            <span className="sr-only">Aktifkan persyaratan tambahan</span>
+          </label>
+        </div>
+
+        {hasCustomRequirements ? (
+          <div className="mt-5 space-y-5 border-t border-slate-100 pt-5">
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-900">Daftar persyaratan</span>
+              <span className="mt-1 block text-xs leading-5 text-slate-500">Tulis satu persyaratan pada setiap baris.</span>
+              <textarea name="customRequirements" required disabled={isPending} rows={4} placeholder={"Contoh:\nPelajar SMA/SMK atau mahasiswa aktif\nBersedia mengikuti pertemuan awal"} className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+            </label>
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-900">Tautan sumber <span className="font-normal text-slate-400">(opsional)</span></span>
+              <span className="mt-1 block text-xs leading-5 text-slate-500">Gunakan jika persyaratan berasal dari penyelenggara, sekolah, kampus, atau organisasi tertentu.</span>
+              <input name="requirementsSourceUrl" type="url" disabled={isPending} placeholder="https://..." className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+            </label>
+          </div>
+        ) : null}
+      </section>
+
       {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -171,5 +298,106 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
         </button>
       </div>
     </form>
+
+    {positionDialogOpen ? (
+      <PositionDialog
+        key={`${editingPositionIndex ?? "new"}-${editingPositionIndex === null ? "" : positions[editingPositionIndex]?.name}`}
+        initialPosition={editingPositionIndex === null ? undefined : positions[editingPositionIndex]}
+        existingPositions={positions}
+        editingIndex={editingPositionIndex}
+        onCancel={() => setPositionDialogOpen(false)}
+        onSave={savePosition}
+      />
+    ) : null}
+    </>
+  );
+}
+
+type PositionDialogProps = {
+  initialPosition?: Position;
+  existingPositions: Position[];
+  editingIndex: number | null;
+  onCancel: () => void;
+  onSave: (position: Position) => void;
+};
+
+function PositionDialog({ initialPosition, existingPositions, editingIndex, onCancel, onSave }: PositionDialogProps) {
+  const [name, setName] = useState(initialPosition?.name ?? "");
+  const [slotsAvailable, setSlotsAvailable] = useState(initialPosition?.slotsAvailable ?? 1);
+  const [dialogError, setDialogError] = useState("");
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusFrame = requestAnimationFrame(() => nameInputRef.current?.focus());
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onCancel();
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), input"));
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onCancel]);
+
+  function handleDialogSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedName = name.trim();
+    if (normalizedName.length < 2) {
+      setDialogError("Nama posisi minimal 2 karakter.");
+      return;
+    }
+    const isDuplicate = existingPositions.some((position, index) => index !== editingIndex && position.name.toLocaleLowerCase("id-ID") === normalizedName.toLocaleLowerCase("id-ID"));
+    if (isDuplicate) {
+      setDialogError("Posisi dengan nama tersebut sudah ditambahkan.");
+      return;
+    }
+    onSave({ name: normalizedName, slotsAvailable });
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-end justify-center p-0 sm:items-center sm:p-6">
+      <button type="button" aria-label="Tutup modal posisi" tabIndex={-1} onClick={onCancel} className="absolute inset-0 bg-slate-950/55 backdrop-blur-[2px]" />
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className="relative w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-[480px] sm:rounded-3xl sm:p-7">
+        <button type="button" aria-label="Tutup" onClick={onCancel} className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"><XIcon className="size-5" /></button>
+        <span className="flex size-11 items-center justify-center rounded-xl bg-brand-soft text-brand-primary"><PlusIcon className="size-5" /></span>
+        <h2 id={titleId} className="mt-4 pr-10 text-xl font-bold text-slate-950">{editingIndex === null ? "Tambah posisi" : "Ubah posisi"}</h2>
+        <p className="mt-1 text-sm leading-6 text-slate-500">Tentukan peran dan jumlah anggota yang dibutuhkan.</p>
+
+        <form onSubmit={handleDialogSubmit} className="mt-5 space-y-4">
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Nama posisi</span>
+            <input ref={nameInputRef} value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={80} required placeholder="Contoh: UI/UX Designer" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Jumlah anggota</span>
+            <input type="number" min={1} max={20} value={slotsAvailable} onChange={(event) => setSlotsAvailable(Number(event.target.value))} required className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
+          </label>
+          {dialogError ? <p role="alert" className="rounded-xl bg-rose-50 px-3.5 py-3 text-xs font-medium text-rose-700">{dialogError}</p> : null}
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button type="button" onClick={onCancel} className="min-h-11 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+            <button type="submit" className="min-h-11 rounded-xl bg-brand-primary px-4 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Simpan posisi</button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
