@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LockIcon } from "@/app/components/ui/icons";
 
 type Props = {
   area: "Aktivitas" | "Profil";
@@ -11,11 +12,7 @@ export default function LoginRequired({ area, description, returnTo }: Props) {
     <main className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-slate-50 px-4 py-12 sm:px-6">
       <section className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center sm:px-10 sm:py-12">
         <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-blue-50 text-brand-primary" aria-hidden="true">
-          <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M7 10V8a5 5 0 0 1 10 0v2" strokeLinecap="round" />
-            <rect x="5" y="10" width="14" height="10" rx="2" />
-            <path d="M12 14v2" strokeLinecap="round" />
-          </svg>
+          <LockIcon className="size-7" />
         </div>
 
         <p className="mt-5 text-sm font-semibold text-brand-primary">Akses khusus anggota</p>

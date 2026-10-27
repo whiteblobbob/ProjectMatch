@@ -1,6 +1,7 @@
 import Navbar from "../components/navigation-bar/guestnavbar";
 import RegisterForm from "../components/auth/register-form";
 import { Suspense } from "react";
+import { CheckIcon } from "../components/ui/icons";
 
 export default function RegisterPage() {
   return (
@@ -16,7 +17,7 @@ export default function RegisterPage() {
               {["Temukan proyek lintas bidang", "Bangun tim berdasarkan peran", "Tunjukkan kontribusi dan pengalaman"].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/15" aria-hidden="true">
-                    <svg viewBox="0 0 16 16" className="size-3" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 8.5 3 3L13 4.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <CheckIcon className="size-3" />
                   </span>
                   {item}
                 </li>

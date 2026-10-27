@@ -10,6 +10,7 @@ import {
   isDemoAccountEnabled,
 } from "../lib/demo-account";
 import { ActionError } from "../lib/errors";
+import { encodeProfilePublicInfo } from "../lib/profile-public-info";
 import { prisma } from "../lib/prisma";
 import { parseOrThrow } from "../lib/validator/global";
 import {
@@ -26,7 +27,11 @@ const demoProfile: ProfileView = {
   instance: "Universitas Contoh Indonesia",
   educationLevel: "HIGHER_EDUCATION",
   bio: "Pelajar yang terbuka untuk berkolaborasi dalam proyek lintas jurusan dan belajar hal baru bersama tim.",
-  contactInfo: "",
+  contactInfo: encodeProfilePublicInfo({
+    location: "Denpasar, Bali",
+    portfolioUrl: "https://www.figma.com/community",
+    contacts: ["https://instagram.com/projectmatch.demo"],
+  }),
   skills: ["Komunikasi", "Riset", "Desain presentasi"],
   totalProjectsCompleted: 0,
   avgCommitmentScore: 0,

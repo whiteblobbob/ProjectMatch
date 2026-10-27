@@ -1,3 +1,5 @@
+import { SearchIcon } from "@/app/components/ui/icons";
+
 export function ProjectListSkeleton() {
   return (
     <div className="space-y-4" aria-label="Memuat proyek" aria-live="polite">
@@ -19,7 +21,7 @@ export function EmptyProjectState({ filtered, onClear }: { filtered: boolean; on
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-6 py-12 text-center">
       <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-blue-50 text-brand-primary" aria-hidden="true">
-        <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" strokeLinecap="round" /></svg>
+        <SearchIcon className="size-6" />
       </div>
       <h3 className="mt-4 font-bold text-slate-950">Belum ada proyek yang sesuai</h3>
       <p className="mt-2 text-sm text-slate-600">{filtered ? "Coba ubah kata pencarian atau kurangi beberapa filter." : "Belum ada posisi terbuka. Coba kembali lagi nanti."}</p>

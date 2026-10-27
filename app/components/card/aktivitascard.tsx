@@ -1,4 +1,10 @@
-import Image from "next/image"
+import {
+    ArrowUpRightIcon,
+    CalendarIcon,
+    LaptopIcon,
+    UserAddIcon,
+    UsersIcon,
+} from "../ui/icons";
 
 export default function aktivitascard(){
     return(
@@ -13,61 +19,26 @@ export default function aktivitascard(){
                     <h1 className="text-[14px] text-text-subheading pt-5"><span>EcoTrack</span> · <span>UINIC 2026</span></h1>
                 <div className="flex flex-row justify-between" id="title">
                 <h1 className="text-[20px] text-text-heading font-bold pt-1.5" id="subtitle">Mencari UI/UX Designer</h1>
-                <Image
-                    className="h-5 w-auto mt-3 hover:rotate-45 transform transition duration-300"
-                    src="/img/arrow-up-right.png"
-                    alt="Arrow logo"
-                    width={40}
-                    height={40}
-                    priority
-                ></Image>
+                <ArrowUpRightIcon className="mt-3 size-5 transition-transform duration-300 hover:rotate-45" />
                 </div>
                 </div>
                 
                 <div className="flex flex-row mt-2" id="title">
-                    <Image
-                    className="h-3 w-auto flex mt-0.5 mr-1"
-                    src="/img/laptop.png"
-                    alt="Compass logo"
-                    width={80}
-                    height={80}
-                   priority
-                />
+                    <LaptopIcon className="mr-1 mt-0.5 size-3 shrink-0" />
                 <h3 className="text-[12px] font-normal text-text-subheading mr-4">
                     Remote</h3>
 
-                    <Image
-                    className="h-3 w-auto flex mt-0.5 mr-1"
-                    src="/img/calendar-days.png"
-                    alt="Compass logo"
-                    width={80}
-                    height={80}
-                   priority
-                />
+                    <CalendarIcon className="mr-1 mt-0.5 size-3 shrink-0" />
                 <h3 className="text-[12px] font-normal text-text-subheading">6 jam/minggu</h3>
                 </div>
                 <div className="flex flex-row mt-2 justify-between" id="title">
                     <div className="flex flex-row" id="title">
-                    <Image
-                    className="h-3 w-auto flex mt-0.5 mr-1"
-                    src="/img/calendar-days.png"
-                    alt="Compass logo"
-                    width={80}
-                    height={80}
-                   priority
-                />
+                    <CalendarIcon className="mr-1 mt-0.5 size-3 shrink-0" />
                 <h3 className="text-[12px] font-normal text-text-warning">Tenggat 30 Okt</h3>
                 </div>
 
                 <div className="flex flex-row" id="title">
-                <Image
-                    className="h-3 w-auto flex mt-2 mr-1"
-                    src="/img/person.png"
-                    alt="Compass logo"
-                    width={80}
-                    height={80}
-                   priority
-                />
+                <UsersIcon className="mr-1 mt-2 size-3 shrink-0" />
                 <h3 className="text-[12px] font-semibold text-text-subheading pt-1.5">Tim 2/3</h3>
                 </div>
 
@@ -84,14 +55,7 @@ export default function aktivitascard(){
                 <p className="text-[14px] font-normal text-text-subheading">Posisi UI/UX Designer</p>
                     
                 <div className="flex flex-row mt-2" id="title">
-                <Image
-                    className="h-3 w-auto flex mt-2 mr-1"
-                    src="/img/user-round-plus.png"
-                    alt="Compass logo"
-                    width={80}
-                    height={80}
-                   priority
-                />
+                <UserAddIcon className="mr-1 mt-2 size-3 shrink-0" />
                 <h1 className="font-bold text-[14px] text-text-warning p-0.75"><span>1</span> Pelamar Baru</h1>
                 </div>
                 </div>

@@ -1,6 +1,19 @@
 import Image from "next/image";
+import Link from "next/link";
 
-import CekPersyaratan, { type Requirement } from "../card/cekpersyaratan";
+import CekPersyaratan from "../card/cekpersyaratan";
+import ReportProjectButton from "../project/report-project-button";
+import {
+    CalendarIcon,
+    ClockIcon,
+    ExternalLinkIcon,
+    LaptopIcon,
+    LinkIcon,
+    ToolsIcon,
+    UsersIcon,
+    VideoIcon,
+    WarningIcon,
+} from "../ui/icons";
 
 type ProjectStatus = "OPEN_RECRUITMENT" | "IN_PROGRESS" | "COMPLETED";
 
@@ -110,12 +123,12 @@ export default function ProjectDetail({
                     aria-label="Breadcrumb"
                     className="flex items-center gap-2 text-xs"
                 >
-                    <a
-                        href="/guest"
+                    <Link
+                        href="/"
                         className="text-text-subheading hover:text-brand-primary"
                     >
                         Jelajah
-                    </a>
+                    </Link>
 
                     <span className="text-text-subheading">/</span>
 
@@ -164,43 +177,24 @@ export default function ProjectDetail({
                         </div>
                     </div>
 
-                    <a
-                        href="/profil"
+                    <Link
+                        href="/profil/raka-aditya"
                         className="flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-primary hover:text-brand-secondary"
                     >
-                        Lihat profil
-                        <Image
-                            src="/img/external-link.png"
-                            alt="Link eksternal"
-                            width={16}
-                            height={16}
-                            className="size-4"
-                        />
-
-                    </a>
+                        Lihat profil pembuat
+                        <ExternalLinkIcon className="size-4" />
+                    </Link>
 
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                         <div className="flex items-center gap-1.5">
-                            <Image
-                                src="/img/person.png"
-                                alt=""
-                                width={16}
-                                height={16}
-                                className="size-4"
-                            />
+                            <UsersIcon className="size-4 text-text-subheading" />
                             <span className="text-[13px] text-text-subheading">
                                 Tim {memberCount}/{teamCapacity}
                             </span>
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                            <Image
-                                src="/img/calendar-days.png"
-                                alt=""
-                                width={16}
-                                height={16}
-                                className="size-4"
-                            />
+                            <CalendarIcon className="size-4 text-text-warning" />
                             <span className="text-[13px] text-text-warning">
                                 {deadlineLabel}
                             </span>
@@ -247,79 +241,80 @@ export default function ProjectDetail({
                                     website lingkungan.
                                 </p>
 
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                    <div className="flex items-center gap-1.5">
-                                        <Image
-                                            src="/img/laptop.png"
-                                            alt=""
-                                            width={16}
-                                            height={16}
-                                            className="size-4"
-                                        />
-                                        <span className="text-[13px] text-text-subheading">
-                                            {project.onSite
-                                                ? "Tatap muka"
-                                                : "Daring"}
-                                        </span>
-                                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <div className="flex items-center gap-1.5">
+                            <LaptopIcon className="size-4 text-text-subheading" />
+                            <span className="text-[13px] text-text-subheading">
+                                Daring
+                            </span>
+                        </div>
 
-                                    <div className="flex items-center gap-1.5">
-                                        <Image
-                                            src="/img/clock.png"
-                                            alt=""
-                                            width={16}
-                                            height={16}
-                                            className="size-4"
-                                        />
-                                        <span className="text-[13px] text-text-subheading">
-                                            ±{project.workHoursPerWeek} jam/minggu
-                                        </span>
-                                    </div>
+                        <div className="flex items-center gap-1.5">
+                            <ClockIcon className="size-4 text-text-subheading" />
+                            <span className="text-[13px] text-text-subheading">
+                                ±6 jam/minggu
+                            </span>
+                        </div>
 
-                                    <div className="flex items-center gap-1.5">
-                                        <Image
-                                            src="/img/figma.png"
-                                            alt=""
-                                            width={16}
-                                            height={16}
-                                            className="size-4"
-                                        />
-                                        <span className="text-[13px] text-text-subheading">
-                                            Figma
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </section>
-                )}
+                        <div className="flex items-center gap-1.5">
+                            <ToolsIcon className="size-4 text-text-subheading" />
+                            <span className="text-[13px] text-text-subheading">
+                                Figma
+                            </span>
+                        </div>
+                    </div>
+                </section>
 
                 {/* Meeting information */}
-                <section className="flex min-w-0 flex-col gap-3 rounded-xl border border-border-default bg-white p-4">
-                    <h2 className="text-base font-semibold text-text-heading">
-                        Pertemuan pertama
-                    </h2>
+                <section className="overflow-hidden rounded-xl border border-border-default bg-white">
+                    <div className="flex items-start gap-3 p-4">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-primary"><VideoIcon className="size-5" /></span>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <h2 className="text-base font-semibold text-text-heading">Pertemuan pertama</h2>
+                                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-brand-primary">Daring</span>
+                            </div>
+                            <p className="mt-2 text-[13px] leading-5 text-text-heading">Perkenalan dan pembagian peran</p>
+                            <p className="mt-1 text-[13px] leading-5 text-text-subheading">28 Okt 2026 · 19.00–20.00 WITA</p>
+                            <p className="mt-1 text-[13px] leading-5 text-text-subheading">Google Meet · Masuk 10 menit lebih awal</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-2 border-t border-border-default bg-slate-50 px-4 py-3 text-xs leading-5 text-text-subheading">
+                        <LinkIcon className="mt-0.5 size-4 shrink-0" />
+                        Tautan meeting dibuka setelah kamu diterima dan mengonfirmasi bergabung.
+                    </div>
+                </section>
 
-                    <p className="text-[13px] leading-5 text-text-subheading">
-                        Perkenalan dan pembagian peran
-                    </p>
-
-                    <p className="text-[13px] leading-5 text-text-subheading">
-                        28 Okt 2026 · 19.00–20.00 WITA
-                    </p>
-
-                    <p className="text-[13px] leading-5 text-text-subheading">
-                        Daring melalui Zoom
-                    </p>
-
-                    <p className="text-[13px] leading-5 text-text-subheading">
-                        Detail akses tersedia setelah kamu mengonfirmasi
-                        bergabung.
-                    </p>
+                <section className="rounded-xl border border-amber-200 bg-amber-50 p-4" aria-labelledby="safety-heading">
+                    <div className="flex items-start gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700"><WarningIcon className="size-5" /></span>
+                        <div>
+                            <h2 id="safety-heading" className="text-base font-semibold text-amber-950">Cek keamanan sebelum bergabung</h2>
+                            <ul className="mt-2 space-y-1.5 text-[13px] leading-5 text-amber-900">
+                                <li>• Buka profil pembuat dan cocokkan identitas serta institusinya.</li>
+                                <li>• Untuk pertemuan luring, periksa tautan Google Maps dan pilih tempat publik yang jelas.</li>
+                                <li>• Jangan membayar biaya atau membagikan data pribadi sensitif.</li>
+                            </ul>
+                            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                                <Link href="/profil/raka-aditya" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-900 px-4 text-sm font-semibold text-white hover:bg-amber-950">
+                                    Cek profil pembuat <ExternalLinkIcon className="size-4" />
+                                </Link>
+                                <ReportProjectButton />
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 {/* Eligibility check */}
-                <CekPersyaratan requirements={requirements} />
+                <CekPersyaratan
+                    requirements={[
+                        {
+                            id: "active-student",
+                            label: "Pelajar SMA/SMK atau mahasiswa aktif",
+                            status: "review",
+                        },
+                    ]}
+                />
 
                 {/* Application action */}
                 <div className="sticky bottom-0 -mx-4 border-t border-border-default bg-background/95 px-4 py-3 backdrop-blur-sm">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { LoaderIcon, LogoutIcon, XIcon } from "@/app/components/ui/icons";
 
 type LogoutConfirmationDialogProps = {
   open: boolean;
@@ -104,16 +105,11 @@ export default function LogoutConfirmationDialog({
           onClick={onCancel}
           className="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
-          </svg>
+          <XIcon className="size-5" />
         </button>
 
         <div className="flex size-12 items-center justify-center rounded-full bg-red-50 text-red-600">
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10 17l5-5-5-5M15 12H3" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" strokeLinecap="round" />
-          </svg>
+          <LogoutIcon className="size-6" />
         </div>
 
         <div className="mt-5 pr-8">
@@ -148,10 +144,7 @@ export default function LogoutConfirmationDialog({
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 disabled:cursor-wait disabled:bg-red-500"
           >
             {isPending && (
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 animate-spin" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.3" strokeWidth="3" />
-                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeLinecap="round" strokeWidth="3" />
-              </svg>
+              <LoaderIcon className="size-4 animate-spin" />
             )}
             {isPending ? "Sedang keluar…" : "Ya, keluar"}
           </button>

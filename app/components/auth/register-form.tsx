@@ -42,10 +42,17 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
   const graduationYear = Number(data.graduationYear);
   const age = calculateAge(data.dateOfBirth, new Date());
 
-  if (data.institutionName.trim().length < 2) errors.institutionName = "Masukkan nama sekolah atau universitas.";
-  if (!data.educationLevel) errors.educationLevel = "Pilih jenjang pendidikan.";
-  if (!/^\d{4}$/.test(data.entryYear) || entryYear < 2000 || entryYear > currentYear + 1) errors.entryYear = "Masukkan tahun masuk yang valid.";
-  if (!/^\d{4}$/.test(data.graduationYear) || graduationYear < entryYear || graduationYear > currentYear + 12) errors.graduationYear = "Tahun lulus harus setelah tahun masuk dan masuk akal.";
+  if (data.institutionName.trim().length < 2) errors.institutionName = data.educationStatus === "student" ? "Masukkan nama sekolah." : "Masukkan nama universitas.";
+  if (!data.educationLevel) errors.educationLevel = data.educationStatus === "student" ? "Pilih jenjang sekolah." : "Pilih jenjang pendidikan.";
+
+  if (data.educationStatus === "student") {
+    if (!data.schoolGrade) errors.schoolGrade = "Pilih kelas saat ini.";
+    if (!/^\d{4}$/.test(data.graduationYear) || graduationYear < currentYear || graduationYear > currentYear + 8) errors.graduationYear = "Masukkan perkiraan tahun lulus yang valid.";
+  } else {
+    if (data.studyProgram.trim().length < 2) errors.studyProgram = "Masukkan program studi.";
+    if (!/^\d{4}$/.test(data.entryYear) || entryYear < 2000 || entryYear > currentYear + 1) errors.entryYear = "Masukkan tahun masuk yang valid.";
+    if (!/^\d{4}$/.test(data.graduationYear) || graduationYear < entryYear || graduationYear > currentYear + 12) errors.graduationYear = "Tahun lulus harus setelah tahun masuk dan masuk akal.";
+  }
   if (age === null || age < 10 || age > 100) errors.dateOfBirth = "Masukkan tanggal lahir yang valid.";
   return errors;
 }

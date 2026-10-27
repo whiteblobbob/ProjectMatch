@@ -1,32 +1,30 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function lamarproject() {
+import { ProfileView } from "@/app/lib/validator/profile";
+import { decodeProfilePublicInfo } from "@/app/lib/profile-public-info";
+import Breadcrumbs from "../ui/breadcrumbs";
+import { ExternalLinkIcon, MapPinIcon } from "../ui/icons";
+
+type LamarProjectProps = {
+    profile: ProfileView;
+};
+
+export default function Lamarproject({ profile }: LamarProjectProps) {
+    const publicInfo = decodeProfilePublicInfo(profile.contactInfo);
+
     return (
         <div
             id="wrapper"
             className="min-h-screen w-full min-w-0 bg-background "
         >
             <main className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-5 px-4 pb-6 pt-4">
-                {/* Breadcrumb */}
-                <nav
-                    aria-label="Breadcrumb"
-                    className="flex flex-wrap items-center gap-1 text-xs text-text-subheading"
-                >
-                    <a href="/guest" className="hover:text-brand-primary">
-                        Jelajah
-                    </a>
-                    <span>/</span>
-                    <a
-                        href="/projectdetail"
-                        className="hover:text-brand-primary"
-                    >
-                        Detail Postingan
-                    </a>
-                    <span>/</span>
-                    <span className="font-semibold text-text-heading">
-                        Form Bergabung
-                    </span>
-                </nav>
+                <Breadcrumbs
+                    items={[
+                        { label: "Jelajah", href: "/" },
+                        { label: "Detail postingan", href: "/projectdetail" },
+                        { label: "Ajukan bergabung" },
+                    ]}
+                />
 
                 <form
                     action="/submit"
@@ -45,29 +43,26 @@ export default function lamarproject() {
                     </section>
 
                     {/* Applicant profile */}
-                    <section className="flex min-w-0 flex-col gap-3 rounded-xl border border-border-default bg-white p-4">
-                        <h2 className="text-base font-semibold text-text-heading">
-                            Data dari profil
-                        </h2>
+                    <section className="rounded-2xl border border-border-default bg-white p-5">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-text-subheading">Data dari profil</p>
+                                <h2 className="mt-1 text-base font-bold text-text-heading">{profile.name || "Profil belum lengkap"}</h2>
+                                <p className="mt-1 text-[13px] leading-5 text-text-subheading">{profile.instance || "Sekolah atau kampus belum diisi"}</p>
+                                <p className="mt-2 flex items-center gap-1.5 text-xs text-text-subheading">
+                                    <MapPinIcon className="size-3.5" />
+                                    {publicInfo.location || "Lokasi belum diisi"}
+                                </p>
+                            </div>
 
-                        <p className="text-[13px] leading-5 text-text-heading">
-                            Joshua Kevin · Universitas Primakara
-                        </p>
-
-                        <a
-                            href="/profil"
-                            className="flex min-h-11 items-center text-sm font-semibold text-brand-primary hover:text-brand-secondary"
-                        >
-                            Ubah profil
-                            <span aria-hidden="true" className="ml-1">
-                                <Image
-                                    src="/img/external-link.png"
-                                    alt=""
-                                    width={16}
-                                    height={16}
-                                />
-                            </span>
-                        </a>
+                            <Link
+                                href="/profil"
+                                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-brand-primary transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                            >
+                                Ubah profil
+                                <ExternalLinkIcon className="size-4" />
+                            </Link>
+                        </div>
                     </section>
 
                     {/* Application details */}
@@ -131,7 +126,7 @@ export default function lamarproject() {
                                 htmlFor="tugas"
                                 className="text-sm font-semibold text-text-heading"
                             >
-                                Apa yang bisa kamu kerjakan?
+                                Kontribusi apa yang bisa kamu berikan?
                             </label>
 
                             <textarea
@@ -163,27 +158,27 @@ export default function lamarproject() {
                             />
                         </div>
 
-                        {/* Optional portfolio */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label
-                                htmlFor="portofolio"
-                                className="text-sm font-semibold text-text-heading"
-                            >
-                                Link Portofolio (opsional)
-                            </label>
-
-                            <input
-                                id="portofolio"
-                                name="portofolio"
-                                type="url"
-                                placeholder="https://..."
-                                className="min-h-12 w-full min-w-0 rounded-lg border border-border-input bg-white px-3 py-2 text-sm text-text-heading placeholder:text-text-subheading focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-soft"
-                            />
-
-                            <p className="text-xs leading-5 text-text-subheading">
-                                Bisa tautan GitHub, Figma, Behance, atau lainnya.
-                            </p>
-                        </div>
+                        {/* Portfolio from profile */}
+                        <section className="rounded-2xl border border-border-default bg-white p-4">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-text-subheading">Portofolio dari profil</p>
+                                    {publicInfo.portfolioUrl ? (
+                                        <a href={publicInfo.portfolioUrl} target="_blank" rel="noreferrer" className="mt-2 flex min-w-0 items-center gap-2 text-sm font-semibold text-brand-primary hover:text-brand-secondary">
+                                            <span className="truncate">{publicInfo.portfolioUrl}</span>
+                                            <ExternalLinkIcon className="size-4 shrink-0" />
+                                        </a>
+                                    ) : (
+                                        <p className="mt-2 text-sm text-text-warning">Belum ada portofolio utama di profilmu.</p>
+                                    )}
+                                    <p className="mt-2 text-xs leading-5 text-text-subheading">Tautan ini otomatis disertakan bersama pengajuanmu.</p>
+                                </div>
+                                <Link href="/profil" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-brand-primary hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
+                                    {publicInfo.portfolioUrl ? "Ganti portofolio" : "Tambah portofolio"}
+                                </Link>
+                            </div>
+                            <input type="hidden" name="portfolioLink" value={publicInfo.portfolioUrl} />
+                        </section>
                     </section>
 
                     {/* First meeting */}

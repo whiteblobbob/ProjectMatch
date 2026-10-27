@@ -181,11 +181,14 @@ export function AccountStep({ data, errors, onChange, disabled }: StepProps) {
   );
 }
 
-const schoolLevels = ["SMP/sederajat", "SMA/SMK/sederajat"];
-const universityLevels = ["Diploma", "Sarjana", "Magister", "Doktor"];
+const schoolLevels = ["SMP/sederajat", "SMA/sederajat", "SMK/sederajat"];
+const juniorSecondaryGrades = ["Kelas 7", "Kelas 8", "Kelas 9"];
+const seniorSecondaryGrades = ["Kelas 10", "Kelas 11", "Kelas 12"];
+const universityLevels = ["Diploma", "Sarjana", "Magister"];
 
 export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
   const educationLevels = data.educationStatus === "student" ? schoolLevels : universityLevels;
+  const schoolGrades = data.educationLevel === "SMP/sederajat" ? juniorSecondaryGrades : seniorSecondaryGrades;
 
   return (
     <section aria-labelledby="education-step-title">
@@ -209,6 +212,9 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
                 onChange={() => {
                   onChange("educationStatus", status);
                   onChange("educationLevel", "");
+                  onChange("studyProgram", "");
+                  onChange("schoolGrade", "");
+                  onChange("entryYear", "");
                 }}
                 disabled={disabled}
                 className="size-4 accent-blue-700"
@@ -220,27 +226,41 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
       </fieldset>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <TextInput field="institutionName" label="Nama sekolah atau universitas" value={data.institutionName} error={errors.institutionName} onChange={(value) => onChange("institutionName", value)} placeholder="Contoh: Universitas Indonesia" disabled={disabled} />
+          <TextInput field="institutionName" label={data.educationStatus === "student" ? "Nama sekolah" : "Nama universitas"} value={data.institutionName} error={errors.institutionName} onChange={(value) => onChange("institutionName", value)} placeholder={data.educationStatus === "student" ? "Contoh: SMA Negeri 1 Denpasar" : "Contoh: Universitas Indonesia"} disabled={disabled} />
         </div>
-        <TextInput field="studyProgram" label="Program studi atau jurusan" value={data.studyProgram} error={errors.studyProgram} onChange={(value) => onChange("studyProgram", value)} placeholder="Contoh: Desain Komunikasi Visual" disabled={disabled} />
-        <Field id="registration-educationLevel" label="Jenjang pendidikan" error={errors.educationLevel}>
+        {data.educationStatus === "university" ? (
+          <TextInput field="studyProgram" label="Program studi" value={data.studyProgram} error={errors.studyProgram} onChange={(value) => onChange("studyProgram", value)} placeholder="Contoh: Desain Komunikasi Visual" disabled={disabled} />
+        ) : null}
+        <Field id="registration-educationLevel" label={data.educationStatus === "student" ? "Jenjang sekolah" : "Jenjang pendidikan"} error={errors.educationLevel}>
           <select
             id="registration-educationLevel"
             value={data.educationLevel}
-            onChange={(event) => onChange("educationLevel", event.target.value)}
+            onChange={(event) => {
+              onChange("educationLevel", event.target.value);
+              if (data.educationStatus === "student") onChange("schoolGrade", "");
+            }}
             disabled={disabled}
             aria-invalid={Boolean(errors.educationLevel)}
             aria-describedby={errors.educationLevel ? "registration-educationLevel-error" : undefined}
             className={`${inputClass} ${errors.educationLevel ? "border-red-400" : ""}`}
           >
-            <option value="">Pilih jenjang</option>
+            <option value="">{data.educationStatus === "student" ? "Pilih jenjang sekolah" : "Pilih jenjang pendidikan"}</option>
             {educationLevels.map((level) => <option key={level} value={level}>{level}</option>)}
           </select>
         </Field>
-        <TextInput field="entryYear" label="Tahun masuk" value={data.entryYear} error={errors.entryYear} onChange={(value) => onChange("entryYear", value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" placeholder="2024" disabled={disabled} />
+        {data.educationStatus === "student" ? (
+          <Field id="registration-schoolGrade" label="Kelas saat ini" error={errors.schoolGrade}>
+            <select id="registration-schoolGrade" value={data.schoolGrade} onChange={(event) => onChange("schoolGrade", event.target.value)} disabled={disabled || !data.educationLevel} aria-invalid={Boolean(errors.schoolGrade)} aria-describedby={errors.schoolGrade ? "registration-schoolGrade-error" : undefined} className={`${inputClass} ${errors.schoolGrade ? "border-red-400" : ""}`}>
+              <option value="">{data.educationLevel ? "Pilih kelas" : "Pilih jenjang dahulu"}</option>
+              {schoolGrades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
+            </select>
+          </Field>
+        ) : (
+          <TextInput field="entryYear" label="Tahun masuk kuliah" value={data.entryYear} error={errors.entryYear} onChange={(value) => onChange("entryYear", value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" placeholder="2024" disabled={disabled} />
+        )}
         <TextInput field="graduationYear" label="Perkiraan tahun lulus" value={data.graduationYear} error={errors.graduationYear} onChange={(value) => onChange("graduationYear", value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" placeholder="2027" disabled={disabled} />
         <div className="sm:col-span-2">
-          <TextInput field="dateOfBirth" label="Tanggal lahir" value={data.dateOfBirth} error={errors.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} type="date" autoComplete="bday" hint="Tanggal lahir digunakan untuk menentukan kebutuhan persetujuan wali di tampilan ini." disabled={disabled} />
+          <TextInput field="dateOfBirth" label="Tanggal lahir" value={data.dateOfBirth} error={errors.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} type="date" autoComplete="bday" hint="Tanggal lahir digunakan untuk menentukan apakah persetujuan wali diperlukan." disabled={disabled} />
         </div>
       </div>
     </section>
@@ -254,7 +274,7 @@ export function GuardianStep({ data, errors, onChange, disabled }: StepProps) {
         <StepHeading eyebrow="Langkah tambahan" title="Persetujuan orang tua atau wali" description="Karena kamu belum berusia 18 tahun, informasi orang tua atau wali diperlukan untuk proses persetujuan." />
       </div>
       <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-        Tahap ini masih berupa tampilan. ProjectMatch tidak akan mengirim email atau menyimpan data wali dari formulir ini.
+        Gunakan alamat email wali yang aktif agar proses persetujuan dapat dilakukan dengan jelas.
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -317,9 +337,13 @@ export function RegistrationReviewStep({ data, errors, onChange, needsGuardian, 
         <SummaryCard title="Pendidikan" onEdit={() => onEdit("education")}>
           <SummaryItem term="Status" detail={data.educationStatus === "student" ? "Pelajar" : "Mahasiswa"} />
           <SummaryItem term="Institusi" detail={data.institutionName} />
-          <SummaryItem term="Jurusan" detail={data.studyProgram} />
+          {data.educationStatus === "student" ? (
+            <SummaryItem term="Kelas" detail={data.schoolGrade} />
+          ) : (
+            <SummaryItem term="Program studi" detail={data.studyProgram} />
+          )}
           <SummaryItem term="Jenjang" detail={data.educationLevel} />
-          <SummaryItem term="Periode" detail={`${data.entryYear}–${data.graduationYear}`} />
+          <SummaryItem term={data.educationStatus === "student" ? "Perkiraan lulus" : "Periode kuliah"} detail={data.educationStatus === "student" ? data.graduationYear : `${data.entryYear}–${data.graduationYear}`} />
           <SummaryItem term="Tanggal lahir" detail={data.dateOfBirth} />
         </SummaryCard>
         {needsGuardian && (
@@ -344,7 +368,7 @@ export function RegistrationStatusCard() {
   return (
     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center sm:p-8" role="status" aria-live="polite">
       <span className="mx-auto grid size-12 place-items-center rounded-full bg-emerald-600 text-white" aria-hidden="true">
-        <svg viewBox="0 0 20 20" className="size-6" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="m4 10.5 3.5 3.5L16 5.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <CheckIcon className="size-6" />
       </span>
       <h2 className="mt-4 text-2xl font-bold text-emerald-950">Akun berhasil dibuat</h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-emerald-900">Periksa kotak masuk emailmu untuk konfirmasi akunmu sebelum login.</p>

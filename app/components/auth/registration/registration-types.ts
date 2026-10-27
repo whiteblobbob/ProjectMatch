@@ -14,6 +14,7 @@ export type RegistrationData = {
   educationStatus: EducationStatus;
   institutionName: string;
   studyProgram: string;
+  schoolGrade: string;
   educationLevel: string;
   entryYear: string;
   graduationYear: string;
@@ -38,6 +39,7 @@ export const initialRegistrationData: RegistrationData = {
   educationStatus: "student",
   institutionName: "",
   studyProgram: "",
+  schoolGrade: "",
   educationLevel: "",
   entryYear: "",
   graduationYear: "",
