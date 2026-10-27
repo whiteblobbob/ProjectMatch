@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
+import { PlusIcon } from "@/app/components/ui/icons";
 import {
   ProfileForm,
   ProfileView,
@@ -306,7 +307,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                   onClick={() => openEditor("skills")}
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-brand-primary hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
                 >
-                  <span aria-hidden="true" className="text-lg leading-none">+</span>
+                  <PlusIcon className="size-[18px] shrink-0" />
                   Tambah keahlian
                 </button>
               </div>

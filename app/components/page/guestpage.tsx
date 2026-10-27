@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { queryProjects } from "@/app/actions/project";
+import { SelectControl } from "@/app/components/ui/select-control";
 import ExploreHero from "../explore/explore-hero";
 import { EmptyProjectState, ProjectListSkeleton } from "../explore/explore-states";
 import {
@@ -221,10 +222,10 @@ export default function GuestPage() {
                   {hasFilters && <span className="size-2 rounded-full bg-blue-600" aria-label="Filter aktif" />}
                 </button>
                 <label htmlFor="sort-projects" className="sr-only">Urutkan proyek</label>
-                <select id="sort-projects" value={sort} onChange={(event) => setSort(event.target.value as SortOption)} className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100 sm:w-auto">
+                <SelectControl id="sort-projects" value={sort} onChange={(event) => setSort(event.target.value as SortOption)} containerClassName="w-full sm:w-auto" className="sm:w-auto">
                   <option value="newest">Terbaru</option>
                   <option value="deadline">Tenggat terdekat</option>
-                </select>
+                </SelectControl>
               </div>
             </div>
 

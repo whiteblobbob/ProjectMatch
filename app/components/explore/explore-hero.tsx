@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
+import { SelectControl } from "@/app/components/ui/select-control";
 
 type ExploreHeroProps = {
   searchInput: string;
@@ -15,8 +16,6 @@ type ExploreHeroProps = {
   onRoleChange: (value: string) => void;
   onSubmit: () => void;
 };
-
-const fieldClass = "min-h-12 w-full border-0 bg-transparent px-3 text-sm text-slate-900 outline-none focus:ring-0";
 
 export default function ExploreHero({
   searchInput,
@@ -45,39 +44,39 @@ export default function ExploreHero({
           <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Jelajahi proyek, lomba, dan ide kolaborasi dari pelajar dan mahasiswa.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 rounded-xl border border-slate-300 bg-white p-2 shadow-sm focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100 lg:grid lg:grid-cols-[minmax(260px,1.6fr)_minmax(145px,.7fr)_minmax(145px,.7fr)_minmax(160px,.8fr)_auto] lg:items-center lg:p-1.5">
-          <div className="relative lg:border-r lg:border-slate-200">
+        <form onSubmit={handleSubmit} className="mt-6 grid min-w-0 gap-2 rounded-xl border border-slate-300 bg-white p-2 shadow-sm sm:grid-cols-2 lg:grid-cols-[minmax(240px,1.5fr)_minmax(140px,.75fr)_minmax(140px,.75fr)_minmax(150px,.8fr)_auto] lg:items-center lg:gap-0 lg:p-1.5">
+          <div className="relative min-w-0 rounded-lg border border-slate-200 transition focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-blue-100 sm:col-span-2 lg:col-span-1 lg:rounded-none lg:border-0 lg:border-r lg:border-slate-200">
             <svg aria-hidden="true" viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" strokeLinecap="round" /></svg>
             <label htmlFor="explore-search" className="sr-only">Cari proyek, posisi, topik, atau lomba</label>
             <input id="explore-search" type="search" value={searchInput} onChange={(event) => onSearchInputChange(event.target.value)} placeholder="Cari proyek, posisi, topik, atau lomba" className="min-h-12 w-full bg-transparent py-2 pl-10 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400" />
           </div>
 
-          <div className="hidden lg:block lg:border-r lg:border-slate-200">
+          <div className="min-w-0 lg:border-r lg:border-slate-200">
             <label htmlFor="search-category" className="sr-only">Jenis proyek</label>
-            <select id="search-category" value={category} onChange={(event) => onCategoryChange(event.target.value)} className={fieldClass}>
+            <SelectControl id="search-category" value={category} onChange={(event) => onCategoryChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
               <option value="">Semua jenis</option>
               {categories.map((item) => <option key={item} value={item}>{item}</option>)}
-            </select>
+            </SelectControl>
           </div>
 
-          <div className="hidden lg:block lg:border-r lg:border-slate-200">
+          <div className="min-w-0 lg:border-r lg:border-slate-200">
             <label htmlFor="search-mode" className="sr-only">Mode kolaborasi</label>
-            <select id="search-mode" value={mode} onChange={(event) => onModeChange(event.target.value)} className={fieldClass}>
+            <SelectControl id="search-mode" value={mode} onChange={(event) => onModeChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
               <option value="">Semua mode</option>
               <option value="remote">Daring</option>
               <option value="onsite">Tatap muka</option>
-            </select>
+            </SelectControl>
           </div>
 
-          <div className="hidden lg:block">
+          <div className="min-w-0">
             <label htmlFor="search-role" className="sr-only">Peran</label>
-            <select id="search-role" value={role} onChange={(event) => onRoleChange(event.target.value)} className={fieldClass}>
+            <SelectControl id="search-role" value={role} onChange={(event) => onRoleChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
               <option value="">Semua peran</option>
               {roles.map((item) => <option key={item} value={item}>{item}</option>)}
-            </select>
+            </SelectControl>
           </div>
 
-          <button type="submit" className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 lg:mt-0 lg:w-auto">
+          <button type="submit" className="inline-flex min-h-12 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-brand-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 lg:w-auto">
             Cari proyek
           </button>
         </form>
