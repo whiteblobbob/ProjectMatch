@@ -24,9 +24,18 @@ const daysFromNow = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 
 
 const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-// Internal keys ("alice", "marcus", ...) model the seed roster before the
-// database has generated the actual user ids.
+// Internal keys ("alice", "marcus", ...) model the seed roster and map to
+// deterministic IDs so every cross-reference remains stable across reruns.
 type UserKey = "alice" | "marcus" | "priya" | "diego" | "hana" | "omar";
+
+const seededUserIds: Record<UserKey, string> = {
+  alice: "2f6d4b8e-1a3c-4d7f-9b52-0e8c6a1d4f90",
+  marcus: "7c1e9a43-5b2d-4f86-a0c7-3d9e1b6f2845",
+  priya: "a4b8d2f6-0c91-4e73-b5a8-6f1d3c9e2470",
+  diego: "e9c3a7b1-6f42-4d58-8b0e-2a7c5d1f9364",
+  hana: "5d0f8b2c-9a64-4e17-b3c6-1f7d0a8e2459",
+  omar: "b7e2c6a9-3d51-4f08-9c74-0a6e1b5d8327",
+};
 
 // Completed-project participants review every other participant — no
 // self-reviews, and (projectId, reviewerId, revieweeId) stays unique.
@@ -111,6 +120,7 @@ async function main() {
       const users = {
         alice: await tx.user.create({
           data: {
+            id: seededUserIds.alice,
             name: "Alice Chen",
             instance: "State University",
             status: { connect: { id: student.id } },
@@ -126,6 +136,7 @@ async function main() {
         }),
         marcus: await tx.user.create({
           data: {
+            id: seededUserIds.marcus,
             name: "Marcus Webb",
             instance: "Nexa Software",
             status: { connect: { id: professional.id } },
@@ -141,6 +152,7 @@ async function main() {
         }),
         priya: await tx.user.create({
           data: {
+            id: seededUserIds.priya,
             name: "Priya Raman",
             instance: "Coders Guild",
             status: { connect: { id: mentor.id } },
@@ -156,6 +168,7 @@ async function main() {
         }),
         diego: await tx.user.create({
           data: {
+            id: seededUserIds.diego,
             name: "Diego Ferrer",
             instance: "TechWorks Bootcamp",
             status: { connect: { id: junior.id } },
@@ -165,6 +178,7 @@ async function main() {
         }),
         hana: await tx.user.create({
           data: {
+            id: seededUserIds.hana,
             name: "Hana Suzuki",
             instance: "Weekend Builders",
             status: { connect: { id: hobbyist.id } },
@@ -175,6 +189,7 @@ async function main() {
         }),
         omar: await tx.user.create({
           data: {
+            id: seededUserIds.omar,
             name: "Omar Badr",
             instance: "Metro College",
             status: { connect: { id: student.id } },
