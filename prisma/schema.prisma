@@ -11,7 +11,6 @@ datasource db {
 }
 
 enum ProjectStatus {
-  DRAFT
   OPEN_RECRUITMENT
   IN_PROGRESS
   COMPLETED
@@ -19,16 +18,8 @@ enum ProjectStatus {
   @@map("project_status")
 }
 
-enum ApplicationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-
-  @@map("application_status")
-}
-
 model User {
-  id                     String          @id @default(uuid())
+  id                     String          @id
   name                   String?
   instance               String?
   statusId               String?         @map("status_id")
@@ -53,7 +44,7 @@ model User {
 
 model Status {
   id                    String                  @id @default(uuid())
-  statusName            String                  @map("status_name")
+  name            String                  @map("name")
 
   users                 User[]
   projectStatusCriteria ProjectStatusCriteria[]
@@ -63,7 +54,7 @@ model Status {
 
 model Category {
   id           String    @id @default(uuid())
-  categoryName String    @map("category_name")
+  name String    @map("name")
 
   projects     Project[]
 
@@ -72,7 +63,7 @@ model Category {
 
 model Role {
   id             String          @id @default(uuid())
-  roleName       String          @map("role_name")
+  name       String          @map("name")
 
   userRoles      UserRole[]
   projectRoles   ProjectRole[]
@@ -147,7 +138,6 @@ model Application {
   roleId        String            @map("role_id")
   message       String?
   portfolioLink String?           @map("portfolio_link")
-  status        ApplicationStatus @default(PENDING)
 
   project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   applicant     User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
@@ -175,7 +165,6 @@ model PeerReview {
   reviewerId      String   @map("reviewer_id")
   revieweeId      String   @map("reviewee_id")
   commitmentScore Int      @map("commitment_score")
-  roleValidated   Boolean  @default(true) @map("role_validated")
   feedback        String?
   createdAt       DateTime @default(now()) @map("created_at")
 

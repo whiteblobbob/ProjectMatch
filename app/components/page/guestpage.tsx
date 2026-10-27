@@ -1,9 +1,10 @@
-import Image from "next/image";
-import Projectcard from "../card/projectcard";
+import Image from "next/image"
+import Projectcard from "../card/projectcard"
 
-export default function guestpage() {
-    return (
-        <main className="min-h-screen w-full bg-background">
+export default function guestpage(){
+    return(
+        <>
+         <main className="min-h-screen w-full bg-background">
             <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-9 px-6 py-10 lg:px-12">
 
                 {/* Hero */}
@@ -39,10 +40,50 @@ export default function guestpage() {
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2">
-                                <Projectcard />
-                                <Projectcard />
-                                <Projectcard />
-                                <Projectcard />
+                                <Projectcard 
+                                title="EcoTrack"
+                                category="Kompetisi"
+                                roles={["UI/UX Designer", "Frontend Dev"]}
+                                onSite={false}
+                                workHoursPerWeek={6}
+                                deadline={new Date("2026-10-30")}
+                                slotsAvailable={1}
+                                teamSize={2}
+                                owner="Raka Aditya"
+                                />
+                                <Projectcard 
+                                title="EcoTrack"
+                                category="Kompetisi"
+                                roles={["UI/UX Designer", "Frontend Dev"]}
+                                onSite={false}
+                                workHoursPerWeek={6}
+                                deadline={new Date("2026-10-30")}
+                                slotsAvailable={1}
+                                teamSize={2}
+                                owner="Raka Aditya"
+                                />
+                                <Projectcard 
+                                title="EcoTrack"
+                                category="Kompetisi"
+                                roles={["UI/UX Designer", "Frontend Dev"]}
+                                onSite={false}
+                                workHoursPerWeek={6}
+                                deadline={new Date("2026-10-30")}
+                                slotsAvailable={1}
+                                teamSize={2}
+                                owner="Raka Aditya"
+                                />
+                                <Projectcard 
+                                title="EcoTrack"
+                                category="Kompetisi"
+                                roles={["UI/UX Designer", "Frontend Dev"]}
+                                onSite={false}
+                                workHoursPerWeek={6}
+                                deadline={new Date("2026-10-30")}
+                                slotsAvailable={1}
+                                teamSize={2}
+                                owner="Raka Aditya"
+                                />
                             </div>
                         </section>
 
@@ -192,5 +233,6 @@ export default function guestpage() {
                 </div>
             </div>
         </main>
-    );
+        </>
+    )
 }

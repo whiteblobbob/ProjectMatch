@@ -1,49 +1,54 @@
 "use server"
 import { cookies } from "next/headers";
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "../lib/prisma";
-import { createClient } from "../utils/supabase/server";
+import { createClient } from "../lib/supabase/server";
 import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
+import { parseOrThrow } from "../lib/validator/global";
+import { ActionError } from "../lib/errors";
+import actionWrapper from "../lib/actionWrapper";
 
-export async function signup(formData: SignupForm) {
-    const result = SignupValidator.safeParse(formData);
+export const signup = actionWrapper(async (formData: SignupForm) => {
+  const data = parseOrThrow(SignupValidator, formData);
 
-    if (!result.success) {
-        throw new Error(result.error.message);
-    }
+  const supabase = createClient(await cookies());
+  const { data: userData, error } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+  });
 
-    const data = result.data;
-    const supabase = createClient(await cookies());
-    const { data: userData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-    });
+  // Supabase auth messages (invalid credentials, unconfirmed email, ...) are
+  // written for end users.
+  if (error) {
+    throw new ActionError(error.message);
+  }
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
+  try {
     await prisma.user.create({
-        data: {
-            id: userData.user?.id,
-        }
+      data: {
+        id: userData.user?.id,
+      }
     });
-}
-
-export async function login(formData: LoginForm) {
-    const result = LoginValidator.safeParse(formData);
-
-    if (!result.success) {
-        throw new Error(result.error.message);
+  } catch (error) {
+    // A unique constraint here means the local user row already exists.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ActionError("An account with this email already exists");
     }
 
-    const data = result.data;
+    throw error;
+  }
+});
+
+export const login = actionWrapper(async (formData: LoginForm) => {
+    const data = parseOrThrow(LoginValidator, formData);
+
     const supabase = createClient(await cookies());
     const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
+      email: data.email,
+      password: data.password,
     });
 
     if (error) {
-        throw new Error(error.message);
+      throw new ActionError(error.message);
     }
-}
+});

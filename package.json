@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:reset": "dotenv -e .env.development -- prisma migrate reset",
     "db:dev": "dotenv -e .env.development -- prisma migrate dev",
+    "db:seed": "dotenv -e .env.development -- tsx prisma/seed.ts",
     "db:deploy": "dotenv -e .env.production -- prisma migrate deploy",
     "db:studio:dev": "dotenv -e .env.development -- prisma studio",
     "db:studio:prod": "dotenv -e .env.production -- prisma studio"
@@ -38,6 +39,7 @@
     "eslint-config-next": "16.4.1",
     "prisma": "^7.10.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
