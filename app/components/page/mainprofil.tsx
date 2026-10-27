@@ -3,7 +3,37 @@
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
-import { PlusIcon } from "@/app/components/ui/icons";
+import {
+  ArrowRightIcon,
+  BehanceIcon,
+  CameraIcon,
+  DiscordIcon,
+  DribbbleIcon,
+  ExternalLinkIcon,
+  FacebookIcon,
+  GithubIcon,
+  InstagramIcon,
+  LinkIcon,
+  LinkedinIcon,
+  MapPinIcon,
+  PencilIcon,
+  PlusIcon,
+  TelegramIcon,
+  TiktokIcon,
+  WhatsappIcon,
+  XIcon,
+  XSocialIcon,
+  YoutubeIcon,
+} from "@/app/components/ui/icons";
+import {
+  MAX_PROFILE_CONTACTS,
+  ProfilePublicInfo,
+  decodeProfilePublicInfo,
+  detectContactPlatform,
+  encodeProfilePublicInfo,
+  isValidPublicUrl,
+  normalizePublicUrl,
+} from "@/app/lib/profile-public-info";
 import {
   ProfileForm,
   ProfileView,
@@ -33,6 +63,14 @@ function editableProfile(profile: ProfileView): ProfileForm {
   };
 }
 
+function editablePublicInfo(profile: ProfileView): ProfilePublicInfo {
+  const info = decodeProfilePublicInfo(profile.contactInfo);
+  return {
+    ...info,
+    contacts: info.contacts.length > 0 ? [...info.contacts] : [""],
+  };
+}
+
 function getInitials(name: string) {
   const initials = name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("");
   return initials.toLocaleUpperCase("id-ID") || "PM";
@@ -42,6 +80,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
   const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
   const [draft, setDraft] = useState<ProfileForm>(() => editableProfile(initialProfile));
+  const [draftPublicInfo, setDraftPublicInfo] = useState<ProfilePublicInfo>(() => editablePublicInfo(initialProfile));
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [skillInput, setSkillInput] = useState("");
@@ -59,6 +98,8 @@ export default function Profil({ initialProfile }: ProfilProps) {
     (option) => option.value === profile.educationLevel,
   )?.label ?? "Jenjang belum diisi";
 
+  const publicInfo = useMemo(() => decodeProfilePublicInfo(profile.contactInfo), [profile.contactInfo]);
+
   const completeness = useMemo(() => {
     const completed = [
       profile.name,
@@ -66,9 +107,12 @@ export default function Profil({ initialProfile }: ProfilProps) {
       profile.bio,
       profile.educationLevel,
       profile.skills.length > 0,
+      publicInfo.location,
+      publicInfo.portfolioUrl,
+      publicInfo.contacts.length > 0,
     ].filter(Boolean).length;
-    return Math.round((completed / 5) * 100);
-  }, [profile]);
+    return Math.round((completed / 8) * 100);
+  }, [profile, publicInfo]);
 
   const availableEducationOptions = useMemo(() => {
     const currentIndex = profileEducationOptions.findIndex(
@@ -105,6 +149,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
   function openEditor(focusTarget?: "skills" | "photo") {
     setDraft(editableProfile(profile));
+    setDraftPublicInfo(editablePublicInfo(profile));
     setSkillInput("");
     setError("");
     setNotice("");
@@ -185,12 +230,47 @@ export default function Profil({ initialProfile }: ProfilProps) {
     }
   }
 
+  function addContact() {
+    setDraftPublicInfo((current) => {
+      if (current.contacts.length >= MAX_PROFILE_CONTACTS) return current;
+      return { ...current, contacts: [...current.contacts, ""] };
+    });
+  }
+
+  function updateContact(index: number, value: string) {
+    setDraftPublicInfo((current) => ({
+      ...current,
+      contacts: current.contacts.map((contact, contactIndex) => contactIndex === index ? value : contact),
+    }));
+  }
+
+  function removeContact(index: number) {
+    setDraftPublicInfo((current) => {
+      const contacts = current.contacts.filter((_, contactIndex) => contactIndex !== index);
+      return { ...current, contacts: contacts.length > 0 ? contacts : [""] };
+    });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+
+    const invalidContact = draftPublicInfo.contacts.find((contact) => contact.trim() && !isValidPublicUrl(contact));
+    if (invalidContact) {
+      setError("Pastikan setiap kontak berupa tautan yang valid.");
+      return;
+    }
+    if (draftPublicInfo.portfolioUrl.trim() && !isValidPublicUrl(draftPublicInfo.portfolioUrl)) {
+      setError("Link portofolio belum valid.");
+      return;
+    }
+
     setIsPending(true);
 
-    const result = await updateProfile(draft);
+    const result = await updateProfile({
+      ...draft,
+      contactInfo: encodeProfilePublicInfo(draftPublicInfo),
+    });
     if (!result.success) {
       const details = result.fieldErrors
         ? Object.values(result.fieldErrors).flat().join(" ")
@@ -215,13 +295,14 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
     setProfile(result.data);
     setDraft(editableProfile(result.data));
+    setDraftPublicInfo(editablePublicInfo(result.data));
     setDraftAvatar(null);
     setRemoveAvatar(false);
     setIsPending(false);
     setIsEditing(false);
     setNotice(
       avatarWasChanged
-        ? "Profil berhasil diperbarui. Foto baru masih berupa pratinjau lokal."
+        ? "Profil dan foto berhasil diperbarui."
         : "Profil berhasil diperbarui.",
     );
     router.refresh();
@@ -233,7 +314,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
         {notice && (
           <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">
             <span>{notice}</span>
-            <button type="button" onClick={() => setNotice("")} className="rounded p-1 hover:bg-emerald-100" aria-label="Tutup pemberitahuan">×</button>
+            <button type="button" onClick={() => setNotice("")} className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-emerald-100" aria-label="Tutup pemberitahuan"><XIcon className="size-4" /></button>
           </div>
         )}
 
@@ -265,6 +346,10 @@ export default function Profil({ initialProfile }: ProfilProps) {
                   {profile.name || "Lengkapi profilmu"}
                 </h1>
                 <p className="mt-2 text-sm text-slate-300">{profile.instance || "Sekolah atau kampus belum diisi"}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                  <MapPinIcon className="size-3.5" />
+                  {publicInfo.location || "Lokasi belum diisi"}
+                </p>
                 <p className="mt-1 truncate text-xs text-slate-400">{profile.email} · hanya terlihat olehmu</p>
               </div>
             </div>
@@ -274,7 +359,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
               onClick={() => openEditor()}
               className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 lg:self-auto"
             >
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="m14.5 5.5 4 4M4 20l3.5-.8L19 7.7a1.4 1.4 0 0 0 0-2L17.3 4a1.4 1.4 0 0 0-2 0L3.8 15.5 3 20Z" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <PencilIcon className="size-4" />
               Ubah profil
             </button>
           </div>
@@ -327,6 +412,33 @@ export default function Profil({ initialProfile }: ProfilProps) {
               )}
             </section>
 
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="portfolio-heading">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Karya</p>
+                  <h2 id="portfolio-heading" className="mt-1 text-lg font-bold text-slate-950">Portofolio utama</h2>
+                  <p className="mt-1 text-sm text-slate-500">Tautan ini otomatis ditawarkan saat kamu mengajukan bergabung.</p>
+                </div>
+                <button type="button" onClick={() => openEditor()} className="self-start rounded-lg px-3 py-2 text-sm font-semibold text-brand-primary hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">Edit</button>
+              </div>
+
+              {publicInfo.portfolioUrl ? (
+                <a
+                  href={publicInfo.portfolioUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-800 transition hover:border-blue-300 hover:bg-blue-50 hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                >
+                  <span className="min-w-0 truncate">{publicInfo.portfolioUrl}</span>
+                  <ExternalLinkIcon className="size-4 shrink-0" />
+                </a>
+              ) : (
+                <button type="button" onClick={() => openEditor()} className="mt-5 w-full rounded-xl border border-dashed border-slate-300 p-5 text-left text-sm text-slate-600 hover:border-blue-300 hover:bg-blue-50/50">
+                  Belum ada portofolio. Tambahkan satu tautan utama untuk digunakan saat melamar.
+                </button>
+              )}
+            </section>
+
             <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="history-heading">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -352,14 +464,29 @@ export default function Profil({ initialProfile }: ProfilProps) {
               </div>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600 transition-[width]" style={{ width: `${completeness}%` }} /></div>
               <p className="mt-3 text-sm leading-6 text-slate-600">Profil yang lengkap membantu calon rekan tim memahami kontribusimu.</p>
-              {completeness < 100 && <button type="button" onClick={() => openEditor()} className="mt-3 text-sm font-semibold text-brand-primary hover:underline">Lengkapi sekarang →</button>}
+              {completeness < 100 && <button type="button" onClick={() => openEditor()} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-primary hover:underline">Lengkapi sekarang <ArrowRightIcon className="size-4" /></button>}
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="contact-heading">
               <h2 id="contact-heading" className="font-bold text-slate-950">Kontak publik</h2>
-              <p className={`mt-3 break-words text-sm leading-6 ${profile.contactInfo ? "text-slate-700" : "text-slate-500"}`}>
-                {profile.contactInfo || "Belum ada kontak yang ditampilkan kepada pengguna lain."}
-              </p>
+              {publicInfo.contacts.length > 0 ? (
+                <ul className="mt-4 space-y-2">
+                  {publicInfo.contacts.map((contact) => {
+                    const platform = detectContactPlatform(contact);
+                    return (
+                      <li key={contact}>
+                        <a href={normalizePublicUrl(contact)} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
+                          <ContactPlatformBadge platform={platform} />
+                          <span className="min-w-0 flex-1 truncate">{platform.label}</span>
+                          <ExternalLinkIcon className="size-4 shrink-0 text-slate-400" />
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm leading-6 text-slate-500">Belum ada kontak yang ditampilkan kepada pengguna lain.</p>
+              )}
               <div className="mt-4 rounded-xl bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-800">Email akun tetap privat. Hanya kontak yang kamu isi di formulir yang akan ditampilkan.</div>
             </section>
 
@@ -377,7 +504,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
           <section className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-7">
               <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Profil saya</p><h2 id="edit-profile-heading" className="mt-1 text-xl font-bold text-slate-950">Ubah profil</h2><p className="mt-1 text-sm text-slate-500">Tampilkan kemampuan dan identitas pelajarmu dengan jelas.</p></div>
-              <button ref={closeButtonRef} type="button" disabled={isPending} onClick={closeEditor} className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50" aria-label="Tutup">×</button>
+              <button ref={closeButtonRef} type="button" disabled={isPending} onClick={closeEditor} className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50" aria-label="Tutup"><XIcon className="size-5" /></button>
             </div>
 
             <form onSubmit={handleSubmit} className="min-h-0 overflow-y-auto">
@@ -396,7 +523,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                           ? "Foto akan dihapus"
                           : draftAvatar?.fileName ?? avatarPreview?.fileName ?? "Gunakan foto yang mudah dikenali"}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">JPG, PNG, atau WebP hingga 5 MB. Saat ini foto hanya menjadi pratinjau lokal sampai penyimpanan file backend tersedia.</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">Gunakan JPG, PNG, atau WebP hingga 5 MB dengan wajah terlihat jelas.</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <input
                           ref={avatarInputRef}
@@ -470,8 +597,41 @@ export default function Profil({ initialProfile }: ProfilProps) {
                   <input id="profile-instance" value={draft.instance} onChange={(event) => setDraft((current) => ({ ...current, instance: event.target.value }))} required minLength={2} maxLength={120} disabled={isPending} placeholder="Contoh: SMA Negeri 1 Denpasar" className={inputClass} />
                 </Field>
 
+                <Field label="Lokasi" htmlFor="profile-location" hint="Cukup kota atau kabupaten, tanpa alamat lengkap.">
+                  <div className="relative">
+                    <MapPinIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="profile-location"
+                      value={draftPublicInfo.location}
+                      onChange={(event) => setDraftPublicInfo((current) => ({ ...current, location: event.target.value }))}
+                      maxLength={100}
+                      disabled={isPending}
+                      autoComplete="address-level2"
+                      placeholder="Contoh: Denpasar, Bali"
+                      className={`${inputClass} pl-10`}
+                    />
+                  </div>
+                </Field>
+
                 <Field label="Tentang dirimu" htmlFor="profile-bio" hint={`${draft.bio.length}/500 karakter`}>
                   <textarea id="profile-bio" value={draft.bio} onChange={(event) => setDraft((current) => ({ ...current, bio: event.target.value }))} maxLength={500} rows={4} disabled={isPending} placeholder="Ceritakan minat, pengalaman, dan kontribusi yang kamu tawarkan..." className={`${inputClass} resize-y py-3`} />
+                </Field>
+
+                <Field label="Link portofolio utama (opsional)" htmlFor="profile-portfolio" hint="Digunakan otomatis saat kamu mengajukan bergabung.">
+                  <div className="relative">
+                    <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="profile-portfolio"
+                      type="url"
+                      value={draftPublicInfo.portfolioUrl}
+                      onChange={(event) => setDraftPublicInfo((current) => ({ ...current, portfolioUrl: event.target.value }))}
+                      onBlur={(event) => setDraftPublicInfo((current) => ({ ...current, portfolioUrl: normalizePublicUrl(event.target.value) }))}
+                      maxLength={300}
+                      disabled={isPending}
+                      placeholder="https://figma.com/... atau https://behance.net/..."
+                      className={`${inputClass} pl-10`}
+                    />
+                  </div>
                 </Field>
 
                 <fieldset>
@@ -485,7 +645,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     {draft.skills.map((skill) => (
                       <span key={skill} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-blue-50 pl-4 pr-2 text-sm font-medium text-blue-800 ring-1 ring-inset ring-blue-100">
                         {skill}
-                        <button type="button" disabled={isPending} onClick={() => setDraft((current) => ({ ...current, skills: current.skills.filter((item) => item !== skill) }))} className="inline-flex size-7 items-center justify-center rounded-full hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label={`Hapus keahlian ${skill}`}>×</button>
+                        <button type="button" disabled={isPending} onClick={() => setDraft((current) => ({ ...current, skills: current.skills.filter((item) => item !== skill) }))} className="inline-flex size-7 items-center justify-center rounded-full hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label={`Hapus keahlian ${skill}`}><XIcon className="size-4" /></button>
                       </span>
                     ))}
                     {draft.skills.length === 0 && <span className="text-sm italic text-slate-400">Belum ada keahlian.</span>}
@@ -493,9 +653,62 @@ export default function Profil({ initialProfile }: ProfilProps) {
                   <p className="mt-2 text-right text-xs text-slate-500">{draft.skills.length}/12 keahlian</p>
                 </fieldset>
 
-                <Field label="Kontak publik (opsional)" htmlFor="profile-contact" hint="Bisa berupa username media sosial, nomor WhatsApp, atau tautan portofolio.">
-                  <input id="profile-contact" value={draft.contactInfo ?? ""} onChange={(event) => setDraft((current) => ({ ...current, contactInfo: event.target.value }))} maxLength={160} disabled={isPending} placeholder="Contoh: instagram.com/namamu" className={inputClass} />
-                </Field>
+                <fieldset>
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <legend className="text-sm font-semibold text-slate-900">Kontak dan media sosial</legend>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">Tempel tautan profil; jenis platform akan dikenali otomatis.</p>
+                    </div>
+                    <span className="text-xs font-medium text-slate-500">{draftPublicInfo.contacts.filter((contact) => contact.trim()).length}/{MAX_PROFILE_CONTACTS} kontak</span>
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    {draftPublicInfo.contacts.map((contact, index) => {
+                      const platform = detectContactPlatform(contact);
+                      return (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="flex min-w-0 flex-1 items-center rounded-xl border border-slate-300 bg-white focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-blue-100">
+                            <div className="flex h-12 w-14 shrink-0 items-center justify-center border-r border-slate-200" title={platform.label}>
+                              <ContactPlatformBadge platform={platform} />
+                            </div>
+                            <input
+                              type="url"
+                              value={contact}
+                              onChange={(event) => updateContact(index, event.target.value)}
+                              onBlur={(event) => updateContact(index, normalizePublicUrl(event.target.value))}
+                              maxLength={300}
+                              disabled={isPending}
+                              placeholder={index === 0 ? "https://instagram.com/namamu" : `Link media sosial ${index + 1}`}
+                              className="h-12 min-w-0 flex-1 rounded-r-xl bg-transparent px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500"
+                              aria-label={`Kontak atau media sosial ${index + 1}`}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeContact(index)}
+                            disabled={isPending}
+                            className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:opacity-50"
+                            aria-label={`Hapus kontak ${index + 1}`}
+                          >
+                            <XIcon className="size-5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {draftPublicInfo.contacts.length < MAX_PROFILE_CONTACTS && (
+                    <button
+                      type="button"
+                      onClick={addContact}
+                      disabled={isPending}
+                      className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-brand-primary transition hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
+                    >
+                      <PlusIcon className="size-4" />
+                      Tambah kontak
+                    </button>
+                  )}
+                </fieldset>
 
                 {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</div>}
               </div>
@@ -544,11 +757,47 @@ function ProfileAvatar({
   );
 }
 
-function CameraIcon() {
+function ContactPlatformBadge({ platform }: { platform: ReturnType<typeof detectContactPlatform> }) {
+  const colorClass = {
+    instagram: "bg-pink-50 text-pink-700",
+    linkedin: "bg-sky-50 text-sky-700",
+    github: "bg-slate-900 text-white",
+    behance: "bg-blue-50 text-blue-700",
+    dribbble: "bg-rose-50 text-rose-700",
+    tiktok: "bg-slate-900 text-white",
+    x: "bg-slate-900 text-white",
+    youtube: "bg-red-50 text-red-700",
+    discord: "bg-indigo-50 text-indigo-700",
+    facebook: "bg-blue-50 text-blue-700",
+    whatsapp: "bg-emerald-50 text-emerald-700",
+    telegram: "bg-sky-50 text-sky-700",
+    link: "bg-slate-100 text-slate-600",
+  }[platform.id] ?? "bg-slate-100 text-slate-600";
+
+  const PlatformIcon = {
+    instagram: InstagramIcon,
+    linkedin: LinkedinIcon,
+    github: GithubIcon,
+    behance: BehanceIcon,
+    dribbble: DribbbleIcon,
+    tiktok: TiktokIcon,
+    x: XSocialIcon,
+    youtube: YoutubeIcon,
+    discord: DiscordIcon,
+    facebook: FacebookIcon,
+    whatsapp: WhatsappIcon,
+    telegram: TelegramIcon,
+    link: LinkIcon,
+  }[platform.id] ?? LinkIcon;
+
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M8.5 6.5 10 4h4l1.5 2.5H19A2 2 0 0 1 21 8.5V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h3.5Z" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="13" r="3.5" />
-    </svg>
+    <span
+      aria-hidden="true"
+      className={`inline-flex size-7 shrink-0 items-center justify-center rounded-lg ${colorClass}`}
+      title={platform.label}
+    >
+      <PlatformIcon className="size-4" />
+    </span>
   );
 }
+

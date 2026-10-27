@@ -1,4 +1,5 @@
 import type { RegistrationStepId } from "./registration-types";
+import { CheckIcon } from "@/app/components/ui/icons";
 
 export type RegistrationStep = {
   id: RegistrationStepId;
@@ -46,9 +47,7 @@ export default function RegistrationStepper({
                   aria-hidden="true"
                 >
                   {isComplete ? (
-                    <svg viewBox="0 0 20 20" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.25">
-                      <path d="m4.5 10.5 3.2 3.2 7.8-8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <CheckIcon className="size-4" />
                   ) : index + 1}
                 </span>
                 <span className={`text-xs font-semibold ${isActive ? "text-brand-primary" : "text-slate-600"}`}>

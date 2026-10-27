@@ -1,4 +1,9 @@
-import Image from "next/image";
+import {
+    CheckIcon,
+    ExternalLinkIcon,
+    InformationIcon,
+    XIcon,
+} from "../ui/icons";
 
 type RequirementStatus = "met" | "unmet" | "review";
 
@@ -10,31 +15,15 @@ type Requirement = {
 
 type CekPersyaratanProps = {
     requirements?: Requirement[];
-    aturanUrl?: string;
+    sourceUrl?: string;
 };
 
-const defaultRequirements: Requirement[] = [
-    {
-        id: "position",
-        label: "Posisi masih tersedia",
-        status: "met",
-    },
-    {
-        id: "collaboration",
-        label: "Kolaborasi lintas sekolah dan kampus diizinkan",
-        status: "met",
-    },
-    {
-        id: "education",
-        label: "Cek syarat pendidikan pada aturan resmi",
-        status: "review",
-    },
-];
-
 export default function CekPersyaratan({
-    requirements = defaultRequirements,
-    aturanUrl = "#",
+    requirements,
+    sourceUrl,
 }: CekPersyaratanProps) {
+    if (!requirements?.length) return null;
+
     const hasUnmetRequirement = requirements.some(
         (requirement) => requirement.status === "unmet"
     );
@@ -42,7 +31,7 @@ export default function CekPersyaratan({
     return (
         <section className="flex w-full min-w-0 flex-col rounded-xl border border-border-default bg-white p-3">
             <h2 className="text-base font-semibold leading-6 text-text-heading">
-                Cek persyaratan
+                Persyaratan tambahan
             </h2>
 
             <div className="mt-1 flex flex-col">
@@ -65,7 +54,13 @@ export default function CekPersyaratan({
                                           : "bg-warning-background text-text-warning"
                                 }`}
                             >
-                                {isMet ? "✓" : isUnmet ? "!" : "?"}
+                                {isMet ? (
+                                    <CheckIcon className="size-3.5" />
+                                ) : isUnmet ? (
+                                    <XIcon className="size-3.5" />
+                                ) : (
+                                    <InformationIcon className="size-3.5" />
+                                )}
                             </span>
 
                             <p
@@ -84,24 +79,21 @@ export default function CekPersyaratan({
                 })}
             </div>
 
-            <a
-                href={aturanUrl}
-                target={aturanUrl === "#" ? undefined : "_blank"}
-                rel={aturanUrl === "#" ? undefined : "noreferrer"}
-                className="flex min-h-11 items-center gap-1.5 text-[13px] font-semibold text-brand-primary hover:text-brand-secondary"
-            >
-                Lihat aturan lomba
-                <Image
-                    src="/img/external-link.png"
-                    alt=""
-                    width={16}
-                    height={16}
-                />
-            </a>
+            {sourceUrl ? (
+                <a
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-h-11 items-center gap-1.5 text-[13px] font-semibold text-brand-primary hover:text-brand-secondary"
+                >
+                    Lihat sumber persyaratan
+                    <ExternalLinkIcon className="size-4 shrink-0" />
+                </a>
+            ) : null}
 
             <p className="text-xs leading-5 text-text-subheading">
-                Informasi persyaratan diisi pembuat proyek. Periksa sumber
-                resmi sebelum mendaftar.
+                Persyaratan ini ditulis oleh pembuat proyek. Pastikan
+                informasinya sesuai sebelum bergabung.
             </p>
 
             {hasUnmetRequirement && (

@@ -1,21 +1,52 @@
+"use client";
+
+import { useState } from "react";
+import DestructiveConfirmationDialog from "../ui/destructive-confirmation-dialog";
+
 export default function KelolaStatusPostingan() {
-    return (
-        <article className="flex w-full min-w-0 flex-col items-start rounded-xl border border-border-default bg-white p-4">
-            <span className="rounded-lg bg-warning-background px-2 py-1 text-xs font-bold text-text-warning">
-                Mencari anggota
-            </span>
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
 
-            <p className="mt-3 text-[13px] leading-5 text-text-subheading">
-                Postingan aktif dan terlihat oleh calon anggota.
-                Setelah ditutup, postingan tetap tersimpan di riwayat.
-            </p>
+  return (
+    <>
+      <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status postingan</p>
+            <h3 className="mt-1 text-sm font-bold text-slate-950">{isClosed ? "Ditutup" : "Aktif dan dapat ditemukan"}</h3>
+          </div>
+          <span className={`relative flex size-3 ${isClosed ? "" : "animate-pulse"}`}>
+            <span className={`relative inline-flex size-3 rounded-full ${isClosed ? "bg-slate-400" : "bg-emerald-500"}`} />
+          </span>
+        </div>
 
-            <a
-                href="/aktivitas/kelolapostingan/tutup"
-                className="mt-4 flex h-11 w-full items-center justify-center rounded-lg border border-danger-text bg-white px-4 text-sm font-semibold text-danger-text transition-colors hover:bg-danger-text hover:text-white"
-            >
-                Tutup postingan
-            </a>
-        </article>
-    );
+        <p className="mt-3 text-sm leading-6 text-slate-500">
+          {isClosed ? "Postingan tidak lagi muncul di Jelajah dan tetap tersimpan di riwayat." : "Postingan tetap tersimpan di riwayat setelah ditutup."}
+        </p>
+
+        {!isClosed && (
+          <button
+            type="button"
+            onClick={() => setDialogOpen(true)}
+            className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-rose-200 px-4 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          >
+            Tutup postingan
+          </button>
+        )}
+      </article>
+
+      <DestructiveConfirmationDialog
+        open={dialogOpen}
+        title="Tutup postingan EcoTrack?"
+        description="Calon anggota tidak akan dapat menemukan atau mengajukan bergabung ke postingan ini."
+        note="Pelamar, anggota, dan riwayat proyek tidak akan dihapus. Kamu dapat menemukannya kembali melalui riwayat."
+        confirmLabel="Ya, tutup"
+        onCancel={() => setDialogOpen(false)}
+        onConfirm={() => {
+          setIsClosed(true);
+          setDialogOpen(false);
+        }}
+      />
+    </>
+  );
 }

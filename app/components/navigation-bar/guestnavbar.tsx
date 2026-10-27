@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import LogoutConfirmationDialog from "@/app/components/auth/logout-confirmation-dialog";
+import { MenuIcon, XIcon } from "@/app/components/ui/icons";
 import { createClient } from "@/app/lib/supabase/client";
 
 const navigation = [
@@ -211,9 +212,7 @@ export default function GuestNavbar() {
           aria-controls={drawerId}
           onClick={() => setIsOpen(true)}
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-          </svg>
+          <MenuIcon className="size-5" />
         </button>
       </div>
 
@@ -238,9 +237,7 @@ export default function GuestNavbar() {
                 aria-label="Tutup navigasi"
                 onClick={() => closeDrawer()}
               >
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
-                </svg>
+                <XIcon className="size-5" />
               </button>
             </div>
 
@@ -310,7 +307,7 @@ function AccountActions({ authStatus, onRequestSignOut }: AccountProps) {
         href="/login"
         className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
-        Login
+        Masuk
       </Link>
     );
   }
@@ -342,7 +339,7 @@ function MobileAccountActions({
         onClick={onNavigate}
         className="flex min-h-12 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-brand-primary hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
-        Login
+        Masuk
       </Link>
     );
   }

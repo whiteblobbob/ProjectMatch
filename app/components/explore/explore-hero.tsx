@@ -2,6 +2,7 @@
 
 import { FormEvent } from "react";
 import { SelectControl } from "@/app/components/ui/select-control";
+import { SearchIcon } from "@/app/components/ui/icons";
 
 type ExploreHeroProps = {
   searchInput: string;
@@ -46,7 +47,7 @@ export default function ExploreHero({
 
         <form onSubmit={handleSubmit} className="mt-6 grid min-w-0 gap-2 rounded-xl border border-slate-300 bg-white p-2 shadow-sm sm:grid-cols-2 lg:grid-cols-[minmax(240px,1.5fr)_minmax(140px,.75fr)_minmax(140px,.75fr)_minmax(150px,.8fr)_auto] lg:items-center lg:gap-0 lg:p-1.5">
           <div className="relative min-w-0 rounded-lg border border-slate-200 transition focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-blue-100 sm:col-span-2 lg:col-span-1 lg:rounded-none lg:border-0 lg:border-r lg:border-slate-200">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" strokeLinecap="round" /></svg>
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
             <label htmlFor="explore-search" className="sr-only">Cari proyek, posisi, topik, atau lomba</label>
             <input id="explore-search" type="search" value={searchInput} onChange={(event) => onSearchInputChange(event.target.value)} placeholder="Cari proyek, posisi, topik, atau lomba" className="min-h-12 w-full bg-transparent py-2 pl-10 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400" />
           </div>
