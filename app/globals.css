@@ -4,9 +4,9 @@
   --background: #F7F7FA;
   --foreground: #171717;
 
-  --brand-primary: #6046D7;
-  --brand-secondary: #4732AA;
-  --brand-soft: #EEEBFF;
+  --brand-primary: #2459C4;
+  --brand-secondary: #19479F;
+  --brand-soft: #EFF5FF;
 
   --accent-opportunity: #F59E42;
   --accent-soft: #FFF0DF;
@@ -61,8 +61,7 @@
   --color-text-heading: var(--text-heading);
   --color-text-subheading: var(--text-subheading);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-plus-jakarta-sans);
 }
 
 /* @media (prefers-color-scheme: dark) {
@@ -75,5 +74,37 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-plus-jakarta-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+@keyframes logout-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes logout-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.logout-dialog-backdrop {
+  animation: logout-backdrop-in 180ms ease-out;
+}
+
+.logout-dialog-panel {
+  animation: logout-dialog-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logout-dialog-backdrop,
+  .logout-dialog-panel {
+    animation: none;
+  }
 }
