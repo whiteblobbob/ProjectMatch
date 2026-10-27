@@ -15,7 +15,7 @@ export default function guestnavbar(){
                 priority
                 />
                 <a href="#" className="ml-1">ProjectMatch</a></li>
-            <li className=""><a href="#" className="text-[#2459C4] transition duration-300 hover:text-[#182230]">Login</a></li>
+            <li className=""><a href="../login" className="text-[#2459C4] transition duration-300 hover:text-[#182230]">Login</a></li>
             </ul>
         </nav>
     )
