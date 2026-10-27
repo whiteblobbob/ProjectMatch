@@ -2,7 +2,7 @@ import Image from "next/image";
 
 type RequirementStatus = "met" | "unmet" | "review";
 
-type Requirement = {
+export type Requirement = {
     id: string;
     label: string;
     status: RequirementStatus;

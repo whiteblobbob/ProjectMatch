@@ -59,7 +59,9 @@ export const initialRegistrationData: RegistrationData = {
   confirmedAccuracy: false,
 };
 
-export function calculateAge(dateOfBirth: string, today = new Date()) {
+export function calculateAge(dateOfBirth: string) {
+  const today = new Date()
+  
   const parts = dateOfBirth.split("-").map(Number);
   if (parts.length !== 3 || parts.some((part) => !Number.isInteger(part))) return null;
 
