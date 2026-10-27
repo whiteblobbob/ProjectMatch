@@ -4,16 +4,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { createProjectPosting } from "@/app/actions/project";
+import type { InstitutionOption } from "@/app/components/auth/registration/institution-combobox";
+import {
+  collaborationModes,
+  getCollaborationModeLabel,
+  type CollaborationMode,
+} from "@/app/components/ui/collaboration-mode";
 import type { ProjectFormOptions } from "@/app/lib/project-form";
 import { MapPinIcon, PencilIcon, PlusIcon, TrashIcon, VideoIcon, WarningIcon, XIcon } from "../ui/icons";
 import { SelectControl } from "../ui/select-control";
+import ProjectAudienceScope, { type AudienceScope } from "./project-audience-scope";
 
 type Position = {
   name: string;
   slotsAvailable: number;
 };
-
-type CollaborationMode = "remote" | "onsite" | "hybrid";
 
 const educationLevels = [
   { value: "JUNIOR_SECONDARY", label: "SMP/sederajat" },
@@ -26,10 +31,12 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
   const [positions, setPositions] = useState<Position[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
-  const [workMode, setWorkMode] = useState<CollaborationMode>("remote");
+  const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>("REMOTE");
   const [positionDialogOpen, setPositionDialogOpen] = useState(false);
   const [editingPositionIndex, setEditingPositionIndex] = useState<number | null>(null);
   const [hasCustomRequirements, setHasCustomRequirements] = useState(false);
+  const [audienceScope, setAudienceScope] = useState<AudienceScope>("all");
+  const [selectedInstitutions, setSelectedInstitutions] = useState<InstitutionOption[]>([]);
 
   function openAddPositionDialog() {
     setEditingPositionIndex(null);
@@ -70,6 +77,11 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
       return;
     }
 
+    if (audienceScope === "selected" && selectedInstitutions.length === 0) {
+      setError("Pilih minimal satu sekolah atau kampus yang diizinkan mendaftar.");
+      return;
+    }
+
     if (new Set(selectedPositions.map((position) => position.name.toLocaleLowerCase("id-ID"))).size !== selectedPositions.length) {
       setError("Nama setiap posisi harus berbeda.");
       return;
@@ -82,7 +94,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
       description: String(formData.get("description") ?? ""),
       deadline: new Date(`${deadlineValue}T23:59:59`),
       categoryId: String(formData.get("categoryId") ?? ""),
-      onSite: formData.get("workMode") === "onsite",
+      onSite: collaborationMode !== "REMOTE",
       workHoursPerWeek: Number(formData.get("workHoursPerWeek")),
       educationLevels: selectedEducationLevels,
       positions: selectedPositions,
@@ -126,14 +138,10 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           <fieldset>
             <legend className="text-sm font-semibold text-slate-900">Mode kolaborasi</legend>
             <div className="mt-2 grid grid-cols-3 gap-2">
-              {[
-                { value: "remote", label: "Daring" },
-                { value: "onsite", label: "Luring" },
-                { value: "hybrid", label: "Hybrid" },
-              ].map((mode) => (
-                <label key={mode.value} className="flex min-h-12 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm text-slate-700 has-checked:border-brand-primary has-checked:bg-brand-soft has-checked:text-brand-primary">
-                  <input type="radio" name="workMode" value={mode.value} checked={workMode === mode.value} onChange={() => setWorkMode(mode.value as CollaborationMode)} disabled={isPending} className="size-4 accent-blue-600" />
-                  {mode.label}
+              {collaborationModes.map((mode) => (
+                <label key={mode} className="flex min-h-12 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm text-slate-700 has-checked:border-brand-primary has-checked:bg-brand-soft has-checked:text-brand-primary">
+                  <input type="radio" name="collaborationMode" value={mode} checked={collaborationMode === mode} onChange={() => setCollaborationMode(mode)} disabled={isPending} className="size-4 accent-blue-600" />
+                  {getCollaborationModeLabel(mode)}
                 </label>
               ))}
             </div>
@@ -151,7 +159,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
       <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="meeting-plan-heading">
         <div className="flex items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-primary">
-            {workMode === "onsite" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
+            {collaborationMode === "ONSITE" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
           </span>
           <div>
             <h2 id="meeting-plan-heading" className="text-lg font-bold text-slate-950">Rencana pertemuan</h2>
@@ -159,7 +167,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           </div>
         </div>
 
-        {(workMode === "remote" || workMode === "hybrid") ? (
+        {(collaborationMode === "REMOTE" || collaborationMode === "HYBRID") ? (
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Platform pertemuan</span>
@@ -174,7 +182,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           </div>
         ) : null}
 
-        {(workMode === "onsite" || workMode === "hybrid") ? (
+        {(collaborationMode === "ONSITE" || collaborationMode === "HYBRID") ? (
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Kategori tempat aman</span>
@@ -193,7 +201,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
         <label className="mt-5 block">
           <span className="text-sm font-semibold text-slate-900">Deskripsi dan petunjuk pertemuan</span>
           <span className="mt-1 block text-xs leading-5 text-slate-500">Jelaskan agenda, patokan tempat, atau hal yang perlu disiapkan. Jangan mencantumkan alamat rumah atau data pribadi.</span>
-          <textarea key={workMode} name="meetingDescription" required disabled={isPending} rows={3} placeholder={workMode === "remote" ? "Contoh: Masuk 10 menit lebih awal untuk perkenalan." : "Contoh: Bertemu di taman kampus dekat perpustakaan utama."} className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          <textarea key={collaborationMode} name="meetingDescription" required disabled={isPending} rows={3} placeholder={collaborationMode === "REMOTE" ? "Contoh: Masuk 10 menit lebih awal untuk perkenalan." : "Contoh: Bertemu di taman kampus dekat perpustakaan utama."} className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
         </label>
 
         <label className="mt-5 block">
@@ -202,7 +210,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           <input name="collaborationTools" disabled={isPending} placeholder="Contoh: Figma, Google Drive, Notion" className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
         </label>
 
-        {(workMode === "onsite" || workMode === "hybrid") ? (
+        {(collaborationMode === "ONSITE" || collaborationMode === "HYBRID") ? (
           <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-amber-900">
             <WarningIcon className="mt-0.5 size-5 shrink-0" />
             <p className="text-xs leading-5">Gunakan sekolah, kampus, ruang publik, atau kafe yang mudah diverifikasi. Hindari rumah pribadi dan tempat sepi.</p>
@@ -260,6 +268,14 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           ))}
         </div>
       </section>
+
+      <ProjectAudienceScope
+        scope={audienceScope}
+        selectedInstitutions={selectedInstitutions}
+        onScopeChange={setAudienceScope}
+        onSelectedInstitutionsChange={setSelectedInstitutions}
+        disabled={isPending}
+      />
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="custom-requirements-heading">
         <div className="flex items-start justify-between gap-4">

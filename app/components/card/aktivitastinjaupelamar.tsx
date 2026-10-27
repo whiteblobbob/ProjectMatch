@@ -68,7 +68,7 @@ export default function Aktivitastinjaupelamar() {
             </div>
             <div className="flex items-start gap-2 rounded-xl bg-white p-3">
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700"><WarningIcon className="size-4" /></span>
-              <div><p className="text-sm font-semibold text-slate-900">Syarat lomba</p><p className="mt-0.5 text-xs text-slate-500">Perlu diperiksa</p></div>
+              <div><p className="text-sm font-semibold text-slate-900">Prasyarat</p><p className="mt-0.5 text-xs text-slate-500">Perlu diperiksa</p></div>
             </div>
           </div>
         </section>

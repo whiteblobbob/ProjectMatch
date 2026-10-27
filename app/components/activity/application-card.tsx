@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ActiveApplication } from "@/app/lib/activity";
+import { getCollaborationModeLabel } from "@/app/components/ui/collaboration-mode";
 import StatusBadge from "./status-badge";
 
 export default function ApplicationCard({ application }: { application: ActiveApplication }) {
@@ -17,7 +18,7 @@ export default function ApplicationCard({ application }: { application: ActiveAp
         <StatusBadge tone="attention">Menunggu</StatusBadge>
       </div>
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
-        <span>{application.onSite ? "On-site" : "Remote"}</span>
+        <span>{getCollaborationModeLabel(application.onSite ? "ONSITE" : "REMOTE")}</span>
         <span>{application.workHoursPerWeek} jam/minggu</span>
       </div>
       <Link

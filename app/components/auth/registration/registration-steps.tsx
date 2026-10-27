@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckIcon, UploadIcon } from "@/app/components/ui/icons";
 import { SelectControl } from "@/app/components/ui/select-control";
 import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from "react";
+import { InstitutionCombobox } from "./institution-combobox";
 import {
   formatFileSize,
   type RegistrationData,
@@ -216,6 +217,8 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
                 checked={data.educationStatus === status}
                 onChange={() => {
                   onChange("educationStatus", status);
+                  onChange("institutionId", "");
+                  onChange("institutionName", "");
                   onChange("educationLevel", "");
                   onChange("studyProgram", "");
                   onChange("schoolGrade", "");
@@ -231,7 +234,21 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
       </fieldset>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <TextInput field="institutionName" label={data.educationStatus === "student" ? "Nama sekolah" : "Nama universitas"} value={data.institutionName} error={errors.institutionName} onChange={(value) => onChange("institutionName", value)} placeholder={data.educationStatus === "student" ? "Contoh: SMA Negeri 1 Denpasar" : "Contoh: Universitas Indonesia"} disabled={disabled} />
+          <InstitutionCombobox
+            kind={data.educationStatus}
+            value={data.institutionName}
+            selectedId={data.institutionId}
+            error={errors.institutionName}
+            disabled={disabled}
+            onQueryChange={(value) => {
+              onChange("institutionName", value);
+              onChange("institutionId", "");
+            }}
+            onSelect={(option) => {
+              onChange("institutionId", option.id);
+              onChange("institutionName", option.name);
+            }}
+          />
         </div>
         {data.educationStatus === "university" ? (
           <TextInput field="studyProgram" label="Program studi" value={data.studyProgram} error={errors.studyProgram} onChange={(value) => onChange("studyProgram", value)} placeholder="Contoh: Desain Komunikasi Visual" disabled={disabled} />

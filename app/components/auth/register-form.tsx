@@ -44,7 +44,11 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
   const graduationYear = Number(data.graduationYear);
   const age = calculateAge(data.dateOfBirth);
 
-  if (data.institutionName.trim().length < 2) errors.institutionName = data.educationStatus === "student" ? "Masukkan nama sekolah." : "Masukkan nama universitas.";
+  if (!data.institutionId) {
+    errors.institutionName = data.educationStatus === "student"
+      ? "Ketik nama sekolah, lalu pilih sekolah dari hasil pencarian."
+      : "Ketik nama kampus, lalu pilih kampus dari hasil pencarian.";
+  }
   if (!data.educationLevel) errors.educationLevel = data.educationStatus === "student" ? "Pilih jenjang sekolah." : "Pilih jenjang pendidikan.";
 
   if (data.educationStatus === "student") {
