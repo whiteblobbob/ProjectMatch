@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { createProjectPosting } from "@/app/actions/project";
 import type { ProjectFormOptions } from "@/app/lib/project-form";
 import { MapPinIcon, PencilIcon, PlusIcon, TrashIcon, VideoIcon, WarningIcon, XIcon } from "../ui/icons";
+import { SelectControl } from "../ui/select-control";
 
 type Position = {
   name: string;
@@ -113,10 +114,10 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           </div>
           <div>
             <label htmlFor="project-category" className="block text-sm font-semibold text-slate-900">Jenis proyek</label>
-            <select id="project-category" name="categoryId" required disabled={isPending} defaultValue="" className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100">
+            <SelectControl id="project-category" name="categoryId" required disabled={isPending} defaultValue="" containerClassName="mt-2">
               <option value="" disabled>Pilih jenis proyek</option>
               {options.categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-            </select>
+            </SelectControl>
           </div>
           <div>
             <label htmlFor="project-deadline" className="block text-sm font-semibold text-slate-900">Tenggat lamaran</label>
@@ -162,9 +163,9 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Platform pertemuan</span>
-              <select name="meetingPlatform" defaultValue="Google Meet" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100">
+              <SelectControl name="meetingPlatform" defaultValue="Google Meet" disabled={isPending} containerClassName="mt-2">
                 <option>Google Meet</option><option>Zoom</option><option>Microsoft Teams</option><option>Discord</option>
-              </select>
+              </SelectControl>
             </label>
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Tautan pertemuan</span>
@@ -177,10 +178,10 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Kategori tempat aman</span>
-              <select name="meetingPlaceCategory" defaultValue="" required disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100">
+              <SelectControl name="meetingPlaceCategory" defaultValue="" required disabled={isPending} containerClassName="mt-2">
                 <option value="" disabled>Pilih kategori</option>
                 <option>Sekolah</option><option>Kampus</option><option>Ruang publik</option><option>Kafe</option>
-              </select>
+              </SelectControl>
             </label>
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Tautan Google Maps</span>

@@ -5,12 +5,14 @@ import { FormEvent, useState } from "react";
 
 import Breadcrumbs from "../ui/breadcrumbs";
 import { ArrowLeftIcon, CheckIcon, MapPinIcon, VideoIcon, WarningIcon, UsersIcon } from "../ui/icons";
+import { SelectControl } from "../ui/select-control";
 
 type CollaborationMode = "Daring" | "Luring" | "Hybrid";
 
 export default function UbahPosisi() {
   const [saved, setSaved] = useState(false);
   const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>("Daring");
+  const [hasCustomRequirements, setHasCustomRequirements] = useState(true);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,11 +73,11 @@ export default function UbahPosisi() {
               </label>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-900">Jumlah anggota</span>
-                <select defaultValue="1" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20">
+                <SelectControl defaultValue="1" containerClassName="mt-2" className="rounded-xl">
                   <option value="1">1 orang</option>
                   <option value="2">2 orang</option>
                   <option value="3">3 orang</option>
-                </select>
+                </SelectControl>
               </label>
             </div>
 
@@ -88,9 +90,9 @@ export default function UbahPosisi() {
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-semibold text-slate-900">Mode kolaborasi</span>
-                <select value={collaborationMode} onChange={(event) => setCollaborationMode(event.target.value as CollaborationMode)} className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20">
+                <SelectControl value={collaborationMode} onChange={(event) => setCollaborationMode(event.target.value as CollaborationMode)} containerClassName="mt-2" className="rounded-xl">
                   <option>Daring</option><option>Luring</option><option>Hybrid</option>
-                </select>
+                </SelectControl>
               </label>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-900">Komitmen belajar per minggu</span>
@@ -113,9 +115,9 @@ export default function UbahPosisi() {
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-900">Platform pertemuan</span>
-                    <select defaultValue="Google Meet" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20">
+                    <SelectControl defaultValue="Google Meet" containerClassName="mt-2" className="rounded-xl">
                       <option>Google Meet</option><option>Zoom</option><option>Microsoft Teams</option><option>Discord</option>
-                    </select>
+                    </SelectControl>
                   </label>
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-900">Tautan pertemuan</span>
@@ -128,10 +130,10 @@ export default function UbahPosisi() {
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-900">Kategori tempat aman</span>
-                    <select defaultValue="" required className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20">
+                    <SelectControl defaultValue="" required containerClassName="mt-2" className="rounded-xl">
                       <option value="" disabled>Pilih kategori</option>
                       <option>Sekolah</option><option>Kampus</option><option>Ruang publik</option><option>Kafe</option>
-                    </select>
+                    </SelectControl>
                   </label>
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-900">Tautan Google Maps</span>
@@ -157,8 +159,56 @@ export default function UbahPosisi() {
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Alat kolaborasi <span className="font-normal text-slate-400">(opsional)</span></span>
               <span className="mt-1 block text-xs leading-5 text-slate-500">Kosongkan jika belum ditentukan. Kamu dapat menambahkannya nanti.</span>
-              <input placeholder="Contoh: Figma, Google Drive, Notion" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20" />
+              <input defaultValue="Figma, Google Drive" placeholder="Contoh: Figma, Google Drive, Notion" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20" />
             </label>
+
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5" aria-labelledby="edit-requirements-heading">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 id="edit-requirements-heading" className="text-lg font-bold text-slate-950">
+                    Persyaratan tambahan <span className="text-sm font-normal text-slate-400">(opsional)</span>
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    Tambahkan hanya jika proyek memiliki ketentuan khusus di luar jenjang pelajar yang sudah dipilih.
+                  </p>
+                </div>
+                <label className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    checked={hasCustomRequirements}
+                    onChange={(event) => setHasCustomRequirements(event.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <span className="relative h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-brand-primary peer-focus-visible:ring-2 peer-focus-visible:ring-brand-primary peer-focus-visible:ring-offset-2 after:absolute after:left-1 after:top-1 after:size-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+                  <span className="sr-only">Aktifkan persyaratan tambahan</span>
+                </label>
+              </div>
+
+              {hasCustomRequirements ? (
+                <div className="mt-5 space-y-5 border-t border-slate-100 pt-5">
+                  <label className="block">
+                    <span className="text-sm font-semibold text-slate-900">Daftar persyaratan</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-500">Tulis satu persyaratan pada setiap baris.</span>
+                    <textarea
+                      defaultValue={"Pelajar SMA/SMK atau mahasiswa aktif\nBersedia mengikuti pertemuan awal"}
+                      rows={4}
+                      required
+                      placeholder={"Contoh:\nPelajar SMA/SMK atau mahasiswa aktif\nBersedia mengikuti pertemuan awal"}
+                      className="mt-2 w-full resize-y rounded-xl border border-slate-300 px-4 py-3 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-semibold text-slate-900">Tautan sumber <span className="font-normal text-slate-400">(opsional)</span></span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-500">Gunakan jika persyaratan berasal dari penyelenggara, sekolah, kampus, atau organisasi tertentu.</span>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </section>
 
             <aside className="rounded-2xl bg-brand-soft p-4 sm:p-5">
               <p className="text-sm font-bold text-slate-950">Tips membuat posisi yang ramah pelajar</p>

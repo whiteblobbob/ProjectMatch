@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CheckIcon, UploadIcon } from "@/app/components/ui/icons";
+import { SelectControl } from "@/app/components/ui/select-control";
 import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from "react";
 import {
   formatFileSize,
@@ -236,7 +237,7 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
           <TextInput field="studyProgram" label="Program studi" value={data.studyProgram} error={errors.studyProgram} onChange={(value) => onChange("studyProgram", value)} placeholder="Contoh: Desain Komunikasi Visual" disabled={disabled} />
         ) : null}
         <Field id="registration-educationLevel" label={data.educationStatus === "student" ? "Jenjang sekolah" : "Jenjang pendidikan"} error={errors.educationLevel}>
-          <select
+          <SelectControl
             id="registration-educationLevel"
             value={data.educationLevel}
             onChange={(event) => {
@@ -246,18 +247,19 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
             disabled={disabled}
             aria-invalid={Boolean(errors.educationLevel)}
             aria-describedby={errors.educationLevel ? "registration-educationLevel-error" : undefined}
-            className={`${inputClass} ${errors.educationLevel ? "border-red-400" : ""}`}
+            containerClassName="mt-2"
+            className={`rounded-xl ${errors.educationLevel ? "border-red-400" : ""}`}
           >
             <option value="">{data.educationStatus === "student" ? "Pilih jenjang sekolah" : "Pilih jenjang pendidikan"}</option>
             {educationLevels.map((level) => <option key={level} value={level}>{level}</option>)}
-          </select>
+          </SelectControl>
         </Field>
         {data.educationStatus === "student" ? (
           <Field id="registration-schoolGrade" label="Kelas saat ini" error={errors.schoolGrade}>
-            <select id="registration-schoolGrade" value={data.schoolGrade} onChange={(event) => onChange("schoolGrade", event.target.value)} disabled={disabled || !data.educationLevel} aria-invalid={Boolean(errors.schoolGrade)} aria-describedby={errors.schoolGrade ? "registration-schoolGrade-error" : undefined} className={`${inputClass} ${errors.schoolGrade ? "border-red-400" : ""}`}>
+            <SelectControl id="registration-schoolGrade" value={data.schoolGrade} onChange={(event) => onChange("schoolGrade", event.target.value)} disabled={disabled || !data.educationLevel} aria-invalid={Boolean(errors.schoolGrade)} aria-describedby={errors.schoolGrade ? "registration-schoolGrade-error" : undefined} containerClassName="mt-2" className={`rounded-xl ${errors.schoolGrade ? "border-red-400" : ""}`}>
               <option value="">{data.educationLevel ? "Pilih kelas" : "Pilih jenjang dahulu"}</option>
               {schoolGrades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
-            </select>
+            </SelectControl>
           </Field>
         ) : (
           <TextInput field="entryYear" label="Tahun masuk kuliah" value={data.entryYear} error={errors.entryYear} onChange={(value) => onChange("entryYear", value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" placeholder="2024" disabled={disabled} />
@@ -405,10 +407,10 @@ export function VerificationStep({ data, errors, onChange, file, onFileChange, o
         ) : (
           <div className="space-y-4">
             <Field id="registration-documentType" label="Jenis dokumen" error={errors.documentType}>
-              <select id="registration-documentType" value={data.documentType} onChange={(event) => onChange("documentType", event.target.value)} disabled={disabled} className={inputClass}>
+              <SelectControl id="registration-documentType" value={data.documentType} onChange={(event) => onChange("documentType", event.target.value)} disabled={disabled} containerClassName="mt-2" className="rounded-xl">
                 <option value="student-card">Kartu pelajar/mahasiswa</option>
                 <option value="enrollment-letter">Surat keterangan aktif</option>
-              </select>
+              </SelectControl>
             </Field>
             <p className="rounded-xl bg-slate-100 p-3 text-xs leading-5 text-slate-700">
               Pastikan nama dan institusi terlihat. Tutupi NIS/NIM, alamat, barcode, dan informasi lain yang tidak diperlukan.

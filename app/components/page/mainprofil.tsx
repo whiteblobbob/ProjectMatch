@@ -25,6 +25,7 @@ import {
   XSocialIcon,
   YoutubeIcon,
 } from "@/app/components/ui/icons";
+import { SelectControl } from "@/app/components/ui/select-control";
 import {
   MAX_PROFILE_CONTACTS,
   ProfilePublicInfo,
@@ -584,9 +585,9 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     <input id="profile-name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} required minLength={2} maxLength={80} disabled={isPending} autoComplete="name" placeholder="Nama lengkapmu" className={inputClass} />
                   </Field>
                   <Field label="Status pendidikan" htmlFor="profile-education">
-                    <select id="profile-education" value={draft.educationLevel} onChange={(event) => setDraft((current) => ({ ...current, educationLevel: event.target.value as ProfileForm["educationLevel"] }))} disabled={isPending || availableEducationOptions.length === 1} className={inputClass}>
+                    <SelectControl id="profile-education" value={draft.educationLevel} onChange={(event) => setDraft((current) => ({ ...current, educationLevel: event.target.value as ProfileForm["educationLevel"] }))} disabled={isPending || availableEducationOptions.length === 1} className="rounded-xl">
                       {availableEducationOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </select>
+                    </SelectControl>
                     <p className="mt-2 text-xs leading-5 text-slate-500">
                       Status berasal dari data registrasi dan hanya dapat dipertahankan atau diperbarui ke jenjang berikutnya.
                     </p>
