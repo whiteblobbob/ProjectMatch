@@ -1,21 +1,16 @@
-"use client";
 import Image from "next/image"
-import { useEffect, useState } from "react"
 import { queryProjects } from "@/app/actions/project";
 import ProjectCard from "../card/projectcard";
+import { notFound } from "next/navigation";
 
-export default function GuestPage(){
-    const [projects, setProjects] = useState<any[]>([]);
+export default async function GuestPage(){
+    const result = await queryProjects({ status: "OPEN_RECRUITMENT" });
 
-    useEffect(() => {
-        const init = async () => {
-            const projects = await queryProjects({ status: "OPEN_RECRUITMENT" });
-            console.log(projects);
-            setProjects(projects.data.projects || []);
-        };
+    if (!(result.success && "data" in result)) {
+        notFound();
+    }
 
-        init();
-    }, []);
+    const projects = result.data.projects;
 
     return(
         <>
@@ -70,6 +65,7 @@ export default function GuestPage(){
         </div>
         {  projects && projects.map((project) => (
             <ProjectCard
+                id={project.id  }
                 title={project.title}
                 category={project.category.name}
                 roles={project.projectRoles.map((role: any) => role.role.name)}

@@ -108,6 +108,11 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
           totalProjectsCompleted: true,
         },
       },
+      category: {
+        select: {
+          name: true,
+        },
+      },
       projectStatusCriteria: {
         include: { status: true },
       },
@@ -193,6 +198,10 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
 
   if (project.status !== "OPEN_RECRUITMENT") {
     throw new ActionError("This project is not open for applications");
+  }
+
+  if (!(data.roleId in project.projectRoles.map(role => role.roleId))) {
+    throw new ActionError("The selected role is not part of this project");
   }
 
   if (project.deadline && project.deadline < new Date()) {
