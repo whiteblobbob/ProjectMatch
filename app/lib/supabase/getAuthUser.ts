@@ -3,6 +3,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createClient } from "./server";
 import { DEMO_SESSION_COOKIE, DEMO_USER_ID, isDemoAccountEnabled } from "../demo-account";
+import { connection } from "next/server";
+import { redirect } from "next/navigation";
 
 export type AuthUser = {
   id: string;
@@ -10,6 +12,7 @@ export type AuthUser = {
 };
 
 export async function getAuthUser(): Promise<AuthUser | null> {
+  await connection();
   const cookieStore = await cookies();
 
   if (isDemoAccountEnabled() && cookieStore.get(DEMO_SESSION_COOKIE)?.value === "active") {
@@ -26,7 +29,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     return null;
   }
 
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
   const {
     data: { user },
     error,
@@ -40,4 +43,14 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     id: user.id,
     email: user.email ?? null,
   };
+}
+
+export async function requireAuthUser(): Promise<AuthUser> {
+  const user = await getAuthUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
 }

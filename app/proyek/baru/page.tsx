@@ -1,9 +1,8 @@
 import { Suspense } from "react";
-import LoginRequired from "../../components/auth/login-required";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import CreateProjectForm from "../../components/project/create-project-form";
 import { getProjectFormOptions } from "../../lib/project-form";
-import { getAuthUser } from "../../lib/supabase/getAuthUser";
+import { requireAuthUser } from "../../lib/supabase/getAuthUser";
 
 export default function CreateProjectPage() {
   return (
@@ -17,17 +16,7 @@ export default function CreateProjectPage() {
 }
 
 async function CreateProjectAccess() {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return (
-      <LoginRequired
-        area="Aktivitas"
-        returnTo="/proyek/baru"
-        description="Masuk untuk membuat postingan proyek dan mulai mencari anggota tim."
-      />
-    );
-  }
+  const user = await requireAuthUser();
 
   const result = await getProjectFormOptions(user.id)
     .then((options) => ({ options, error: null }))

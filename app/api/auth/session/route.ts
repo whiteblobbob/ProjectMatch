@@ -21,7 +21,7 @@ export async function POST() {
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
-    const supabase = createClient(cookieStore);
+    const supabase = await createClient();
     await supabase.auth.signOut();
   }
 

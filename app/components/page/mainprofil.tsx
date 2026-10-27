@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
+import VerificationForm from "@/app/components/auth/verification/verification-form";
 import { PlusIcon } from "@/app/components/ui/icons";
 import {
   ProfileForm,
@@ -43,6 +44,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
   const [profile, setProfile] = useState(initialProfile);
   const [draft, setDraft] = useState<ProfileForm>(() => editableProfile(initialProfile));
   const [isEditing, setIsEditing] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [error, setError] = useState("");
@@ -54,6 +56,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const verifyCloseButtonRef = useRef<HTMLButtonElement>(null);
 
   const educationLabel = profileEducationOptions.find(
     (option) => option.value === profile.educationLevel,
@@ -102,6 +105,24 @@ export default function Profil({ initialProfile }: ProfilProps) {
       document.removeEventListener("keydown", handleEscape);
     };
   }, [isEditing, isPending]);
+
+  useEffect(() => {
+    if (!isVerifying) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    verifyCloseButtonRef.current?.focus();
+
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setIsVerifying(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isVerifying]);
 
   function openEditor(focusTarget?: "skills" | "photo") {
     setDraft(editableProfile(profile));
@@ -355,6 +376,15 @@ export default function Profil({ initialProfile }: ProfilProps) {
               {completeness < 100 && <button type="button" onClick={() => openEditor()} className="mt-3 text-sm font-semibold text-brand-primary hover:underline">Lengkapi sekarang →</button>}
             </section>
 
+            <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="verification-heading">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="verification-heading" className="font-bold text-slate-950">Verifikasi pendidikan</h2>
+                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Belum terverifikasi</span>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Verifikasi status pelajar atau mahasiswamu agar profilmu lebih dipercaya calon rekan tim.</p>
+              <button type="button" onClick={() => setIsVerifying(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-primary px-4 text-sm font-semibold text-white transition hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Verifikasi</button>
+            </section>
+
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="contact-heading">
               <h2 id="contact-heading" className="font-bold text-slate-950">Kontak publik</h2>
               <p className={`mt-3 break-words text-sm leading-6 ${profile.contactInfo ? "text-slate-700" : "text-slate-500"}`}>
@@ -505,6 +535,20 @@ export default function Profil({ initialProfile }: ProfilProps) {
                 <button type="submit" disabled={isPending} className="min-h-11 rounded-xl bg-brand-primary px-5 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70">{isPending ? "Menyimpan…" : "Simpan perubahan"}</button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {isVerifying && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="verification-form-title">
+          <button type="button" aria-label="Tutup verifikasi" className="absolute inset-0 bg-slate-950/55 backdrop-blur-[2px]" onClick={() => setIsVerifying(false)} />
+          <section className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+            <div className="flex items-center justify-end border-b border-slate-200 px-5 py-4 sm:px-7">
+              <button ref={verifyCloseButtonRef} type="button" onClick={() => setIsVerifying(false)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label="Tutup">×</button>
+            </div>
+            <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-7">
+              <VerificationForm />
+            </div>
           </section>
         </div>
       )}

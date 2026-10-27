@@ -5,10 +5,9 @@ import ApplicationCard from "../components/activity/application-card";
 import ActivitySection from "../components/activity/activity-section";
 import { ActivityError, ActivitySkeleton, EmptyState } from "../components/activity/activity-states";
 import ProjectPostCard from "../components/activity/project-post-card";
-import LoginRequired from "../components/auth/login-required";
 import Navbar from "../components/navigation-bar/guestnavbar";
 import { getActivityOverview } from "../lib/activity";
-import { getAuthUser } from "../lib/supabase/getAuthUser";
+import { requireAuthUser } from "../lib/supabase/getAuthUser";
 
 export default function AktivitasPage() {
   return (
@@ -22,17 +21,7 @@ export default function AktivitasPage() {
 }
 
 async function AktivitasAccess() {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return (
-      <LoginRequired
-        area="Aktivitas"
-        returnTo="/aktivitas"
-        description="Masuk untuk memantau lamaran, undangan tim, dan perkembangan proyekmu di satu tempat."
-      />
-    );
-  }
+  const user = await requireAuthUser();
 
   const result = await getActivityOverview(user.id)
     .then((data) => ({ data, error: null }))

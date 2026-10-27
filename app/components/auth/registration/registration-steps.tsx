@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
-  formatFileSize,
   type RegistrationData,
   type RegistrationErrors,
-  type RegistrationField,
   type RegistrationStepId,
-  type VerificationMethod,
 } from "./registration-types";
 
 type UpdateField = <Field extends keyof RegistrationData>(field: Field, value: RegistrationData[Field]) => void;
@@ -20,10 +17,10 @@ type StepProps = {
   disabled?: boolean;
 };
 
-const inputClass =
+export const inputClass =
   "mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50";
 
-function Field({
+export function Field({
   id,
   label,
   error,
@@ -46,7 +43,7 @@ function Field({
   );
 }
 
-function TextInput({
+export function TextInput({
   field,
   label,
   value,
@@ -55,7 +52,7 @@ function TextInput({
   hint,
   ...props
 }: {
-  field: RegistrationField;
+  field: string;
   label: string;
   value: string;
   error?: string;
@@ -98,7 +95,7 @@ export function AccountStep({ data, errors, onChange, disabled }: StepProps) {
     <section aria-labelledby="account-step-title">
       <div id="account-step-title">
         <StepHeading
-          eyebrow="Langkah 1 dari 4"
+          eyebrow="Langkah 1"
           title="Buat akunmu"
           description="Gunakan email aktif untuk masuk ke ProjectMatch. Data pendidikan akan dilengkapi di langkah berikutnya."
         />
@@ -250,162 +247,6 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
   );
 }
 
-type InstitutionalEmailFieldProps = {
-  value: string;
-  error?: string;
-  onChange: (value: string) => void;
-  onRequestCode?: (email: string) => void;
-  disabled?: boolean;
-};
-
-export function InstitutionalEmailField({ value, error, onChange, onRequestCode, disabled }: InstitutionalEmailFieldProps) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <TextInput field="institutionalEmail" label="Email sekolah atau kampus" value={value} error={error} onChange={onChange} type="email" placeholder="nama@institusi.ac.id" disabled={disabled} />
-      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          disabled={disabled || !onRequestCode}
-          onClick={() => onRequestCode?.(value)}
-          className="min-h-11 rounded-xl border border-brand-primary bg-white px-4 text-sm font-semibold text-brand-primary disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
-        >
-          Kirim kode
-        </button>
-        <input aria-label="Kode verifikasi" placeholder="6 digit kode" inputMode="numeric" disabled className="min-h-11 flex-1 rounded-xl border border-slate-300 bg-slate-100 px-3 text-sm text-slate-500" />
-      </div>
-      <p className="mt-3 text-xs leading-5 text-amber-800">Verifikasi akan diproses setelah integrasi backend tersedia.</p>
-    </div>
-  );
-}
-
-type VerificationDocumentFieldProps = {
-  file: File | null;
-  error?: string;
-  onFileChange: (file: File | null) => void;
-  onValidationError: (message: string) => void;
-  disabled?: boolean;
-};
-
-export function VerificationDocumentField({ file, error, onFileChange, onValidationError, disabled }: VerificationDocumentFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const validateAndSelect = (candidate?: File) => {
-    if (!candidate) return;
-    const acceptedTypes = ["image/jpeg", "image/png", "application/pdf"];
-    if (!acceptedTypes.includes(candidate.type)) {
-      onValidationError("Format dokumen harus JPG, PNG, atau PDF.");
-      return;
-    }
-    if (candidate.size > 5 * 1024 * 1024) {
-      onValidationError("Ukuran dokumen maksimal 5 MB.");
-      return;
-    }
-    onValidationError("");
-    onFileChange(candidate);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    if (!disabled) validateAndSelect(event.dataTransfer.files[0]);
-  };
-
-  return (
-    <div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-        onChange={(event: ChangeEvent<HTMLInputElement>) => validateAndSelect(event.target.files?.[0])}
-        disabled={disabled}
-        className="sr-only"
-        aria-describedby={error ? "registration-document-error" : "registration-document-hint"}
-      />
-      <div
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={handleDrop}
-        className={`rounded-xl border-2 border-dashed p-5 text-center ${error ? "border-red-300 bg-red-50" : "border-slate-300 bg-slate-50"}`}
-      >
-        <svg viewBox="0 0 24 24" className="mx-auto size-8 text-brand-primary" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-          <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <p className="mt-2 text-sm font-semibold text-slate-900">Tarik dokumen ke sini atau pilih dari perangkat</p>
-        <p id="registration-document-hint" className="mt-1 text-xs text-slate-500">JPG, PNG, atau PDF · Maksimal 5 MB</p>
-        <button type="button" onClick={() => inputRef.current?.click()} disabled={disabled} className="mt-4 min-h-11 rounded-xl bg-white px-4 text-sm font-semibold text-brand-primary ring-1 ring-inset ring-slate-300 hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-60">
-          {file ? "Ganti dokumen" : "Pilih dokumen"}
-        </button>
-      </div>
-      {file && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-left">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-900">{file.name}</p>
-            <p className="mt-0.5 text-xs text-slate-600">{formatFileSize(file.size)} · Dipilih di perangkat, belum diunggah</p>
-          </div>
-          <button type="button" onClick={() => { onFileChange(null); if (inputRef.current) inputRef.current.value = ""; }} className="min-h-11 shrink-0 rounded-lg px-3 text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600">
-            Hapus
-          </button>
-        </div>
-      )}
-      {error && <p id="registration-document-error" className="mt-2 text-xs font-medium text-red-700">{error}</p>}
-    </div>
-  );
-}
-
-export function VerificationStep({ data, errors, onChange, file, onFileChange, onFileError, disabled }: StepProps & {
-  file: File | null;
-  onFileChange: (file: File | null) => void;
-  onFileError: (message: string) => void;
-}) {
-  const methods: Array<{ value: VerificationMethod; title: string; description: string }> = [
-    { value: "institutional-email", title: "Email sekolah atau kampus", description: "Gunakan alamat email resmi institusimu." },
-    { value: "document", title: "Dokumen pendidikan", description: "Pilih kartu pelajar/mahasiswa atau surat aktif." },
-  ];
-
-  return (
-    <section aria-labelledby="verification-step-title">
-      <div id="verification-step-title">
-        <StepHeading eyebrow="Langkah 3" title="Pilih cara verifikasi" description="ProjectMatch hanya ditujukan untuk pelajar dan mahasiswa aktif. Verifikasi membantu menjaga komunitas tetap aman dan relevan." />
-      </div>
-      <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-        <strong>Status integrasi:</strong> Verifikasi akan diproses setelah integrasi backend tersedia. Pilihanmu saat ini hanya disimpan sementara di halaman ini.
-      </div>
-      <fieldset>
-        <legend className="sr-only">Metode verifikasi</legend>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {methods.map((method) => (
-            <label key={method.value} className={`cursor-pointer rounded-xl border p-4 transition ${data.verificationMethod === method.value ? "border-brand-primary bg-brand-soft ring-1 ring-brand-primary" : "border-slate-200 bg-white hover:border-slate-400"}`}>
-              <span className="flex items-start gap-3">
-                <input type="radio" name="verification-method" value={method.value} checked={data.verificationMethod === method.value} onChange={() => onChange("verificationMethod", method.value)} disabled={disabled} className="mt-1 size-4 accent-blue-700" />
-                <span>
-                  <span className="block text-sm font-bold text-slate-900">{method.title}</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-600">{method.description}</span>
-                </span>
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <div className="mt-5">
-        {data.verificationMethod === "institutional-email" ? (
-          <InstitutionalEmailField value={data.institutionalEmail} error={errors.institutionalEmail} onChange={(value) => onChange("institutionalEmail", value)} disabled={disabled} />
-        ) : (
-          <div className="space-y-4">
-            <Field id="registration-documentType" label="Jenis dokumen" error={errors.documentType}>
-              <select id="registration-documentType" value={data.documentType} onChange={(event) => onChange("documentType", event.target.value)} disabled={disabled} className={inputClass}>
-                <option value="student-card">Kartu pelajar/mahasiswa</option>
-                <option value="enrollment-letter">Surat keterangan aktif</option>
-              </select>
-            </Field>
-            <p className="rounded-xl bg-slate-100 p-3 text-xs leading-5 text-slate-700">
-              Pastikan nama dan institusi terlihat. Tutupi NIS/NIM, alamat, barcode, dan informasi lain yang tidak diperlukan.
-            </p>
-            <VerificationDocumentField file={file} error={errors.document} onFileChange={onFileChange} onValidationError={onFileError} disabled={disabled} />
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
 export function GuardianStep({ data, errors, onChange, disabled }: StepProps) {
   return (
     <section aria-labelledby="guardian-step-title">
@@ -459,8 +300,7 @@ function ConsentCheckbox({ checked, onChange, error, id, children }: { checked: 
   );
 }
 
-export function RegistrationReviewStep({ data, errors, onChange, file, needsGuardian, onEdit }: StepProps & {
-  file: File | null;
+export function RegistrationReviewStep({ data, errors, onChange, needsGuardian, onEdit }: StepProps & {
   needsGuardian: boolean;
   onEdit: (step: RegistrationStepId) => void;
 }) {
@@ -482,10 +322,6 @@ export function RegistrationReviewStep({ data, errors, onChange, file, needsGuar
           <SummaryItem term="Periode" detail={`${data.entryYear}–${data.graduationYear}`} />
           <SummaryItem term="Tanggal lahir" detail={data.dateOfBirth} />
         </SummaryCard>
-        <SummaryCard title="Verifikasi" onEdit={() => onEdit("verification")}>
-          <SummaryItem term="Metode" detail={data.verificationMethod === "institutional-email" ? "Email sekolah atau kampus" : "Dokumen pendidikan"} />
-          <SummaryItem term={data.verificationMethod === "institutional-email" ? "Email institusi" : "Dokumen lokal"} detail={data.verificationMethod === "institutional-email" ? data.institutionalEmail : file?.name ?? "—"} />
-        </SummaryCard>
         {needsGuardian && (
           <SummaryCard title="Orang tua atau wali" onEdit={() => onEdit("guardian")}>
             <SummaryItem term="Nama" detail={data.guardianName} />
@@ -493,9 +329,6 @@ export function RegistrationReviewStep({ data, errors, onChange, file, needsGuar
             <SummaryItem term="Email" detail={data.guardianEmail} />
           </SummaryCard>
         )}
-      </div>
-      <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-        <strong>Pengingat privasi:</strong> saat ini hanya email dan kata sandi yang dikirim untuk membuat akun. Informasi pendidikan, metode verifikasi, dokumen, dan data wali tidak dikirim atau disimpan.
       </div>
       <fieldset className="mt-5 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
         <legend className="px-1 text-sm font-bold text-slate-900">Konfirmasi</legend>
@@ -514,7 +347,7 @@ export function RegistrationStatusCard() {
         <svg viewBox="0 0 20 20" className="size-6" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="m4 10.5 3.5 3.5L16 5.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </span>
       <h2 className="mt-4 text-2xl font-bold text-emerald-950">Akun berhasil dibuat</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-emerald-900">Jika verifikasi email akun diaktifkan, periksa kotak masukmu sebelum masuk. Data verifikasi pendidikan belum dikirim karena integrasinya belum tersedia.</p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-emerald-900">Periksa kotak masuk emailmu untuk konfirmasi akunmu sebelum login.</p>
       <Link href="/login" className="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-primary px-5 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Lanjut ke login</Link>
     </div>
   );

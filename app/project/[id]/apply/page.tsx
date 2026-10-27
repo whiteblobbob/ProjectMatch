@@ -1,6 +1,5 @@
 "use client";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
-import Botnav from "../../../components/navigation-bar/bottomnav";
 import { fetchProject, sendApplication } from "@/app/actions/project";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -119,7 +118,6 @@ export default function ProjectApplicationPage({ params }: { params: Promise<{ i
 
         </form>
         </div>
-        <Botnav />
         </>
     )
 }

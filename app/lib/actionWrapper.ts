@@ -44,7 +44,7 @@ export default function actionWrapper<Args extends unknown[], Result>(
             email: process.env.DEMO_ACCOUNT_EMAIL ?? "demo@projectmatch.test",
           } as User;
         } else {
-          const supabase = createClient(cookieStore);
+          const supabase = await createClient();
           const authResult = await supabase.auth.getUser();
           user = authResult.data.user;
           error = authResult.error;

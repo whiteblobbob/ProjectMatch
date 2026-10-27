@@ -9,7 +9,6 @@ import {
   GuardianStep,
   RegistrationReviewStep,
   RegistrationStatusCard,
-  VerificationStep,
 } from "./registration/registration-steps";
 import {
   calculateAge,
@@ -22,7 +21,6 @@ import {
 const baseSteps: RegistrationStep[] = [
   { id: "account", label: "Akun" },
   { id: "education", label: "Pendidikan" },
-  { id: "verification", label: "Verifikasi" },
   { id: "review", label: "Tinjau" },
 ];
 
@@ -42,25 +40,13 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
   const currentYear = new Date().getFullYear();
   const entryYear = Number(data.entryYear);
   const graduationYear = Number(data.graduationYear);
-  const age = calculateAge(data.dateOfBirth);
+  const age = calculateAge(data.dateOfBirth, new Date());
 
   if (data.institutionName.trim().length < 2) errors.institutionName = "Masukkan nama sekolah atau universitas.";
   if (!data.educationLevel) errors.educationLevel = "Pilih jenjang pendidikan.";
   if (!/^\d{4}$/.test(data.entryYear) || entryYear < 2000 || entryYear > currentYear + 1) errors.entryYear = "Masukkan tahun masuk yang valid.";
   if (!/^\d{4}$/.test(data.graduationYear) || graduationYear < entryYear || graduationYear > currentYear + 12) errors.graduationYear = "Tahun lulus harus setelah tahun masuk dan masuk akal.";
   if (age === null || age < 10 || age > 100) errors.dateOfBirth = "Masukkan tanggal lahir yang valid.";
-  return errors;
-}
-
-function validateVerification(data: RegistrationData, file: File | null): RegistrationErrors {
-  const errors: RegistrationErrors = {};
-  if (data.verificationMethod === "institutional-email" && !emailPattern.test(data.institutionalEmail.trim())) {
-    errors.institutionalEmail = "Masukkan email sekolah atau kampus yang valid.";
-  }
-  if (data.verificationMethod === "document") {
-    if (!data.documentType) errors.documentType = "Pilih jenis dokumen.";
-    if (!file) errors.document = "Pilih dokumen untuk pratinjau lokal.";
-  }
   return errors;
 }
 
@@ -85,20 +71,19 @@ export default function RegisterForm() {
   const [data, setData] = useState(initialRegistrationData);
   const [currentStep, setCurrentStep] = useState<RegistrationStepId>("account");
   const [errors, setErrors] = useState<RegistrationErrors>({});
-  const [file, setFile] = useState<File | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [announcement, setAnnouncement] = useState("Langkah Akun dibuka.");
   const formRef = useRef<HTMLFormElement>(null);
 
-  const age = calculateAge(data.dateOfBirth);
+  const age = calculateAge(data.dateOfBirth, new Date());
   const needsGuardian = age !== null && age < 18;
   const steps = useMemo<RegistrationStep[]>(() => needsGuardian
     ? [
-        ...baseSteps.slice(0, 3),
+        ...baseSteps.slice(0, baseSteps.length - 1),
         { id: "guardian", label: "Wali" },
-        baseSteps[3],
+        baseSteps[baseSteps.length - 1],
       ]
     : baseSteps,
   [needsGuardian]);
@@ -114,7 +99,6 @@ export default function RegisterForm() {
   const getStepErrors = (step: RegistrationStepId) => {
     if (step === "account") return validateAccount(data);
     if (step === "education") return validateEducation(data);
-    if (step === "verification") return validateVerification(data, file);
     if (step === "guardian") return validateGuardian(data);
     return validateReview(data);
   };
@@ -177,7 +161,6 @@ export default function RegisterForm() {
       return;
     }
 
-    setFile(null);
     setIsComplete(true);
     setIsPending(false);
   }
@@ -192,22 +175,8 @@ export default function RegisterForm() {
       <div className="mt-7 border-t border-slate-200 pt-7">
         {currentStep === "account" && <AccountStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
         {currentStep === "education" && <EducationStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
-        {currentStep === "verification" && (
-          <VerificationStep
-            data={data}
-            errors={errors}
-            onChange={updateField}
-            file={file}
-            onFileChange={(nextFile) => {
-              setFile(nextFile);
-              setErrors((current) => ({ ...current, document: undefined }));
-            }}
-            onFileError={(message) => setErrors((current) => ({ ...current, document: message || undefined }))}
-            disabled={isPending}
-          />
-        )}
         {currentStep === "guardian" && <GuardianStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
-        {currentStep === "review" && <RegistrationReviewStep data={data} errors={errors} onChange={updateField} file={file} needsGuardian={needsGuardian} onEdit={openStep} disabled={isPending} />}
+        {currentStep === "review" && <RegistrationReviewStep data={data} errors={errors} onChange={updateField} needsGuardian={needsGuardian} onEdit={openStep} disabled={isPending} />}
       </div>
 
       {submitError && <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</div>}

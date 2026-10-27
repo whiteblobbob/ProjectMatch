@@ -1,12 +1,10 @@
 export type RegistrationStepId =
   | "account"
   | "education"
-  | "verification"
   | "guardian"
   | "review";
 
 export type EducationStatus = "student" | "university";
-export type VerificationMethod = "institutional-email" | "document";
 
 export type RegistrationData = {
   fullName: string;
@@ -20,9 +18,6 @@ export type RegistrationData = {
   entryYear: string;
   graduationYear: string;
   dateOfBirth: string;
-  verificationMethod: VerificationMethod;
-  institutionalEmail: string;
-  documentType: string;
   guardianName: string;
   guardianRelationship: string;
   guardianEmail: string;
@@ -32,7 +27,7 @@ export type RegistrationData = {
   confirmedAccuracy: boolean;
 };
 
-export type RegistrationField = keyof RegistrationData | "document";
+export type RegistrationField = keyof RegistrationData;
 export type RegistrationErrors = Partial<Record<RegistrationField, string>>;
 
 export const initialRegistrationData: RegistrationData = {
@@ -47,9 +42,6 @@ export const initialRegistrationData: RegistrationData = {
   entryYear: "",
   graduationYear: "",
   dateOfBirth: "",
-  verificationMethod: "institutional-email",
-  institutionalEmail: "",
-  documentType: "student-card",
   guardianName: "",
   guardianRelationship: "",
   guardianEmail: "",
@@ -59,9 +51,7 @@ export const initialRegistrationData: RegistrationData = {
   confirmedAccuracy: false,
 };
 
-export function calculateAge(dateOfBirth: string) {
-  const today = new Date()
-  
+export function calculateAge(dateOfBirth: string, today: Date) {
   const parts = dateOfBirth.split("-").map(Number);
   if (parts.length !== 3 || parts.some((part) => !Number.isInteger(part))) return null;
 
@@ -79,9 +69,4 @@ export function calculateAge(dateOfBirth: string) {
     (today.getMonth() + 1 === month && today.getDate() >= day);
   if (!birthdayHasPassed) age -= 1;
   return age;
-}
-
-export function formatFileSize(bytes: number) {
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

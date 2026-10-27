@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import Navbar from "../components/navigation-bar/guestnavbar";
 import Mainprofil from "../components/page/mainprofil";
-import LoginRequired, { LoginRequiredFallback } from "../components/auth/login-required";
-import { getAuthUser } from "../lib/supabase/getAuthUser";
+import { LoginRequiredFallback } from "../components/auth/login-required";
 import { fetchProfile } from "../actions/profile";
 
 export default function ProfilPage() {
@@ -17,18 +16,6 @@ export default function ProfilPage() {
 }
 
 async function ProfilAccess() {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return (
-      <LoginRequired
-        area="Profil"
-        returnTo="/profil"
-        description="Masuk untuk melihat dan memperbarui identitas, keahlian, serta rekam jejak kolaborasimu."
-      />
-    );
-  }
-
   const profile = await fetchProfile();
 
   if (!profile.success) {

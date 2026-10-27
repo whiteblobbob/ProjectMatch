@@ -12,7 +12,7 @@ import { DEMO_SESSION_COOKIE, isDemoCredential } from "../lib/demo-account";
 export const signup = actionWrapper(async (formData: SignupForm) => {
   const data = parseOrThrow(SignupValidator, formData);
 
-  const supabase = createClient(await cookies());
+  const supabase = await createClient();
   const { data: userData, error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
@@ -60,7 +60,7 @@ export const login = actionWrapper(async (formData: LoginForm) => {
       return;
     }
 
-    const supabase = createClient(await cookies());
+    const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,

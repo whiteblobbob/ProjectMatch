@@ -1,5 +1,6 @@
 import Navbar from "../components/navigation-bar/guestnavbar";
 import RegisterForm from "../components/auth/register-form";
+import { Suspense } from "react";
 
 export default function RegisterPage() {
   return (
@@ -30,7 +31,9 @@ export default function RegisterPage() {
             <p className="text-sm font-semibold text-brand-primary">Buat akun ProjectMatch</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Daftar sebagai pelajar</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">Lengkapi setiap langkah. Kamu dapat kembali dan mengubah jawaban sebelum membuat akun.</p>
-            <RegisterForm />
+            <Suspense>
+              <RegisterForm />
+            </Suspense>
           </section>
         </div>
       </main>
