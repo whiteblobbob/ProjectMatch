@@ -4,6 +4,7 @@ import { ProfileView } from "@/app/lib/validator/profile";
 import { decodeProfilePublicInfo } from "@/app/lib/profile-public-info";
 import Breadcrumbs from "../ui/breadcrumbs";
 import { ExternalLinkIcon, MapPinIcon } from "../ui/icons";
+import { SelectControl } from "../ui/select-control";
 
 type LamarProjectProps = {
     profile: ProfileView;
@@ -76,12 +77,12 @@ export default function Lamarproject({ profile }: LamarProjectProps) {
                             Posisi yang ingin dilamar
                         </label>
 
-                        <select
+                        <SelectControl
                             id="role"
                             name="role"
                             required
                             defaultValue=""
-                            className="min-h-12 w-full min-w-0 appearance-none rounded-lg border border-border-input bg-white px-3 py-2 text-sm text-text-heading focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-soft"
+                            className="border-border-input text-text-heading focus:ring-2 focus:ring-brand-soft"
                         >
                             <option value="" disabled>
                                 Pilih posisi yang kamu inginkan
@@ -94,7 +95,7 @@ export default function Lamarproject({ profile }: LamarProjectProps) {
                             <option value="Data Analyst">Data Analyst</option>
                             <option value="Project Manager">Project Manager</option>
                             <option value="Other">Lainnya</option>
-                        </select>
+                        </SelectControl>
 
                         <p className="text-xs leading-5 text-text-subheading">
                             Pilih posisi yang paling sesuai dengan kemampuan dan kontribusimu.

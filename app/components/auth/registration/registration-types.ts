@@ -14,6 +14,7 @@ export type RegistrationData = {
   password: string;
   passwordConfirmation: string;
   educationStatus: EducationStatus;
+  institutionId: string;
   institutionName: string;
   studyProgram: string;
   schoolGrade: string;
@@ -42,6 +43,7 @@ export const initialRegistrationData: RegistrationData = {
   password: "",
   passwordConfirmation: "",
   educationStatus: "student",
+  institutionId: "",
   institutionName: "",
   studyProgram: "",
   schoolGrade: "",

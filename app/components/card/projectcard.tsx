@@ -6,19 +6,21 @@ import {
   MapPinIcon,
   UsersIcon,
 } from "@/app/components/ui/icons";
+import { getCollaborationModeLabel, type CollaborationMode } from "@/app/components/ui/collaboration-mode";
 
 type Props = {
   title: string;
   description: string;
   category: string;
   roles: string[];
-  onSite: boolean;
+  collaborationMode: CollaborationMode;
   workHoursPerWeek: number;
   deadline: Date | null;
   slotsAvailable: number;
   teamSize: number;
   owner: string;
   institution: string | null;
+  relevanceLabel?: string;
 };
 
 export default function ProjectCard({
@@ -26,13 +28,14 @@ export default function ProjectCard({
   description,
   category,
   roles,
-  onSite,
+  collaborationMode,
   workHoursPerWeek,
   deadline,
   slotsAvailable,
   teamSize,
   owner,
   institution,
+  relevanceLabel,
 }: Props) {
   const formattedDeadline = deadline
     ? deadline.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
@@ -52,6 +55,7 @@ export default function ProjectCard({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="rounded-md bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">{category}</span>
+                {relevanceLabel ? <span className="rounded-md bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">{relevanceLabel}</span> : null}
                 <span className="font-medium text-slate-500">{title}</span>
               </div>
               <h3 className="mt-3 text-lg font-bold leading-snug text-slate-950 sm:text-xl">
@@ -83,7 +87,7 @@ export default function ProjectCard({
             </div>
             <div className="flex items-center gap-2">
               <MapPinIcon className="size-4 text-slate-400" />
-              <dt className="sr-only">Mode kolaborasi</dt><dd className="font-medium text-slate-700">{onSite ? "Tatap muka" : "Daring"}</dd>
+              <dt className="sr-only">Mode kolaborasi</dt><dd className="font-medium text-slate-700">{getCollaborationModeLabel(collaborationMode)}</dd>
             </div>
           </dl>
 
