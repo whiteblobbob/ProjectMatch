@@ -292,11 +292,6 @@ export default function GuestPage() {
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 id="results-heading" className="text-xl font-bold text-slate-950">Posisi terbuka</h2>
-                {viewerContext && sort === "relevant" ? (
-                  <p className="mt-1 text-xs font-medium text-emerald-700">
-                    Diutamakan dari {viewerContext.institution || viewerContext.city || viewerContext.province} dan wilayah terdekat.
-                  </p>
-                ) : null}
                 <p className="mt-1 text-sm text-slate-500" aria-live="polite">{isLoading ? "Mencari peluang…" : `${filteredProjects.length} proyek ditemukan`}</p>
               </div>
 
@@ -308,8 +303,8 @@ export default function GuestPage() {
                 </button>
                 <label htmlFor="sort-projects" className="sr-only">Urutkan proyek</label>
                 <SelectControl id="sort-projects" value={sort} onChange={(event) => setSort(event.target.value as SortOption)} containerClassName="w-full sm:w-auto" className="sm:w-auto">
-                  <option value="relevant">Paling relevan</option>
-                  <option value="newest">Terbaru</option>
+                  <option value="relevant">{viewerContext ? "Paling relevan" : "Terbaru"}</option>
+                  {viewerContext ? <option value="newest">Terbaru</option> : null}
                   <option value="deadline">Tenggat terdekat</option>
                 </SelectControl>
               </div>
