@@ -40,6 +40,7 @@ import {
   ProfileView,
   profileEducationOptions,
 } from "@/app/lib/validator/profile";
+import VerificationForm from "../auth/verification/verification-form";
 
 type ProfilProps = {
   initialProfile: ProfileView;

@@ -15,105 +15,10 @@ import {
     WarningIcon,
 } from "../ui/icons";
 
-type ProjectStatus = "OPEN_RECRUITMENT" | "IN_PROGRESS" | "COMPLETED";
-
-export type ProjectDetailData = {
-    id: string;
-    title: string;
-    description: string;
-    deadline: Date | null;
-    onSite: boolean;
-    workHoursPerWeek: number;
-    status: ProjectStatus;
-    category: { name: string };
-    owner: { name: string | null; instance: string | null };
-    projectRoles: Array<{ slotsAvailable: number; role: { id: string; name: string } }>;
-    projectMembers: Array<{ role: { name: string } }>;
-    projectStatusCriteria: Array<{ status: { name: string } }>;
-};
-
-const statusMeta: Record<ProjectStatus, { label: string; className: string }> = {
-    OPEN_RECRUITMENT: {
-        label: "Mencari anggota",
-        className: "bg-warning-background text-text-warning",
-    },
-    IN_PROGRESS: {
-        label: "Sedang berjalan",
-        className: "bg-brand-soft text-brand-primary",
-    },
-    COMPLETED: {
-        label: "Selesai",
-        className: "bg-success-background text-success-text",
-    },
-};
-
-// Fallback used by the static preview route so it keeps rendering without data.
-const sampleProject: ProjectDetailData = {
-    id: "sample-project",
-    title: "EcoTrack",
-    description:
-        "Bersama tim, pelajari riset pengguna dan perancangan solusi lingkungan.",
-    deadline: new Date("2026-10-27"),
-    onSite: false,
-    workHoursPerWeek: 6,
-    status: "OPEN_RECRUITMENT",
-    category: { name: "UINIC 2026" },
-    owner: { name: "Raka Aditya", instance: "Universitas Indonesia" },
-    projectRoles: [
-        { slotsAvailable: 1, role: { id: "sample-role", name: "UI/UX Designer" } },
-    ],
-    projectMembers: [
-        { role: { name: "Anggota tim" } },
-        { role: { name: "Anggota tim" } },
-    ],
-    projectStatusCriteria: [],
-};
-
-function formatDeadline(deadline: Date) {
-    return new Date(deadline).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "short",
-    });
-}
-
-export default function ProjectDetail({
-    project = sampleProject,
-}: {
-    project?: ProjectDetailData;
-}) {
-    const totalAvailableSlot = project.projectRoles.reduce(
-        (total, projectRole) => total + projectRole.slotsAvailable,
-        0,
-    );
-    const openRoles = project.projectRoles.filter(
-        (projectRole) => projectRole.slotsAvailable > 0,
-    );
-    const memberCount = project.projectMembers.length;
-    const teamCapacity = memberCount + totalAvailableSlot;
-    const status = statusMeta[project.status];
-    const deadlineLabel = project.deadline
-        ? `Batas pengajuan ${formatDeadline(project.deadline)}`
-        : "Tanpa batas waktu";
-    const requirementsMet =
-        project.status === "OPEN_RECRUITMENT" && totalAvailableSlot > 0;
-
-    const requirements: Requirement[] = [
-        {
-            id: "position",
-            label: "Posisi masih tersedia",
-            status: totalAvailableSlot > 0 ? "met" : "unmet",
-        },
-        {
-            id: "status",
-            label: `Status proyek: ${status.label}`,
-            status: project.status === "OPEN_RECRUITMENT" ? "met" : "unmet",
-        },
-        ...project.projectStatusCriteria.map((criteria, index) => ({
-            id: `criteria-${index}`,
-            label: `Syarat: ${criteria.status.name}`,
-            status: "review" as const,
-        })),
-    ];
+export default function projectdetail() {
+    // Temporary sample data.
+    // Replace these values with backend data when the integration is ready.
+    const requirementsMet = true;
 
     return (
         <main className="min-h-screen w-full min-w-0 bg-background pb-8">
@@ -141,18 +46,16 @@ export default function ProjectDetail({
                 <section className="flex min-w-0 flex-col gap-3 rounded-xl border border-border-default bg-white p-4">
                     <div className="flex min-w-0 items-start justify-between gap-3">
                         <h1 className="min-w-0 text-[21px] font-semibold leading-tight text-text-heading">
-                            {project.title}
+                            EcoTrack
                         </h1>
 
-                        <span
-                            className={`shrink-0 rounded-lg px-2 py-1 text-xs font-semibold ${status.className}`}
-                        >
-                            {status.label}
+                        <span className="shrink-0 rounded-lg bg-warning-background px-2 py-1 text-xs font-semibold text-text-warning">
+                            Mencari anggota
                         </span>
                     </div>
 
                     <p className="text-sm font-medium leading-5 text-text-subheading">
-                        {project.category.name}
+                        UINIC 2026
                     </p>
 
                     <div className="flex min-w-0 items-center gap-2.5">
@@ -166,13 +69,11 @@ export default function ProjectDetail({
 
                         <div className="min-w-0 flex-1">
                             <p className="text-[13px] font-medium text-text-heading">
-                                {project.owner.name ?? "Pengguna ProjectMatch"}
+                                Raka Aditya
                             </p>
 
                             <p className="text-xs leading-5 text-text-subheading">
-                                {project.owner.instance
-                                    ? `${project.owner.instance} · Pembuat proyek`
-                                    : "Pembuat proyek"}
+                                Universitas Indonesia · Pembuat proyek
                             </p>
                         </div>
                     </div>
@@ -189,14 +90,14 @@ export default function ProjectDetail({
                         <div className="flex items-center gap-1.5">
                             <UsersIcon className="size-4 text-text-subheading" />
                             <span className="text-[13px] text-text-subheading">
-                                Tim {memberCount}/{teamCapacity}
+                                Tim 2/3
                             </span>
                         </div>
 
                         <div className="flex items-center gap-1.5">
                             <CalendarIcon className="size-4 text-text-warning" />
                             <span className="text-[13px] text-text-warning">
-                                {deadlineLabel}
+                                Batas pengajuan 27 Okt
                             </span>
                         </div>
                     </div>
@@ -209,7 +110,8 @@ export default function ProjectDetail({
                     </h2>
 
                     <p className="text-[13px] leading-5 text-text-subheading">
-                        {project.description}
+                        Bersama tim, pelajari riset pengguna dan perancangan
+                        solusi lingkungan.
                     </p>
 
                     <p className="text-[13px] leading-5 text-text-subheading">
@@ -221,25 +123,19 @@ export default function ProjectDetail({
                 <hr className="border-border-default" />
 
                 {/* Open position */}
-                {openRoles.length > 0 && (
-                    <section className="flex min-w-0 flex-col gap-4">
-                        <p className="text-xs font-medium text-accent-text">
-                            {openRoles.length} posisi terbuka
-                        </p>
+                <section className="flex min-w-0 flex-col gap-3 rounded-xl border border-border-default bg-white p-4">
+                    <p className="text-xs font-medium text-accent-text">
+                        1 posisi terbuka
+                    </p>
 
-                        {openRoles.map((projectRole) => (
-                            <div
-                                key={projectRole.role.id}
-                                className="flex min-w-0 flex-col gap-3 rounded-xl border border-border-default bg-white p-4"
-                            >
-                                <h2 className="text-[21px] font-semibold leading-tight text-text-heading">
-                                    {projectRole.role.name}
-                                </h2>
+                    <h2 className="text-[21px] font-semibold leading-tight text-text-heading">
+                        UI/UX Designer
+                    </h2>
 
-                                <p className="text-sm leading-5 text-text-heading">
-                                    Rancang user flow dan tiga layar utama untuk
-                                    website lingkungan.
-                                </p>
+                    <p className="text-sm leading-5 text-text-heading">
+                        Rancang user flow dan tiga layar utama untuk website
+                        lingkungan.
+                    </p>
 
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                         <div className="flex items-center gap-1.5">
@@ -320,7 +216,7 @@ export default function ProjectDetail({
                 <div className="sticky bottom-0 -mx-4 border-t border-border-default bg-background/95 px-4 py-3 backdrop-blur-sm">
                     {requirementsMet ? (
                         <a
-                            href={`/project/${project.id}/apply`}
+                            href="/projectdetail/pengajuanbergabung"
                             className="flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brand-secondary"
                         >
                             Ajukan Bergabung
