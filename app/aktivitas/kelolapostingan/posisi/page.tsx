@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 
-import LoginRequired, { LoginRequiredFallback } from "../../../components/auth/login-required";
+import { ActivitySkeleton } from "../../../components/activity/activity-states";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import UbahPosisi from "../../../components/page/ubahposisi";
-import { getAuthUser } from "../../../lib/supabase/getAuthUser";
+import { requireSessionUser } from "../../../lib/ui/session";
 
 export default function UbahPosisiPage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<LoginRequiredFallback />}>
+      <Suspense fallback={<ActivitySkeleton />}>
         <UbahPosisiAccess />
       </Suspense>
     </>
@@ -17,17 +17,7 @@ export default function UbahPosisiPage() {
 }
 
 async function UbahPosisiAccess() {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return (
-      <LoginRequired
-        area="Aktivitas"
-        returnTo="/aktivitas/kelolapostingan/posisi"
-        description="Masuk untuk mengubah kebutuhan posisi di proyekmu."
-      />
-    );
-  }
+  await requireSessionUser();
 
   return <UbahPosisi />;
 }

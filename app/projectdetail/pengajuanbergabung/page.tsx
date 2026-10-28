@@ -1,16 +1,16 @@
 import { Suspense } from "react";
 
-import { fetchProfile } from "../../actions/profile";
-import LoginRequired, { LoginRequiredFallback } from "../../components/auth/login-required";
+import { getProfileView } from "../../lib/ui/actions";
+import { ActivitySkeleton } from "../../components/activity/activity-states";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import Lamarproject from "../../components/page/lamarproject";
-import { getAuthUser } from "../../lib/supabase/getAuthUser";
+import { requireSessionUser } from "../../lib/ui/session";
 
 export default function ProjectApplicationPage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<LoginRequiredFallback />}>
+      <Suspense fallback={<ActivitySkeleton />}>
         <ProjectApplicationAccess />
       </Suspense>
     </>
@@ -18,19 +18,9 @@ export default function ProjectApplicationPage() {
 }
 
 async function ProjectApplicationAccess() {
-  const user = await getAuthUser();
+  await requireSessionUser();
 
-  if (!user) {
-    return (
-      <LoginRequired
-        area="Aktivitas"
-        returnTo="/projectdetail/pengajuanbergabung"
-        description="Masuk untuk mengajukan bergabung dan menggunakan data dari profilmu."
-      />
-    );
-  }
-
-  const profile = await fetchProfile();
+  const profile = await getProfileView();
 
   if (!profile.success) {
     return (

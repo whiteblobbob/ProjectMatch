@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Navbar from "../components/navigation-bar/guestnavbar";
 import Mainprofil from "../components/page/mainprofil";
-import { LoginRequiredFallback } from "../components/auth/login-required";
+import { ActivitySkeleton } from "../components/activity/activity-states";
 import { fetchProfile } from "../actions/profile";
 import { connection } from "next/server";
 
@@ -9,7 +9,7 @@ export default function ProfilPage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<LoginRequiredFallback />}>
+      <Suspense fallback={<ActivitySkeleton />}>
         <ProfilAccess />
       </Suspense>
     </>

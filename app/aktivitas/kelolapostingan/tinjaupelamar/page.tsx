@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { LoginRequiredFallback } from "../../../components/auth/login-required";
+import { ActivitySkeleton } from "../../../components/activity/activity-states";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import TinjauPelamar from "../../../components/page/tinjaupelamar";
 
@@ -7,7 +7,7 @@ export default function TinjauPelamarPage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<LoginRequiredFallback />}>
+      <Suspense fallback={<ActivitySkeleton />}>
         <TinjauPelamarAccess />
       </Suspense>
     </>

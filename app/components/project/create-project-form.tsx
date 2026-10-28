@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
-import { createProjectPosting } from "@/app/actions/project";
+import { createProjectPosting } from "@/app/lib/ui/actions";
 import type { InstitutionOption } from "@/app/components/auth/registration/institution-combobox";
 import {
   collaborationModes,
   getCollaborationModeLabel,
   type CollaborationMode,
 } from "@/app/components/ui/collaboration-mode";
-import type { ProjectFormOptions } from "@/app/lib/project-form";
+import type { ProjectFormOptions } from "@/app/lib/ui/project-form";
 import { MapPinIcon, PencilIcon, PlusIcon, TrashIcon, VideoIcon, WarningIcon, XIcon } from "../ui/icons";
 import { SelectControl } from "../ui/select-control";
 import ProjectAudienceScope, { type AudienceScope } from "./project-audience-scope";

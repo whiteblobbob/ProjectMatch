@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import CreateProjectForm from "../../components/project/create-project-form";
 import { getProjectFormOptions } from "../../lib/project-form";
-import { requireAuthUser } from "../../lib/supabase/getAuthUser";
+import { requireSessionUser } from "../../lib/ui/session";
 
 export default function CreateProjectPage() {
   return (
@@ -16,7 +16,7 @@ export default function CreateProjectPage() {
 }
 
 async function CreateProjectAccess() {
-  await requireAuthUser();
+  await requireSessionUser();
 
   const result = await getProjectFormOptions()
     .then((options) => ({ options, error: null }))

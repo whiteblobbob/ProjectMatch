@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { LoginRequiredFallback } from "../../components/auth/login-required";
+import { ActivitySkeleton } from "../../components/activity/activity-states";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import KelolaPostingan from "../../components/page/kelolapostingan";
 
@@ -7,7 +7,7 @@ export default function KelolaPostinganPage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<LoginRequiredFallback />}>
+      <Suspense fallback={<ActivitySkeleton />}>
         <KelolaPostinganAccess />
       </Suspense>
     </>

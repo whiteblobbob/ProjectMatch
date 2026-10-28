@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { queryProjects } from "@/app/actions/project";
-import { fetchProfile } from "@/app/actions/profile";
+import { getProfileView, listGuestProjects } from "@/app/lib/ui/actions";
 import { institutionOptions } from "@/app/components/auth/registration/institution-combobox";
 import { SelectControl } from "@/app/components/ui/select-control";
-import { decodeProfilePublicInfo } from "@/app/lib/profile-public-info";
+import { decodeProfilePublicInfo } from "@/app/lib/ui/profile-public-info";
 import ExploreHero from "../explore/explore-hero";
 import { EmptyProjectState, ProjectListSkeleton } from "../explore/explore-states";
 import {
@@ -89,7 +88,7 @@ export default function GuestPage() {
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     setError("");
-    const result = await queryProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 });
+    const result = await listGuestProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 });
 
     if (!result.success || !("data" in result)) {
       setProjects([]);
@@ -105,7 +104,7 @@ export default function GuestPage() {
   useEffect(() => {
     let cancelled = false;
 
-    void queryProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 }).then((result) => {
+    void listGuestProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 }).then((result) => {
       if (cancelled) return;
       if (!result.success || !("data" in result)) {
         setProjects([]);
@@ -129,7 +128,7 @@ export default function GuestPage() {
         const session = await sessionResponse.json() as { authenticated: boolean };
         if (!session.authenticated || cancelled) return;
 
-        const profileResult = await fetchProfile();
+        const profileResult = await getProfileView();
         if (!profileResult.success || !("data" in profileResult) || cancelled) return;
 
         const profile = profileResult.data;

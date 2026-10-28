@@ -1,17 +1,14 @@
 import "server-only";
 
-import { createClient } from "./server";
-import { connection } from "next/server";
 import { redirect } from "next/navigation";
+import { createClient } from "../supabase/server";
 
-export type AuthUser = {
+export type SessionUser = {
   id: string;
   email: string | null;
 };
 
-export async function getAuthUser(): Promise<AuthUser | null> {
-  await connection();
-
+export async function getSessionUser(): Promise<SessionUser | null> {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -35,8 +32,8 @@ export async function getAuthUser(): Promise<AuthUser | null> {
   };
 }
 
-export async function requireAuthUser(): Promise<AuthUser> {
-  const user = await getAuthUser();
+export async function requireSessionUser(): Promise<SessionUser> {
+  const user = await getSessionUser();
 
   if (!user) {
     redirect("/login");

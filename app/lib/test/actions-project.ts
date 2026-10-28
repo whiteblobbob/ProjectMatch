@@ -231,7 +231,7 @@ describe("queryProjects", () => {
       }),
       include: {
         projectRoles: { include: { role: true } },
-        owner: { select: { name: true, instance: true } },
+        owner: { select: { name: true } },
         category: { select: { name: true } },
         _count: { select: { projectMembers: true } },
       },

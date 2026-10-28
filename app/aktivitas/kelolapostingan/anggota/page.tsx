@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 
-import LoginRequired, { LoginRequiredFallback } from "../../../components/auth/login-required";
+import { ActivitySkeleton } from "../../../components/activity/activity-states";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import KelolaAnggota from "../../../components/page/kelolaanggota";
-import { getAuthUser } from "../../../lib/supabase/getAuthUser";
+import { requireSessionUser } from "../../../lib/ui/session";
 
 export default function KelolaAnggotaPage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<LoginRequiredFallback />}>
+      <Suspense fallback={<ActivitySkeleton />}>
         <KelolaAnggotaAccess />
       </Suspense>
     </>
@@ -17,17 +17,7 @@ export default function KelolaAnggotaPage() {
 }
 
 async function KelolaAnggotaAccess() {
-  const user = await getAuthUser();
-
-  if (!user) {
-    return (
-      <LoginRequired
-        area="Aktivitas"
-        returnTo="/aktivitas/kelolapostingan/anggota"
-        description="Masuk untuk melihat anggota dan pembagian kontribusi di proyekmu."
-      />
-    );
-  }
+  await requireSessionUser();
 
   return <KelolaAnggota />;
 }

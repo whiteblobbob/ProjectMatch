@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import LoginRequired, { LoginRequiredFallback } from "../../components/auth/login-required";
+import { ActivitySkeleton } from "../../components/activity/activity-states";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import ProfilPelamar from "../../components/page/profilpelamar";
 import ProfilPembuat from "../../components/page/profilpembuat";
-import { getAuthUser } from "../../lib/supabase/getAuthUser";
+import { requireSessionUser } from "../../lib/ui/session";
 
 type CandidateProfilePageProps = {
   params: Promise<{ slug: string }>;
@@ -19,7 +19,7 @@ export default function CandidateProfilePage({ params }: CandidateProfilePagePro
   return (
     <>
       <Navbar />
-      <Suspense fallback={<LoginRequiredFallback />}>
+      <Suspense fallback={<ActivitySkeleton />}>
         <CandidateProfileAccess params={params} />
       </Suspense>
     </>
@@ -33,17 +33,7 @@ async function CandidateProfileAccess({ params }: CandidateProfilePageProps) {
     notFound();
   }
 
-  const user = await getAuthUser();
-
-  if (!user) {
-    return (
-      <LoginRequired
-        area="Profil"
-        returnTo={`/profil/${slug}`}
-        description="Masuk untuk melihat profil anggota ProjectMatch."
-      />
-    );
-  }
+  await requireSessionUser();
 
   return slug === "raka-aditya" ? <ProfilPembuat /> : <ProfilPelamar />;
 }

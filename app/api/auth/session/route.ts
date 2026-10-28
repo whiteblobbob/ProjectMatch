@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getAuthUser } from "@/app/lib/supabase/getAuthUser";
 import { createClient } from "@/app/lib/supabase/server";
+import { getSessionUser } from "@/app/lib/ui/session";
 
 export async function GET() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   return NextResponse.json({
     authenticated: Boolean(user),

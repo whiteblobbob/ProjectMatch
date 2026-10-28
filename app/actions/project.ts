@@ -8,8 +8,6 @@ import {
   PeerReviewValidator,
   CreateProjectForm,
   CreateProjectValidator,
-  CreateProjectPostingForm,
-  CreateProjectPostingValidator,
   UpdateProjectForm,
   UpdateProjectValidator,
   QueryProjectsForm,
@@ -55,7 +53,6 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
       owner: {
         select: {
           name: true,
-          instance: true,
         }
       },
       category: {
@@ -179,68 +176,6 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
         })),
       },
     }
-  });
-
-  return { id: project.id };
-}, { auth: true });
-
-const educationLevelNames = {
-  JUNIOR_SECONDARY: "Pelajar SMP/sederajat",
-  SENIOR_SECONDARY: "Pelajar SMA/SMK/sederajat",
-  HIGHER_EDUCATION: "Mahasiswa",
-} as const;
-
-export const createProjectPosting = actionWrapper(async (user: User, formData: CreateProjectPostingForm) => {
-  const data = parseOrThrow(CreateProjectPostingValidator, formData);
-
-  const project = await prisma.$transaction(async (tx) => {
-    const roles: Array<{ roleId: string; slotsAvailable: number }> = [];
-    for (const position of data.positions) {
-      const existingRole = await tx.role.findFirst({
-        where: { name: { equals: position.name, mode: "insensitive" } },
-        select: { id: true },
-      });
-      const role = existingRole ?? await tx.role.create({
-        data: { name: position.name },
-        select: { id: true },
-      });
-      roles.push({ roleId: role.id, slotsAvailable: position.slotsAvailable });
-    }
-
-    const statusIds: string[] = [];
-    for (const educationLevel of data.educationLevels) {
-      const statusName = educationLevelNames[educationLevel];
-      const existingStatus = await tx.status.findFirst({
-        where: { name: { equals: statusName, mode: "insensitive" } },
-        select: { id: true },
-      });
-      const status = existingStatus ?? await tx.status.create({
-        data: { name: statusName },
-        select: { id: true },
-      });
-      statusIds.push(status.id);
-    }
-
-    return tx.project.create({
-      data: {
-        ownerId: user.id,
-        title: data.title,
-        description: data.description,
-        deadline: data.deadline,
-        categoryId: data.categoryId,
-        onSite: data.onSite,
-        workHoursPerWeek: data.workHoursPerWeek,
-        projectStatusCriteria: {
-          create: statusIds.map((statusId) => ({ status: { connect: { id: statusId } } })),
-        },
-        projectRoles: {
-          create: roles.map((role) => ({
-            slotsAvailable: role.slotsAvailable,
-            role: { connect: { id: role.roleId } },
-          })),
-        },
-      },
-    });
   });
 
   return { id: project.id };
