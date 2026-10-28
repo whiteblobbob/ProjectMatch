@@ -26,7 +26,19 @@ const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 10
 
 // Internal keys ("alice", "marcus", ...) model the seed roster and map to
 // deterministic IDs so every cross-reference remains stable across reruns.
-type UserKey = "alice" | "marcus" | "priya" | "diego" | "hana" | "omar";
+type UserKey =
+  | "alice"
+  | "marcus"
+  | "priya"
+  | "diego"
+  | "hana"
+  | "omar"
+  | "nora"
+  | "liam"
+  | "sofia"
+  | "kenji"
+  | "maya"
+  | "noah";
 
 const seededUserIds: Record<UserKey, string> = {
   alice: "2f6d4b8e-1a3c-4d7f-9b52-0e8c6a1d4f90",
@@ -35,6 +47,12 @@ const seededUserIds: Record<UserKey, string> = {
   diego: "e9c3a7b1-6f42-4d58-8b0e-2a7c5d1f9364",
   hana: "5d0f8b2c-9a64-4e17-b3c6-1f7d0a8e2459",
   omar: "b7e2c6a9-3d51-4f08-9c74-0a6e1b5d8327",
+  nora: "c1a8e4f2-7b35-4d69-92f0-6e3c5a1b8472",
+  liam: "8d4f1b6a-2c97-4e53-a0b8-5f7d9c3e1624",
+  sofia: "f3b7d1e9-6a42-4c85-9e0f-2d8b5a7c1346",
+  kenji: "6e2a9c4f-1b78-4d35-8f06-3c5b7e9a2148",
+  maya: "a9c5e1b7-3d64-4f28-90a6-7b2e8c1d4539",
+  noah: "4b8f2d6a-9c31-4e75-a0d8-5f3b7c1e2469",
 };
 
 // Completed-project participants review every other participant — no
@@ -58,6 +76,9 @@ const peerReviewSeed: Array<{
   { reviewer: "omar", reviewee: "alice", commitmentScore: 5, feedback: "Took feedback openly and iterated." },
   { reviewer: "omar", reviewee: "marcus", commitmentScore: 5, feedback: "Carried the heavier technical work." },
 ];
+
+const deterministicPick = <T>(values: readonly T[], index: number) =>
+  values[(index * 7 + 3) % values.length];
 
 async function main() {
   // ---------------------------------------------------------------------------
@@ -83,25 +104,19 @@ async function main() {
       // -------------------------------------------------------------------------
       const statuses = await tx.status.createManyAndReturn({
         data: [
-          { name: "Student" },
-          { name: "Junior" },
-          { name: "Professional" },
-          { name: "Mentor" },
-          { name: "Hobbyist" },
+          { name: "SMP/sederajat" },
+          { name: "SMA/SMAK/sederajat" },
+          { name: "Mahasiswa" },
         ],
       });
-      const [student, junior, professional, mentor, hobbyist] = statuses;
-
       const categories = await tx.category.createManyAndReturn({
         data: [
-          { name: "Web Development" },
-          { name: "Mobile Development" },
-          { name: "Game Development" },
-          { name: "Data & AI" },
-          { name: "UI/UX Design" },
+          { name: "Lomba" },
+          { name: "Proyek" },
         ],
       });
-      const [web, mobile, game, dataAi, design] = categories;
+      const statusFor = (index: number) => deterministicPick(statuses, index);
+      const categoryFor = (index: number) => deterministicPick(categories, index);
 
       const roles = await tx.role.createManyAndReturn({
         data: [
@@ -115,7 +130,7 @@ async function main() {
       const [frontend, backend, fullstack, uidesigner, projectManager] = roles;
 
       // -------------------------------------------------------------------------
-      // Users (6: 5 project owners + a member/reviewer pool)
+      // Users (12: project owners plus a member/reviewer pool)
       // -------------------------------------------------------------------------
       const users = {
         alice: await tx.user.create({
@@ -123,7 +138,7 @@ async function main() {
             id: seededUserIds.alice,
             name: "Alice Chen",
             instance: "State University",
-            status: { connect: { id: student.id } },
+            status: { connect: { id: statusFor(0).id } },
             bio: "Computer science senior who loves shipping small web tools.",
             contactInfo: "https://github.com/alicechen",
             userRoles: {
@@ -139,7 +154,7 @@ async function main() {
             id: seededUserIds.marcus,
             name: "Marcus Webb",
             instance: "Nexa Software",
-            status: { connect: { id: professional.id } },
+            status: { connect: { id: statusFor(1).id } },
             bio: "Product minded engineer tinker. React, PostgreSQL and clean DX.",
             contactInfo: "https://linkedin.com/in/marcuswebb",
             userRoles: {
@@ -155,7 +170,7 @@ async function main() {
             id: seededUserIds.priya,
             name: "Priya Raman",
             instance: "Coders Guild",
-            status: { connect: { id: mentor.id } },
+            status: { connect: { id: statusFor(2).id } },
             bio: "Mentoring juniors through their first production deploys for a decade.",
             contactInfo: "priya@codersguild.dev",
             userRoles: {
@@ -171,7 +186,7 @@ async function main() {
             id: seededUserIds.diego,
             name: "Diego Ferrer",
             instance: "TechWorks Bootcamp",
-            status: { connect: { id: junior.id } },
+            status: { connect: { id: statusFor(3).id } },
             bio: "Bootcamp grad looking for teammates to practice with.",
             userRoles: { create: [{ role: { connect: { id: frontend.id } } }] },
           },
@@ -181,7 +196,7 @@ async function main() {
             id: seededUserIds.hana,
             name: "Hana Suzuki",
             instance: "Weekend Builders",
-            status: { connect: { id: hobbyist.id } },
+            status: { connect: { id: statusFor(4).id } },
             bio: "Ship tiny games on weekends. Pragmatic APIs on the side.",
             contactInfo: "https://hanasuzuki.dev",
             userRoles: { create: [{ role: { connect: { id: backend.id } } }] },
@@ -192,22 +207,88 @@ async function main() {
             id: seededUserIds.omar,
             name: "Omar Badr",
             instance: "Metro College",
-            status: { connect: { id: student.id } },
+            status: { connect: { id: statusFor(5).id } },
             bio: "Design student sketching interfaces before writing any code.",
             userRoles: { create: [{ role: { connect: { id: uidesigner.id } } }] },
+          },
+        }),
+        nora: await tx.user.create({
+          data: {
+            id: seededUserIds.nora,
+            name: "Nora Patel",
+            instance: "Northside Academy",
+            status: { connect: { id: statusFor(6).id } },
+            bio: "Student organizer building tools for local study groups.",
+            userRoles: { create: [{ role: { connect: { id: frontend.id } } }] },
+          },
+        }),
+        liam: await tx.user.create({
+          data: {
+            id: seededUserIds.liam,
+            name: "Liam Okafor",
+            instance: "Open Source Lab",
+            status: { connect: { id: statusFor(7).id } },
+            bio: "Backend learner focused on reliable APIs and useful documentation.",
+            contactInfo: "https://github.com/liamokafor",
+            userRoles: { create: [{ role: { connect: { id: backend.id } } }] },
+          },
+        }),
+        sofia: await tx.user.create({
+          data: {
+            id: seededUserIds.sofia,
+            name: "Sofia Alvarez",
+            instance: "Creative Coding Club",
+            status: { connect: { id: statusFor(8).id } },
+            bio: "Visual storyteller translating community ideas into friendly interfaces.",
+            userRoles: { create: [{ role: { connect: { id: uidesigner.id } } }] },
+          },
+        }),
+        kenji: await tx.user.create({
+          data: {
+            id: seededUserIds.kenji,
+            name: "Kenji Tan",
+            instance: "Harbor Polytechnic",
+            status: { connect: { id: statusFor(9).id } },
+            bio: "Full-stack builder interested in civic technology and data tools.",
+            userRoles: { create: [{ role: { connect: { id: fullstack.id } } }] },
+          },
+        }),
+        maya: await tx.user.create({
+          data: {
+            id: seededUserIds.maya,
+            name: "Maya Singh",
+            instance: "Riverside School",
+            status: { connect: { id: statusFor(10).id } },
+            bio: "Product-minded collaborator who enjoys turning rough ideas into plans.",
+            userRoles: { create: [{ role: { connect: { id: projectManager.id } } }] },
+          },
+        }),
+        noah: await tx.user.create({
+          data: {
+            id: seededUserIds.noah,
+            name: "Noah Williams",
+            instance: "Maker House",
+            status: { connect: { id: statusFor(11).id } },
+            bio: "Weekend maker experimenting with accessible education projects.",
+            userRoles: {
+              create: [
+                { role: { connect: { id: frontend.id } } },
+                { role: { connect: { id: backend.id } } },
+              ],
+            },
           },
         }),
       };
 
       // -------------------------------------------------------------------------
-      // Projects — 3 open, 1 in progress, 1 completed.
+      // Projects — 8 open, 1 in progress, 1 completed.
       // Members never include the owner, filled roles have no remaining slots,
       // and in-progress/completed projects have zero open roles left.
       // -------------------------------------------------------------------------
       const campusMarketplace = await tx.project.create({
         data: {
           ownerId: users.alice.id,
-          categoryId: web.id,
+          categoryId: categoryFor(0).id,
           title: "Campus Marketplace",
           description:
             "Buy and sell used textbooks and equipment inside one university. Chat, listings and safe hand-over checkpoints.",
@@ -215,7 +296,10 @@ async function main() {
           onSite: false,
           workHoursPerWeek: 10,
           projectStatusCriteria: {
-            create: [{ status: { connect: { id: student.id } } }, { status: { connect: { id: junior.id } } }],
+            create: [
+              { status: { connect: { id: statusFor(0).id } } },
+              { status: { connect: { id: statusFor(1).id } } },
+            ],
           },
           projectRoles: {
             create: [
@@ -229,7 +313,7 @@ async function main() {
       const habitsTracker = await tx.project.create({
         data: {
           ownerId: users.marcus.id,
-          categoryId: mobile.id,
+          categoryId: categoryFor(1).id,
           title: "Daily Habits Tracker",
           description:
             "A mobile habit tracker with streaks, gentle reminders and an importable on-device dataset.",
@@ -237,7 +321,10 @@ async function main() {
           onSite: false,
           workHoursPerWeek: 8,
           projectStatusCriteria: {
-            create: [{ status: { connect: { id: student.id } } }, { status: { connect: { id: junior.id } } }],
+            create: [
+              { status: { connect: { id: statusFor(2).id } } },
+              { status: { connect: { id: statusFor(3).id } } },
+            ],
           },
           projectRoles: {
             create: [
@@ -251,7 +338,7 @@ async function main() {
       const puzzleGame = await tx.project.create({
         data: {
           ownerId: users.hana.id,
-          categoryId: game.id,
+          categoryId: categoryFor(2).id,
           title: "Indie Puzzle Game",
           description:
             "A cozy tile-sliding puzzle with a small coop mode and a lobby. Ships for web and desktop.",
@@ -259,7 +346,10 @@ async function main() {
           onSite: true,
           workHoursPerWeek: 6,
           projectStatusCriteria: {
-            create: [{ status: { connect: { id: hobbyist.id } } }, { status: { connect: { id: student.id } } }],
+            create: [
+              { status: { connect: { id: statusFor(4).id } } },
+              { status: { connect: { id: statusFor(5).id } } },
+            ],
           },
           projectRoles: {
             create: [
@@ -274,7 +364,7 @@ async function main() {
       await tx.project.create({
         data: {
           ownerId: users.priya.id,
-          categoryId: dataAi.id,
+          categoryId: categoryFor(3).id,
           title: "SaaS Admin Dashboard",
           description:
             "An admin dashboard surface for a rising SaaS workspace with KPI charts and team management.",
@@ -283,7 +373,10 @@ async function main() {
           workHoursPerWeek: 12,
           status: "IN_PROGRESS",
           projectStatusCriteria: {
-            create: [{ status: { connect: { id: professional.id } } }, { status: { connect: { id: junior.id } } }],
+            create: [
+              { status: { connect: { id: statusFor(6).id } } },
+              { status: { connect: { id: statusFor(7).id } } },
+            ],
           },
           projectRoles: {
             create: [
@@ -304,7 +397,7 @@ async function main() {
       const portfolioHub = await tx.project.create({
         data: {
           ownerId: users.diego.id,
-          categoryId: design.id,
+          categoryId: categoryFor(4).id,
           title: "Portfolio Hub",
           description:
             "A shared template site hosting mini portfolios for three students of the same design cohort.",
@@ -313,7 +406,10 @@ async function main() {
           workHoursPerWeek: 5,
           status: "COMPLETED",
           projectStatusCriteria: {
-            create: [{ status: { connect: { id: student.id } } }, { status: { connect: { id: junior.id } } }],
+            create: [
+              { status: { connect: { id: statusFor(8).id } } },
+              { status: { connect: { id: statusFor(9).id } } },
+            ],
           },
           projectRoles: {
             create: [
@@ -327,6 +423,131 @@ async function main() {
               { userId: users.alice.id, roleId: frontend.id },
               { userId: users.marcus.id, roleId: fullstack.id },
               { userId: users.omar.id, roleId: uidesigner.id },
+            ],
+          },
+        },
+      });
+
+      await tx.project.create({
+        data: {
+          ownerId: users.nora.id,
+          categoryId: categoryFor(5).id,
+          title: "Study Group Scheduler",
+          description:
+            "A lightweight scheduler that helps classmates find overlapping study times and share agendas.",
+          deadline: daysFromNow(35),
+          onSite: false,
+          workHoursPerWeek: 7,
+          projectStatusCriteria: {
+            create: [
+              { status: { connect: { id: statusFor(10).id } } },
+              { status: { connect: { id: statusFor(11).id } } },
+            ],
+          },
+          projectRoles: {
+            create: [
+              { roleId: frontend.id, slotsAvailable: 1 },
+              { roleId: projectManager.id, slotsAvailable: 1 },
+            ],
+          },
+        },
+      });
+
+      await tx.project.create({
+        data: {
+          ownerId: users.liam.id,
+          categoryId: categoryFor(6).id,
+          title: "Community API Catalog",
+          description:
+            "A searchable directory of neighborhood APIs, open datasets and examples for student projects.",
+          deadline: daysFromNow(55),
+          onSite: false,
+          workHoursPerWeek: 9,
+          projectStatusCriteria: {
+            create: [
+              { status: { connect: { id: statusFor(0).id } } },
+              { status: { connect: { id: statusFor(2).id } } },
+            ],
+          },
+          projectRoles: {
+            create: [
+              { roleId: backend.id, slotsAvailable: 2 },
+              { roleId: uidesigner.id, slotsAvailable: 1 },
+            ],
+          },
+        },
+      });
+
+      await tx.project.create({
+        data: {
+          ownerId: users.sofia.id,
+          categoryId: categoryFor(7).id,
+          title: "Museum Story Map",
+          description:
+            "An interactive map for a small museum that connects exhibits with short local history stories.",
+          deadline: daysFromNow(70),
+          onSite: true,
+          workHoursPerWeek: 6,
+          projectStatusCriteria: {
+            create: [
+              { status: { connect: { id: statusFor(1).id } } },
+              { status: { connect: { id: statusFor(2).id } } },
+            ],
+          },
+          projectRoles: {
+            create: [
+              { roleId: uidesigner.id, slotsAvailable: 1 },
+              { roleId: frontend.id, slotsAvailable: 1 },
+            ],
+          },
+        },
+      });
+
+      await tx.project.create({
+        data: {
+          ownerId: users.kenji.id,
+          categoryId: categoryFor(8).id,
+          title: "Civic Data Challenge",
+          description:
+            "A collaborative challenge turning public transport data into clear, useful community insights.",
+          deadline: daysFromNow(80),
+          onSite: false,
+          workHoursPerWeek: 11,
+          projectStatusCriteria: {
+            create: [
+              { status: { connect: { id: statusFor(3).id } } },
+              { status: { connect: { id: statusFor(5).id } } },
+            ],
+          },
+          projectRoles: {
+            create: [
+              { roleId: fullstack.id, slotsAvailable: 1 },
+              { roleId: backend.id, slotsAvailable: 1 },
+            ],
+          },
+        },
+      });
+
+      await tx.project.create({
+        data: {
+          ownerId: users.maya.id,
+          categoryId: categoryFor(9).id,
+          title: "Accessible Learning Kit",
+          description:
+            "A set of accessible learning activities and reusable templates for after-school workshops.",
+          deadline: daysFromNow(50),
+          onSite: true,
+          workHoursPerWeek: 8,
+          projectStatusCriteria: {
+            create: [
+              { status: { connect: { id: statusFor(6).id } } },
+              { status: { connect: { id: statusFor(8).id } } },
+            ],
+          },
+          projectRoles: {
+            create: [
+              { roleId: projectManager.id, slotsAvailable: 1 },
+              { roleId: uidesigner.id, slotsAvailable: 1 },
             ],
           },
         },

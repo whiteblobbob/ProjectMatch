@@ -7,6 +7,7 @@ import {
   type RegistrationErrors,
   type RegistrationStepId,
 } from "./registration-types";
+import { CheckIcon } from "../../ui/icons";
 
 type UpdateField = <Field extends keyof RegistrationData>(field: Field, value: RegistrationData[Field]) => void;
 

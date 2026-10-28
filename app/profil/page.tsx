@@ -3,6 +3,7 @@ import Navbar from "../components/navigation-bar/guestnavbar";
 import Mainprofil from "../components/page/mainprofil";
 import { LoginRequiredFallback } from "../components/auth/login-required";
 import { fetchProfile } from "../actions/profile";
+import { connection } from "next/server";
 
 export default function ProfilPage() {
   return (
@@ -16,6 +17,7 @@ export default function ProfilPage() {
 }
 
 async function ProfilAccess() {
+  await connection();
   const profile = await fetchProfile();
 
   if (!profile.success) {
