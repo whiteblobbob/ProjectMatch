@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import LogoutConfirmationDialog from "@/app/components/auth/logout-confirmation-dialog";
+import ProjectMatchLogo from "@/app/components/brand/projectmatch-logo";
 import { MenuIcon, XIcon } from "@/app/components/ui/icons";
 import { createClient } from "@/app/lib/supabase/client";
 
@@ -162,10 +162,10 @@ export default function GuestNavbar() {
       <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2 rounded-md text-base font-bold tracking-tight text-slate-950 outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+          aria-label="ProjectMatch — ke halaman Jelajah"
+          className="flex shrink-0 items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
-          <Image src="/img/logo.png" alt="" width={32} height={32} priority />
-          <span>ProjectMatch</span>
+          <ProjectMatchLogo variant="horizontal" priority className="h-auto w-[150px] sm:w-[168px]" decorative />
         </Link>
 
         <div className="hidden items-center gap-6 lg:flex">
@@ -226,9 +226,9 @@ export default function GuestNavbar() {
           />
           <div ref={drawerRef} id={drawerId} className="absolute right-0 top-0 flex h-dvh w-[min(86vw,360px)] flex-col bg-white p-5 shadow-2xl">
             <div className="flex items-center justify-between">
-              <span id={`${drawerId}-title`} className="flex items-center gap-2 text-base font-bold text-slate-950">
-                <Image src="/img/logo.png" alt="" width={28} height={28} />
-                ProjectMatch
+              <span id={`${drawerId}-title`}>
+                <ProjectMatchLogo variant="horizontal" className="h-auto w-[156px]" decorative />
+                <span className="sr-only">Navigasi ProjectMatch</span>
               </span>
               <button
                 ref={closeButtonRef}
