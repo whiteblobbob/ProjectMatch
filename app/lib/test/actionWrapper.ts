@@ -19,6 +19,8 @@ import actionWrapper from "../actionWrapper";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  delete process.env.ENABLE_DEMO_ACCOUNT;
+  delete process.env.DEMO_ACCOUNT_EMAIL;
   mocks.cookies.mockResolvedValue("cookie-store");
   mocks.createClient.mockReturnValue({
     auth: {
@@ -32,6 +34,20 @@ beforeEach(() => {
 });
 
 describe("actionWrapper", () => {
+  it("accepts the development demo session without initializing Supabase", async () => {
+    process.env.ENABLE_DEMO_ACCOUNT = "true";
+    process.env.DEMO_ACCOUNT_EMAIL = "demo@projectmatch.test";
+    mocks.cookies.mockResolvedValue({
+      get: vi.fn().mockReturnValue({ value: "active" }),
+    });
+    const action = actionWrapper(async (user: { id: string }) => user.id, { auth: true });
+
+    const result = await action();
+
+    expect(result).toEqual({ success: true, data: "projectmatch-demo-user" });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
   it("passes the authenticated user to authenticated actions", async () => {
     const action = actionWrapper(
       async (user: { id: string }, value: string) => `${user.id}:${value}`,

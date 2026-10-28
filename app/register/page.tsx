@@ -1,117 +1,46 @@
+import Navbar from "../components/navigation-bar/guestnavbar";
+import RegisterForm from "../components/auth/register-form";
+import ProjectMatchLogo from "../components/brand/projectmatch-logo";
+import { CheckIcon } from "../components/ui/icons";
 
-export default function Register() {
-    return (
-        <main className="flex min-h-screen w-full items-center justify-center bg-background px-4 py-8">
-            <section className="w-full max-w-md">
-                {/* Brand */}
-                <a
-                    href="../"
-                    className="mb-8 flex items-center justify-center gap-2 text-xl font-bold text-brand-primary"
-                >
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-brand-primary text-sm text-white">
-                        PM
-                    </span>
-                    ProjectMatch
-                </a>
+export default function RegisterPage() {
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-[calc(100dvh-4rem)] bg-slate-50 px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="mx-auto grid min-w-0 w-full max-w-[1180px] grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-10">
+          <aside className="min-w-0 rounded-2xl bg-brand-primary p-6 text-white shadow-sm sm:p-8 lg:sticky lg:top-24">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-100">Khusus pelajar</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Mulai proyek bersama tim yang tepat.</h1>
+            <p className="mt-4 text-sm leading-7 text-blue-50">ProjectMatch mempertemukan pelajar SMP hingga mahasiswa dari berbagai jurusan untuk belajar, berkarya, dan membangun portofolio bersama.</p>
+            <ul className="mt-7 space-y-4 text-sm text-blue-50">
+              {["Temukan proyek lintas bidang", "Bangun tim berdasarkan peran", "Tunjukkan kontribusi dan pengalaman"].map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/15" aria-hidden="true">
+                    <CheckIcon className="size-3" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 rounded-xl border border-white/20 bg-white/10 p-4 text-xs leading-5 text-blue-50">
+              Data verifikasi pada alur ini belum dikirim atau disimpan. Integrasi backend akan dilakukan pada tahap terpisah.
+            </div>
+          </aside>
 
-                {/* Register form */}
-                <div className="rounded-2xl border border-border-default bg-white p-5 sm:p-8">
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-bold text-text-heading">
-                            Buat akun baru
-                        </h1>
-                        <p className="mt-2 text-sm leading-5 text-text-subheading">
-                            Bergabung dan temukan orang yang cocok untuk
-                            membangun proyek bersama.
-                        </p>
-                    </div>
-
-                    <form
-                        action="/register"
-                        method="POST"
-                        className="flex flex-col gap-5"
-                    >
-                        <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="nama"
-                                className="text-sm font-semibold text-text-heading"
-                            >
-                                Nama lengkap
-                            </label>
-                            <input
-                                id="nama"
-                                name="nama"
-                                type="text"
-                                autoComplete="name"
-                                placeholder="Masukkan nama lengkap"
-                                required
-                                className="min-h-12 w-full rounded-lg border border-border-input bg-white px-3 py-2 text-sm text-text-heading placeholder:text-text-subheading focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-soft"
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="email"
-                                className="text-sm font-semibold text-text-heading"
-                            >
-                                Email
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                placeholder="nama@email.com"
-                                required
-                                className="min-h-12 w-full rounded-lg border border-border-input bg-white px-3 py-2 text-sm text-text-heading placeholder:text-text-subheading focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-soft"
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label
-                                htmlFor="password"
-                                className="text-sm font-semibold text-text-heading"
-                            >
-                                Kata sandi
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="new-password"
-                                placeholder="Buat kata sandi"
-                                minLength={8}
-                                required
-                                className="min-h-12 w-full rounded-lg border border-border-input bg-white px-3 py-2 text-sm text-text-heading placeholder:text-text-subheading focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-soft"
-                            />
-                            <p className="text-xs text-text-subheading">
-                                Minimal 8 karakter.
-                            </p>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-                        >
-                            Buat akun
-                        </button>
-                    </form>
-
-                    <p className="mt-6 text-center text-sm text-text-subheading">
-                        Sudah punya akun?{" "}
-                        <a
-                            href="/login"
-                            className="font-semibold text-brand-primary hover:text-brand-secondary"
-                        >
-                            Masuk
-                        </a>
-                    </p>
-                </div>
-
-                <p className="mt-6 text-center text-xs text-text-subheading">
-                    Mulai perjalanan proyekmu bersama ProjectMatch.
-                </p>
-            </section>
-        </main>
-    );
+          <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(15,23,42,0.06)] sm:p-8 lg:p-10">
+            <ProjectMatchLogo
+              variant="stacked"
+              className="mx-auto mb-7 h-auto w-[142px] sm:w-[156px]"
+              decorative
+            />
+            <p className="text-sm font-semibold text-brand-primary">Buat akun ProjectMatch</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Daftar sebagai pelajar</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Lengkapi setiap langkah. Kamu dapat kembali dan mengubah jawaban sebelum membuat akun.</p>
+            <RegisterForm />
+          </section>
+        </div>
+      </main>
+    </>
+  );
 }

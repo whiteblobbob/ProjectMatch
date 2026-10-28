@@ -1,41 +1,47 @@
+import { CalendarIcon, ClockIcon, LaptopIcon, UsersIcon } from "../ui/icons";
+
+const projectFacts = [
+  { label: "Mode kolaborasi", value: "Daring", icon: LaptopIcon },
+  { label: "Komitmen", value: "±6 jam/minggu", icon: ClockIcon },
+  { label: "Anggota", value: "2 dari 3", icon: UsersIcon },
+  { label: "Batas pengajuan", value: "27 Okt 2026", icon: CalendarIcon },
+];
+
 export default function KelolaRingkasanProyek() {
-    return (
-        <article className="w-full min-w-0 rounded-xl border border-border-default bg-white p-4">
-            <div className="flex items-center justify-between gap-3">
-                <h3 className="text-xl font-semibold text-text-heading">
-                    EcoTrack
-                </h3>
-                <span className="shrink-0 rounded-md bg-background px-2 py-1 text-[11px] font-semibold text-text-subheading">
-                    Kompetisi
-                </span>
+  return (
+    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-primary">
+                Kompetisi
+              </span>
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Sedang mencari anggota
+              </span>
             </div>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">EcoTrack</h2>
+            <p className="mt-1 text-sm text-slate-500">UINIC 2026 · Lingkungan</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 px-4 py-3 text-right">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Posisi dicari</p>
+            <p className="mt-1 text-sm font-bold text-slate-950">UI/UX Designer</p>
+          </div>
+        </div>
+      </div>
 
-            <p className="mt-1 text-xs text-text-subheading">
-                UINIC 2026
-            </p>
-
-            <h4 className="mt-2 text-base font-semibold text-text-heading">
-                Mencari UI/UX Designer
-            </h4>
-
-            <p className="mt-2 text-xs text-text-subheading">
-                Lingkungan · Daring
-            </p>
-
-            <div className="mt-2 flex items-center justify-between gap-3 text-xs text-text-subheading">
-                <span>±6 jam/minggu</span>
-                <span className="font-semibold">Tim 2/3</span>
-            </div>
-
-            <p className="mt-2 text-xs text-text-warning">
-                Batas pengajuan 27 Okt
-            </p>
-
-            <hr className="my-3 border-border-default" />
-
-            <p className="text-xs text-text-subheading">
-                Pembuat: Raka Aditya
-            </p>
-        </article>
-    );
+      <dl className="grid grid-cols-2 divide-x divide-y divide-slate-100 sm:grid-cols-4 sm:divide-y-0">
+        {projectFacts.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="min-w-0 p-4 sm:p-5">
+            <dt className="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <Icon className="size-4 shrink-0 text-slate-400" />
+              {label}
+            </dt>
+            <dd className="mt-2 text-sm font-semibold text-slate-900">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </article>
+  );
 }
