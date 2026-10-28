@@ -8,12 +8,22 @@ export type ExploreFilters = {
   role: string;
   mode: string;
   commitment: string;
+  proximity: string;
+  institution: string;
+};
+
+export type ExploreViewerContext = {
+  institution: string;
+  city: string;
+  province: string;
 };
 
 type ProjectFiltersProps = {
   idPrefix: string;
   categories: string[];
   roles: string[];
+  institutions: string[];
+  viewerContext: ExploreViewerContext | null;
   filters: ExploreFilters;
   onChange: (key: keyof ExploreFilters, value: string) => void;
 };
@@ -24,11 +34,32 @@ export function ProjectFilters({
   idPrefix,
   categories,
   roles,
+  institutions,
+  viewerContext,
   filters,
   onChange,
 }: ProjectFiltersProps) {
   return (
     <div className="space-y-5">
+      <div>
+        <label htmlFor={`${idPrefix}-proximity`} className="text-sm font-semibold text-slate-900">Kedekatan</label>
+        <SelectControl id={`${idPrefix}-proximity`} value={filters.proximity} onChange={(event) => onChange("proximity", event.target.value)} containerClassName="mt-2">
+          <option value="">Semua wilayah</option>
+          <option value="institution" disabled={!viewerContext?.institution}>Institusi saya</option>
+          <option value="city" disabled={!viewerContext?.city}>Kota/kabupaten saya</option>
+          <option value="province" disabled={!viewerContext?.province}>Provinsi saya</option>
+        </SelectControl>
+        {!viewerContext ? <p className="mt-1.5 text-xs leading-5 text-slate-500">Masuk dan lengkapi profil untuk memakai filter terdekat.</p> : null}
+      </div>
+
+      <div>
+        <label htmlFor={`${idPrefix}-institution`} className="text-sm font-semibold text-slate-900">Sekolah atau kampus</label>
+        <SelectControl id={`${idPrefix}-institution`} value={filters.institution} onChange={(event) => onChange("institution", event.target.value)} containerClassName="mt-2">
+          <option value="">Semua institusi</option>
+          {institutions.map((item) => <option key={item} value={item}>{item}</option>)}
+        </SelectControl>
+      </div>
+
       <div>
         <label htmlFor={`${idPrefix}-category`} className="text-sm font-semibold text-slate-900">Jenis proyek</label>
         <SelectControl id={`${idPrefix}-category`} value={filters.category} onChange={(event) => onChange("category", event.target.value)} containerClassName="mt-2">
@@ -55,8 +86,9 @@ export function ProjectFilters({
         <div className="mt-2 space-y-1">
           {[
             ["", "Semua mode"],
-            ["remote", "Daring"],
-            ["onsite", "Tatap muka"],
+            ["REMOTE", "Daring"],
+            ["ONSITE", "Luring"],
+            ["HYBRID", "Hybrid"],
           ].map(([value, label]) => (
             <label key={label} className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-50">
               <input type="radio" name={`${idPrefix}-mode`} value={value} checked={filters.mode === value} onChange={(event) => onChange("mode", event.target.value)} className="size-4 accent-blue-600" />
@@ -91,11 +123,16 @@ export function ActiveFilterChips({ filters, onRemove, onClear }: ActiveFilterCh
     filters.category ? { key: "category", label: `Jenis: ${filters.category}` } : null,
     filters.topic ? { key: "topic", label: `Topik: ${filters.topic}` } : null,
     filters.role ? { key: "role", label: `Peran: ${filters.role}` } : null,
-    filters.mode ? { key: "mode", label: filters.mode === "onsite" ? "Tatap muka" : "Daring" } : null,
+    filters.mode ? { key: "mode", label: filters.mode === "ONSITE" ? "Luring" : filters.mode === "HYBRID" ? "Hybrid" : "Daring" } : null,
     filters.commitment ? {
       key: "commitment",
       label: filters.commitment === "light" ? "Maks. 5 jam" : filters.commitment === "medium" ? "6–10 jam" : ">10 jam",
     } : null,
+    filters.proximity ? {
+      key: "proximity",
+      label: filters.proximity === "institution" ? "Institusi saya" : filters.proximity === "city" ? "Kota/kabupaten saya" : "Provinsi saya",
+    } : null,
+    filters.institution ? { key: "institution", label: `Institusi: ${filters.institution}` } : null,
   ].filter((chip): chip is { key: keyof ExploreFilters; label: string } => chip !== null);
 
   if (chips.length === 0) return null;

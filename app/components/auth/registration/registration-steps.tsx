@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { CheckIcon } from "@/app/components/ui/icons";
+import { SelectControl } from "@/app/components/ui/select-control";
 import { useState, type ReactNode } from "react";
+import { InstitutionCombobox } from "./institution-combobox";
 import {
   type RegistrationData,
   type RegistrationErrors,
   type RegistrationStepId,
 } from "./registration-types";
-import { CheckIcon } from "../../ui/icons";
 
 type UpdateField = <Field extends keyof RegistrationData>(field: Field, value: RegistrationData[Field]) => void;
 
@@ -212,6 +214,8 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
                 checked={data.educationStatus === status}
                 onChange={() => {
                   onChange("educationStatus", status);
+                  onChange("institutionId", "");
+                  onChange("institutionName", "");
                   onChange("educationLevel", "");
                   onChange("studyProgram", "");
                   onChange("schoolGrade", "");
@@ -227,13 +231,27 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
       </fieldset>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <TextInput field="institutionName" label={data.educationStatus === "student" ? "Nama sekolah" : "Nama universitas"} value={data.institutionName} error={errors.institutionName} onChange={(value) => onChange("institutionName", value)} placeholder={data.educationStatus === "student" ? "Contoh: SMA Negeri 1 Denpasar" : "Contoh: Universitas Indonesia"} disabled={disabled} />
+          <InstitutionCombobox
+            kind={data.educationStatus}
+            value={data.institutionName}
+            selectedId={data.institutionId}
+            error={errors.institutionName}
+            disabled={disabled}
+            onQueryChange={(value) => {
+              onChange("institutionName", value);
+              onChange("institutionId", "");
+            }}
+            onSelect={(option) => {
+              onChange("institutionId", option.id);
+              onChange("institutionName", option.name);
+            }}
+          />
         </div>
         {data.educationStatus === "university" ? (
           <TextInput field="studyProgram" label="Program studi" value={data.studyProgram} error={errors.studyProgram} onChange={(value) => onChange("studyProgram", value)} placeholder="Contoh: Desain Komunikasi Visual" disabled={disabled} />
         ) : null}
         <Field id="registration-educationLevel" label={data.educationStatus === "student" ? "Jenjang sekolah" : "Jenjang pendidikan"} error={errors.educationLevel}>
-          <select
+          <SelectControl
             id="registration-educationLevel"
             value={data.educationLevel}
             onChange={(event) => {
@@ -243,18 +261,19 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
             disabled={disabled}
             aria-invalid={Boolean(errors.educationLevel)}
             aria-describedby={errors.educationLevel ? "registration-educationLevel-error" : undefined}
-            className={`${inputClass} ${errors.educationLevel ? "border-red-400" : ""}`}
+            containerClassName="mt-2"
+            className={`rounded-xl ${errors.educationLevel ? "border-red-400" : ""}`}
           >
             <option value="">{data.educationStatus === "student" ? "Pilih jenjang sekolah" : "Pilih jenjang pendidikan"}</option>
             {educationLevels.map((level) => <option key={level} value={level}>{level}</option>)}
-          </select>
+          </SelectControl>
         </Field>
         {data.educationStatus === "student" ? (
           <Field id="registration-schoolGrade" label="Kelas saat ini" error={errors.schoolGrade}>
-            <select id="registration-schoolGrade" value={data.schoolGrade} onChange={(event) => onChange("schoolGrade", event.target.value)} disabled={disabled || !data.educationLevel} aria-invalid={Boolean(errors.schoolGrade)} aria-describedby={errors.schoolGrade ? "registration-schoolGrade-error" : undefined} className={`${inputClass} ${errors.schoolGrade ? "border-red-400" : ""}`}>
+            <SelectControl id="registration-schoolGrade" value={data.schoolGrade} onChange={(event) => onChange("schoolGrade", event.target.value)} disabled={disabled || !data.educationLevel} aria-invalid={Boolean(errors.schoolGrade)} aria-describedby={errors.schoolGrade ? "registration-schoolGrade-error" : undefined} containerClassName="mt-2" className={`rounded-xl ${errors.schoolGrade ? "border-red-400" : ""}`}>
               <option value="">{data.educationLevel ? "Pilih kelas" : "Pilih jenjang dahulu"}</option>
               {schoolGrades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
-            </select>
+            </SelectControl>
           </Field>
         ) : (
           <TextInput field="entryYear" label="Tahun masuk kuliah" value={data.entryYear} error={errors.entryYear} onChange={(value) => onChange("entryYear", value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" placeholder="2024" disabled={disabled} />

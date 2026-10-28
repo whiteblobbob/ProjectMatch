@@ -64,8 +64,9 @@ export default function ExploreHero({
             <label htmlFor="search-mode" className="sr-only">Mode kolaborasi</label>
             <SelectControl id="search-mode" value={mode} onChange={(event) => onModeChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
               <option value="">Semua mode</option>
-              <option value="remote">Daring</option>
-              <option value="onsite">Tatap muka</option>
+              <option value="REMOTE">Daring</option>
+              <option value="ONSITE">Luring</option>
+              <option value="HYBRID">Hybrid</option>
             </SelectControl>
           </div>
 

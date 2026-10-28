@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ActiveProjectPost } from "@/app/lib/activity";
+import { getCollaborationModeLabel } from "@/app/components/ui/collaboration-mode";
 import StatusBadge from "./status-badge";
 
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -32,7 +33,7 @@ export default function ProjectPostCard({ project }: { project: ActiveProjectPos
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4 text-sm">
         <div>
           <dt className="text-xs text-slate-500">Mode kolaborasi</dt>
-          <dd className="mt-0.5 font-medium text-slate-800">{project.onSite ? "On-site" : "Remote"}</dd>
+          <dd className="mt-0.5 font-medium text-slate-800">{getCollaborationModeLabel(project.onSite ? "ONSITE" : "REMOTE")}</dd>
         </div>
         <div>
           <dt className="text-xs text-slate-500">Komitmen</dt>
