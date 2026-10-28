@@ -2,13 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ActionError } from "../errors";
 
 const mocks = vi.hoisted(() => ({
-  cookies: vi.fn(),
   createClient: vi.fn(),
   getUser: vi.fn(),
-}));
-
-vi.mock("next/headers", () => ({
-  cookies: mocks.cookies,
 }));
 
 vi.mock("../supabase/server", () => ({
@@ -19,9 +14,6 @@ import actionWrapper from "../actionWrapper";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  delete process.env.ENABLE_DEMO_ACCOUNT;
-  delete process.env.DEMO_ACCOUNT_EMAIL;
-  mocks.cookies.mockResolvedValue("cookie-store");
   mocks.createClient.mockReturnValue({
     auth: {
       getUser: mocks.getUser,
@@ -34,20 +26,6 @@ beforeEach(() => {
 });
 
 describe("actionWrapper", () => {
-  it("accepts the development demo session without initializing Supabase", async () => {
-    process.env.ENABLE_DEMO_ACCOUNT = "true";
-    process.env.DEMO_ACCOUNT_EMAIL = "demo@projectmatch.test";
-    mocks.cookies.mockResolvedValue({
-      get: vi.fn().mockReturnValue({ value: "active" }),
-    });
-    const action = actionWrapper(async (user: { id: string }) => user.id, { auth: true });
-
-    const result = await action();
-
-    expect(result).toEqual({ success: true, data: "projectmatch-demo-user" });
-    expect(mocks.createClient).not.toHaveBeenCalled();
-  });
-
   it("passes the authenticated user to authenticated actions", async () => {
     const action = actionWrapper(
       async (user: { id: string }, value: string) => `${user.id}:${value}`,
@@ -57,8 +35,7 @@ describe("actionWrapper", () => {
     const result = await action("value");
 
     expect(result).toEqual({ success: true, data: "user-id:value" });
-    expect(mocks.cookies).toHaveBeenCalledOnce();
-    expect(mocks.createClient).toHaveBeenCalledWith("cookie-store");
+    expect(mocks.createClient).toHaveBeenCalledOnce();
     expect(mocks.getUser).toHaveBeenCalledOnce();
   });
 
@@ -80,7 +57,6 @@ describe("actionWrapper", () => {
     const result = await action("public");
 
     expect(result).toEqual({ success: true, data: "public" });
-    expect(mocks.cookies).not.toHaveBeenCalled();
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 

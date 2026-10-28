@@ -19,7 +19,6 @@ import actionWrapper from "../lib/actionWrapper";
 import { IdValidator, parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
 import { createNotification } from "../lib/notification";
-import { DEMO_USER_ID, isDemoAccountEnabled } from "../lib/demo-account";
 
 export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) => {
   const data = parseOrThrow(QueryProjectsValidator, formData);
@@ -155,10 +154,6 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
 export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
   const data = parseOrThrow(CreateProjectValidator, formData);
 
-  if (isDemoAccountEnabled() && user.id === DEMO_USER_ID) {
-    return { id: "demo-project-preview" };
-  }
-
   const project = await prisma.project.create({
     data: {
       ownerId: user.id,
@@ -197,10 +192,6 @@ const educationLevelNames = {
 
 export const createProjectPosting = actionWrapper(async (user: User, formData: CreateProjectPostingForm) => {
   const data = parseOrThrow(CreateProjectPostingValidator, formData);
-
-  if (isDemoAccountEnabled() && user.id === DEMO_USER_ID) {
-    return { id: "demo-project-preview" };
-  }
 
   const project = await prisma.$transaction(async (tx) => {
     const roles: Array<{ roleId: string; slotsAvailable: number }> = [];

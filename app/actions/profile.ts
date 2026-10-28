@@ -2,15 +2,8 @@
 
 import { User } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import actionWrapper from "../lib/actionWrapper";
-import {
-  DEMO_PROFILE_COOKIE,
-  DEMO_USER_ID,
-  isDemoAccountEnabled,
-} from "../lib/demo-account";
 import { ActionError } from "../lib/errors";
-import { encodeProfilePublicInfo } from "../lib/profile-public-info";
 import { prisma } from "../lib/prisma";
 import { parseOrThrow } from "../lib/validator/global";
 import {
@@ -21,54 +14,13 @@ import {
   profileEducationOptions,
 } from "../lib/validator/profile";
 
-const demoProfile: ProfileView = {
-  name: "Akun Demo ProjectMatch",
-  email: "demo@projectmatch.test",
-  instance: "Universitas Contoh Indonesia",
-  educationLevel: "HIGHER_EDUCATION",
-  bio: "Pelajar yang terbuka untuk berkolaborasi dalam proyek lintas jurusan dan belajar hal baru bersama tim.",
-  contactInfo: encodeProfilePublicInfo({
-    location: "Denpasar, Bali",
-    portfolioUrl: "https://www.figma.com/community",
-    contacts: ["https://instagram.com/projectmatch.demo"],
-  }),
-  skills: ["Komunikasi", "Riset", "Desain presentasi"],
-  totalProjectsCompleted: 0,
-  avgCommitmentScore: 0,
-};
-
 function educationLevelFromStatus(statusName?: string | null): ProfileEducationLevel | null {
   return profileEducationOptions.find(
     (option) => option.statusName.toLocaleLowerCase("id-ID") === statusName?.toLocaleLowerCase("id-ID"),
   )?.value ?? null;
 }
 
-async function getDemoProfile(email?: string | null): Promise<ProfileView> {
-  const savedProfile = (await cookies()).get(DEMO_PROFILE_COOKIE)?.value;
-
-  if (savedProfile) {
-    try {
-      const parsed = ProfileValidator.safeParse(JSON.parse(savedProfile));
-      if (parsed.success) {
-        return {
-          ...demoProfile,
-          ...parsed.data,
-          email: email ?? demoProfile.email,
-        };
-      }
-    } catch {
-      // A malformed preview cookie falls back to the safe demo profile below.
-    }
-  }
-
-  return { ...demoProfile, email: email ?? demoProfile.email };
-}
-
 export const fetchProfile = actionWrapper(async (user: User): Promise<ProfileView> => {
-  if (isDemoAccountEnabled() && user.id === DEMO_USER_ID) {
-    return getDemoProfile(user.email);
-  }
-
   const profile = await prisma.user.findUnique({
     where: { id: user.id },
     include: {
@@ -106,19 +58,6 @@ export const fetchReviews = actionWrapper(async (user: User) => {
 
 export const updateProfile = actionWrapper(async (user: User, formData: ProfileForm): Promise<ProfileView> => {
   const data = parseOrThrow(ProfileValidator, formData);
-
-  if (isDemoAccountEnabled() && user.id === DEMO_USER_ID) {
-    const cookieStore = await cookies();
-    cookieStore.set(DEMO_PROFILE_COOKIE, JSON.stringify(data), {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
-      maxAge: 60 * 60 * 8,
-    });
-    revalidatePath("/profil");
-    return { ...demoProfile, ...data, email: user.email ?? demoProfile.email };
-  }
 
   const updatedProfile = await prisma.$transaction(async (tx) => {
     const statusName = profileEducationOptions.find(

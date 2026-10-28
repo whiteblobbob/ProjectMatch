@@ -16,9 +16,9 @@ export default function CreateProjectPage() {
 }
 
 async function CreateProjectAccess() {
-  const user = await requireAuthUser();
+  await requireAuthUser();
 
-  const result = await getProjectFormOptions(user.id)
+  const result = await getProjectFormOptions()
     .then((options) => ({ options, error: null }))
     .catch((error: unknown) => ({ options: null, error }));
 

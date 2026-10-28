@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createProxyClient } from "@/app/lib/supabase/proxy-client";
-import { DEMO_SESSION_COOKIE, isDemoAccountEnabled } from "@/app/lib/demo-account";
 
 const PUBLIC_PATHS = new Set(["/", "/login", "/register"]);
 
@@ -12,11 +11,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const hasDemoSession =
-    isDemoAccountEnabled() &&
-    request.cookies.get(DEMO_SESSION_COOKIE)?.value === "active";
-
-  if (user || hasDemoSession || PUBLIC_PATHS.has(pathname)) {
+  if (user || PUBLIC_PATHS.has(pathname)) {
     return response;
   }
 

@@ -1,5 +1,4 @@
 "use server"
-import { cookies } from "next/headers";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { createClient } from "../lib/supabase/server";
@@ -7,7 +6,6 @@ import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/v
 import { parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
 import actionWrapper from "../lib/actionWrapper";
-import { DEMO_SESSION_COOKIE, isDemoCredential } from "../lib/demo-account";
 
 export const signup = actionWrapper(async (formData: SignupForm) => {
   const data = parseOrThrow(SignupValidator, formData);
@@ -47,18 +45,6 @@ export const signup = actionWrapper(async (formData: SignupForm) => {
 
 export const login = actionWrapper(async (formData: LoginForm) => {
     const data = parseOrThrow(LoginValidator, formData);
-
-    if (isDemoCredential(data.email, data.password)) {
-      const cookieStore = await cookies();
-      cookieStore.set(DEMO_SESSION_COOKIE, "active", {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: false,
-        path: "/",
-        maxAge: 60 * 60 * 8,
-      });
-      return;
-    }
 
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({
