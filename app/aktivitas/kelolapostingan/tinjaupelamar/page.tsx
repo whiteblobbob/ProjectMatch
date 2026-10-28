@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import LoginRequired, { LoginRequiredFallback } from "../../../components/auth/login-required";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import TinjauPelamar from "../../../components/page/tinjaupelamar";
-import { getAuthUser } from "../../../lib/supabase/getAuthUser";
+import { getSessionUser } from "../../../lib/ui/session";
 
 export default function TinjauPelamarPage() {
   return (
@@ -16,7 +16,7 @@ export default function TinjauPelamarPage() {
 }
 
 async function TinjauPelamarAccess() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (

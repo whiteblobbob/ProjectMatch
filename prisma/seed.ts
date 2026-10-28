@@ -6,6 +6,7 @@
  *
  * Run with:  npm run db:seed   (= `dotenv -e .env.development -- tsx prisma/seed.ts`)
  */
+import { randomUUID } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
 
@@ -111,6 +112,7 @@ async function main() {
       const users = {
         alice: await tx.user.create({
           data: {
+            id: randomUUID(),
             name: "Alice Chen",
             instance: "State University",
             status: { connect: { id: student.id } },
@@ -126,6 +128,7 @@ async function main() {
         }),
         marcus: await tx.user.create({
           data: {
+            id: randomUUID(),
             name: "Marcus Webb",
             instance: "Nexa Software",
             status: { connect: { id: professional.id } },
@@ -141,6 +144,7 @@ async function main() {
         }),
         priya: await tx.user.create({
           data: {
+            id: randomUUID(),
             name: "Priya Raman",
             instance: "Coders Guild",
             status: { connect: { id: mentor.id } },
@@ -156,6 +160,7 @@ async function main() {
         }),
         diego: await tx.user.create({
           data: {
+            id: randomUUID(),
             name: "Diego Ferrer",
             instance: "TechWorks Bootcamp",
             status: { connect: { id: junior.id } },
@@ -165,6 +170,7 @@ async function main() {
         }),
         hana: await tx.user.create({
           data: {
+            id: randomUUID(),
             name: "Hana Suzuki",
             instance: "Weekend Builders",
             status: { connect: { id: hobbyist.id } },
@@ -175,6 +181,7 @@ async function main() {
         }),
         omar: await tx.user.create({
           data: {
+            id: randomUUID(),
             name: "Omar Badr",
             instance: "Metro College",
             status: { connect: { id: student.id } },

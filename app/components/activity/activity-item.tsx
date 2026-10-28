@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { IncomingApplication } from "@/app/lib/activity";
+import type { IncomingApplication } from "@/app/lib/ui/activity";
 import StatusBadge from "./status-badge";
 
 export default function ActivityItem({ application }: { application: IncomingApplication }) {

@@ -5,7 +5,7 @@ import LoginRequired, { LoginRequiredFallback } from "../../components/auth/logi
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import ProfilPelamar from "../../components/page/profilpelamar";
 import ProfilPembuat from "../../components/page/profilpembuat";
-import { getAuthUser } from "../../lib/supabase/getAuthUser";
+import { getSessionUser } from "../../lib/ui/session";
 
 type CandidateProfilePageProps = {
   params: Promise<{ slug: string }>;
@@ -33,7 +33,7 @@ async function CandidateProfileAccess({ params }: CandidateProfilePageProps) {
     notFound();
   }
 
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (

@@ -5,7 +5,6 @@ import { NotificationValidator } from "../validator/notification";
 import { ProfileValidator } from "../validator/profile";
 import {
   ApplicationValidator,
-  CreateProjectPostingValidator,
   CreateProjectValidator,
   PeerReviewValidator,
   QueryProjectsValidator,
@@ -36,40 +35,6 @@ describe("Validators", () => {
     expect(result.success).toBe(true);
   });
 
-  it("validates custom project positions and student-only education levels", () => {
-    const result = CreateProjectPostingValidator.safeParse({
-      title: "Festival Literasi",
-      description: "Acara kolaborasi pelajar lintas sekolah dan kampus.",
-      deadline: new Date("2030-01-01"),
-      categoryId: "category-id",
-      workHoursPerWeek: 6,
-      educationLevels: ["JUNIOR_SECONDARY", "SENIOR_SECONDARY", "HIGHER_EDUCATION"],
-      positions: [
-        { name: "Ilustrator", slotsAvailable: 2 },
-        { name: "Penulis naskah", slotsAvailable: 1 },
-      ],
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects duplicate custom position names", () => {
-    const result = CreateProjectPostingValidator.safeParse({
-      title: "Festival Literasi",
-      description: "Acara kolaborasi pelajar lintas sekolah dan kampus.",
-      deadline: new Date("2030-01-01"),
-      categoryId: "category-id",
-      workHoursPerWeek: 6,
-      educationLevels: ["JUNIOR_SECONDARY"],
-      positions: [
-        { name: "Ilustrator", slotsAvailable: 1 },
-        { name: "ilustrator", slotsAvailable: 1 },
-      ],
-    });
-
-    expect(result.success).toBe(false);
-  });
-
   it("validates peer review payload with score and feedback", () => {
     const result = PeerReviewValidator.safeParse({
       projectId: "project-id",
@@ -81,29 +46,16 @@ describe("Validators", () => {
     expect(result.success).toBe(true);
   });
 
-  it("validates a student profile with custom skills", () => {
+  it("validates user profile payload with roles", () => {
     const result = ProfileValidator.safeParse({
       name: "Jane Doe",
       instance: "University",
-      educationLevel: "HIGHER_EDUCATION",
-      bio: "Interested in multidisciplinary student projects",
-      contactInfo: "instagram.com/janedoe",
-      skills: ["Public speaking", "Illustration"],
+      bio: "Software developer",
+      statusId: "status-id",
+      userRoles: [{ roleId: "role-id" }],
     });
 
     expect(result.success).toBe(true);
-  });
-
-  it("rejects duplicate profile skills regardless of letter case", () => {
-    const result = ProfileValidator.safeParse({
-      name: "Jane Doe",
-      instance: "University",
-      educationLevel: "HIGHER_EDUCATION",
-      bio: "",
-      skills: ["Illustration", "illustration"],
-    });
-
-    expect(result.success).toBe(false);
   });
 
   it("validates notification payload with message", () => {

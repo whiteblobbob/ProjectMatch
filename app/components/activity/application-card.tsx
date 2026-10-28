@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ActiveApplication } from "@/app/lib/activity";
+import type { ActiveApplication } from "@/app/lib/ui/activity";
 import { getCollaborationModeLabel } from "@/app/components/ui/collaboration-mode";
 import StatusBadge from "./status-badge";
 

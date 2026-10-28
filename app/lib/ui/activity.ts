@@ -1,7 +1,6 @@
 import "server-only";
 
-import { prisma } from "./prisma";
-import { DEMO_USER_ID, isDemoAccountEnabled } from "./demo-account";
+import { prisma } from "../prisma";
 
 export type IncomingApplication = {
   id: string;
@@ -41,10 +40,6 @@ export type ActivityOverview = {
 };
 
 export async function getActivityOverview(userId: string): Promise<ActivityOverview> {
-  if (isDemoAccountEnabled() && userId === DEMO_USER_ID) {
-    return getDemoActivityOverview();
-  }
-
   const [incomingRows, projectRows, applicationRows] = await Promise.all([
     prisma.application.findMany({
       where: {
@@ -158,65 +153,5 @@ export async function getActivityOverview(userId: string): Promise<ActivityOverv
       onSite: application.project.onSite,
       workHoursPerWeek: application.project.workHoursPerWeek,
     })),
-  };
-}
-
-function getDemoActivityOverview(): ActivityOverview {
-  return {
-    incomingApplications: [
-      {
-        id: "demo-application-dina",
-        applicantName: "Dina Maharani",
-        applicantInstance: "Universitas Indonesia",
-        projectTitle: "EcoTrack",
-        roleName: "UI/UX Designer",
-      },
-      {
-        id: "demo-application-raka",
-        applicantName: "Raka Pratama",
-        applicantInstance: "Universitas Gadjah Mada",
-        projectTitle: "EcoTrack",
-        roleName: "Frontend Developer",
-      },
-    ],
-    activeProjectPosts: [
-      {
-        id: "demo-project-ecotrack",
-        title: "EcoTrack",
-        categoryName: "Kompetisi",
-        deadline: new Date("2026-11-30T00:00:00.000Z"),
-        onSite: false,
-        workHoursPerWeek: 6,
-        roles: [
-          { name: "UI/UX Designer", slotsAvailable: 1 },
-          { name: "Frontend Developer", slotsAvailable: 1 },
-        ],
-        applicantCount: 2,
-        memberCount: 2,
-      },
-      {
-        id: "demo-project-studybuddy",
-        title: "StudyBuddy",
-        categoryName: "Proyek portofolio",
-        deadline: new Date("2026-12-15T00:00:00.000Z"),
-        onSite: true,
-        workHoursPerWeek: 5,
-        roles: [{ name: "Backend Developer", slotsAvailable: 1 }],
-        applicantCount: 0,
-        memberCount: 1,
-      },
-    ],
-    activeApplications: [
-      {
-        id: "demo-own-application",
-        projectId: "demo-project-panganhub",
-        projectTitle: "PanganHub",
-        categoryName: "Startup",
-        ownerName: "Nadia Putri",
-        roleName: "Frontend Developer",
-        onSite: false,
-        workHoursPerWeek: 6,
-      },
-    ],
   };
 }

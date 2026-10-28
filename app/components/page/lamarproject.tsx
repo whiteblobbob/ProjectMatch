@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { ProfileView } from "@/app/lib/validator/profile";
-import { decodeProfilePublicInfo } from "@/app/lib/profile-public-info";
+import { ProfileView } from "@/app/lib/ui/profile";
+import { decodeProfilePublicInfo } from "@/app/lib/ui/profile-public-info";
 import Breadcrumbs from "../ui/breadcrumbs";
 import { ExternalLinkIcon, MapPinIcon } from "../ui/icons";
 import { SelectControl } from "../ui/select-control";

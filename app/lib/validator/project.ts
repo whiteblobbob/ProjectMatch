@@ -18,33 +18,6 @@ export const CreateProjectValidator = z.object({
 });
 export type CreateProjectForm = z.infer<typeof CreateProjectValidator>;
 
-export const EducationLevelValidator = z.enum([
-  "JUNIOR_SECONDARY",
-  "SENIOR_SECONDARY",
-  "HIGHER_EDUCATION",
-]);
-
-export const CreateProjectPostingValidator = CreateProjectValidator
-  .omit({ projectStatusCriteria: true, projectRoles: true })
-  .extend({
-    educationLevels: z
-      .array(EducationLevelValidator)
-      .min(1, "At least one education level is required")
-      .refine((levels) => new Set(levels).size === levels.length, "Education levels must be unique"),
-    positions: z
-      .array(z.object({
-        name: z.string().trim().min(2, "Position name must be at least 2 characters").max(80),
-        slotsAvailable: z.number().int().positive("Slots left must be a positive integer").max(20),
-      }))
-      .min(1, "At least one position is required")
-      .max(10)
-      .refine(
-        (positions) => new Set(positions.map((position) => position.name.toLocaleLowerCase("id-ID"))).size === positions.length,
-        "Position names must be unique",
-      ),
-  });
-export type CreateProjectPostingForm = z.infer<typeof CreateProjectPostingValidator>;
-
 export const UpdateProjectValidator = CreateProjectValidator
   .omit({
     categoryId: true,

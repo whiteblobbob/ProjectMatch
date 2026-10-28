@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import Navbar from "../components/navigation-bar/guestnavbar";
 import Mainprofil from "../components/page/mainprofil";
 import LoginRequired, { LoginRequiredFallback } from "../components/auth/login-required";
-import { getAuthUser } from "../lib/supabase/getAuthUser";
-import { fetchProfile } from "../actions/profile";
+import { getSessionUser } from "../lib/ui/session";
+import { getProfileView } from "../lib/ui/actions";
 
 export default function ProfilPage() {
   return (
@@ -17,7 +17,7 @@ export default function ProfilPage() {
 }
 
 async function ProfilAccess() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (
@@ -29,7 +29,7 @@ async function ProfilAccess() {
     );
   }
 
-  const profile = await fetchProfile();
+  const profile = await getProfileView();
 
   if (!profile.success) {
     return (

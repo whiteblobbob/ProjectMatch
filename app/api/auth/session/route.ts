@@ -1,11 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { DEMO_SESSION_COOKIE } from "@/app/lib/demo-account";
-import { getAuthUser } from "@/app/lib/supabase/getAuthUser";
 import { createClient } from "@/app/lib/supabase/server";
+import { getSessionUser } from "@/app/lib/ui/session";
 
 export async function GET() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   return NextResponse.json({
     authenticated: Boolean(user),
@@ -14,14 +13,11 @@ export async function GET() {
 }
 
 export async function POST() {
-  const cookieStore = await cookies();
-  cookieStore.delete(DEMO_SESSION_COOKIE);
-
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
-    const supabase = createClient(cookieStore);
+    const supabase = createClient(await cookies());
     await supabase.auth.signOut();
   }
 
