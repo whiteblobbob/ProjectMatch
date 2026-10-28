@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import LoginRequired from "../../components/auth/login-required";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import CreateProjectForm from "../../components/project/create-project-form";
-import { getProjectFormOptions } from "../../lib/project-form";
-import { getAuthUser } from "../../lib/supabase/getAuthUser";
+import { getProjectFormOptions } from "../../lib/ui/project-form";
+import { getSessionUser } from "../../lib/ui/session";
 
 export default function CreateProjectPage() {
   return (
@@ -17,7 +17,7 @@ export default function CreateProjectPage() {
 }
 
 async function CreateProjectAccess() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (

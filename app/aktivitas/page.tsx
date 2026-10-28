@@ -7,8 +7,8 @@ import { ActivityError, ActivitySkeleton, EmptyState } from "../components/activ
 import ProjectPostCard from "../components/activity/project-post-card";
 import LoginRequired from "../components/auth/login-required";
 import Navbar from "../components/navigation-bar/guestnavbar";
-import { getActivityOverview } from "../lib/activity";
-import { getAuthUser } from "../lib/supabase/getAuthUser";
+import { getActivityOverview } from "../lib/ui/activity";
+import { getSessionUser } from "../lib/ui/session";
 
 export default function AktivitasPage() {
   return (
@@ -22,7 +22,7 @@ export default function AktivitasPage() {
 }
 
 async function AktivitasAccess() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (

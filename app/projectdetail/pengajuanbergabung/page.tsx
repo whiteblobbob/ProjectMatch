@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 
-import { fetchProfile } from "../../actions/profile";
+import { getProfileView } from "../../lib/ui/actions";
 import LoginRequired, { LoginRequiredFallback } from "../../components/auth/login-required";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import Lamarproject from "../../components/page/lamarproject";
-import { getAuthUser } from "../../lib/supabase/getAuthUser";
+import { getSessionUser } from "../../lib/ui/session";
 
 export default function ProjectApplicationPage() {
   return (
@@ -18,7 +18,7 @@ export default function ProjectApplicationPage() {
 }
 
 async function ProjectApplicationAccess() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (
@@ -30,7 +30,7 @@ async function ProjectApplicationAccess() {
     );
   }
 
-  const profile = await fetchProfile();
+  const profile = await getProfileView();
 
   if (!profile.success) {
     return (

@@ -103,7 +103,7 @@ export default function RegisterForm() {
   const [announcement, setAnnouncement] = useState("Langkah Akun dibuka.");
   const formRef = useRef<HTMLFormElement>(null);
 
-  const age = calculateAge(data.dateOfBirth);
+  const age = data.dateOfBirth ? calculateAge(data.dateOfBirth) : null;
   const needsGuardian = age !== null && age < 18;
   const steps = useMemo<RegistrationStep[]>(() => needsGuardian
     ? [

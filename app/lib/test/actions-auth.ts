@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   signUp: vi.fn(),
   signInWithPassword: vi.fn(),
   userCreate: vi.fn(),
-  cookieSet: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
@@ -25,10 +24,7 @@ import { login, signup } from "../../actions/auth";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  delete process.env.ENABLE_DEMO_ACCOUNT;
-  delete process.env.DEMO_ACCOUNT_EMAIL;
-  delete process.env.DEMO_ACCOUNT_PASSWORD;
-  mocks.cookies.mockResolvedValue({ set: mocks.cookieSet });
+  mocks.cookies.mockResolvedValue({});
   mocks.createClient.mockReturnValue({
     auth: {
       signUp: mocks.signUp,
@@ -91,25 +87,6 @@ describe("signup", () => {
 });
 
 describe("login", () => {
-  it("creates a local demo session without calling Supabase", async () => {
-    process.env.ENABLE_DEMO_ACCOUNT = "true";
-    process.env.DEMO_ACCOUNT_EMAIL = "demo@projectmatch.test";
-    process.env.DEMO_ACCOUNT_PASSWORD = "DemoProject123!";
-
-    const result = await login({
-      email: "demo@projectmatch.test",
-      password: "DemoProject123!",
-    });
-
-    expect(result).toEqual({ success: true });
-    expect(mocks.cookieSet).toHaveBeenCalledWith(
-      "projectmatch-demo-session",
-      "active",
-      expect.objectContaining({ httpOnly: true, sameSite: "lax", path: "/" }),
-    );
-    expect(mocks.createClient).not.toHaveBeenCalled();
-  });
-
   it("signs in with valid credentials", async () => {
     const result = await login({ email: "user@example.com", password: "password123" });
 

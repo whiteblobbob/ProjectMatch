@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateProfile } from "@/app/actions/profile";
+import { saveProfileView } from "@/app/lib/ui/actions";
 import {
   ArrowRightIcon,
   BehanceIcon,
@@ -34,12 +34,12 @@ import {
   encodeProfilePublicInfo,
   isValidPublicUrl,
   normalizePublicUrl,
-} from "@/app/lib/profile-public-info";
+} from "@/app/lib/ui/profile-public-info";
 import {
   ProfileForm,
   ProfileView,
   profileEducationOptions,
-} from "@/app/lib/validator/profile";
+} from "@/app/lib/ui/profile";
 
 type ProfilProps = {
   initialProfile: ProfileView;
@@ -268,7 +268,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
     setIsPending(true);
 
-    const result = await updateProfile({
+    const result = await saveProfileView({
       ...draft,
       contactInfo: encodeProfilePublicInfo(draftPublicInfo),
     });

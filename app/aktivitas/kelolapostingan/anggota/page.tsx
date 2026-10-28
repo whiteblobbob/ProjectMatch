@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import LoginRequired, { LoginRequiredFallback } from "../../../components/auth/login-required";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import KelolaAnggota from "../../../components/page/kelolaanggota";
-import { getAuthUser } from "../../../lib/supabase/getAuthUser";
+import { getSessionUser } from "../../../lib/ui/session";
 
 export default function KelolaAnggotaPage() {
   return (
@@ -17,7 +17,7 @@ export default function KelolaAnggotaPage() {
 }
 
 async function KelolaAnggotaAccess() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (

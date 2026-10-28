@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import LoginRequired, { LoginRequiredFallback } from "../../../components/auth/login-required";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import UbahPosisi from "../../../components/page/ubahposisi";
-import { getAuthUser } from "../../../lib/supabase/getAuthUser";
+import { getSessionUser } from "../../../lib/ui/session";
 
 export default function UbahPosisiPage() {
   return (
@@ -17,7 +17,7 @@ export default function UbahPosisiPage() {
 }
 
 async function UbahPosisiAccess() {
-  const user = await getAuthUser();
+  const user = await getSessionUser();
 
   if (!user) {
     return (
