@@ -6,7 +6,6 @@ import { fetchProfile } from "../actions/profile";
 import { fetchRoles, fetchStatuses } from "../actions/catalog";
 import { toProfileView } from "../lib/ui/profile";
 import { requireSessionUser } from "../lib/ui/session";
-import { connection } from "next/server";
 
 export default function ProfilPage() {
   return (
@@ -20,7 +19,6 @@ export default function ProfilPage() {
 }
 
 async function ProfilAccess() {
-  await connection();
   const user = await requireSessionUser();
   const [profile, roles, statuses] = await Promise.all([
     fetchProfile(),
