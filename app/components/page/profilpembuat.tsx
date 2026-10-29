@@ -8,10 +8,10 @@ export default function ProfilPembuat() {
     <main className="min-h-[calc(100vh-4rem)] bg-slate-50">
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-[960px] px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
-          <Breadcrumbs items={[{ label: "Jelajah", href: "/" }, { label: "Detail postingan", href: "/projectdetail" }, { label: "Profil pembuat" }]} />
+          <Breadcrumbs items={[{ label: "Jelajah", href: "/" }, { label: "Detail postingan", href: "/" }, { label: "Profil pembuat" }]} />
           <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div><p className="text-sm font-semibold text-brand-primary">Pembuat proyek EcoTrack</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Profil pembuat</h1></div>
-            <Link href="/projectdetail" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary"><ArrowLeftIcon className="size-4" /> Kembali ke postingan</Link>
+            <Link href="/" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary"><ArrowLeftIcon className="size-4" /> Kembali ke postingan</Link>
           </div>
         </div>
       </div>

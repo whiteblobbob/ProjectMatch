@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { IncomingApplication } from "@/app/lib/ui/activity";
+import type { IncomingApplication } from "@/app/actions/activity";
 import StatusBadge from "./status-badge";
 
 export default function ActivityItem({ application }: { application: IncomingApplication }) {
@@ -36,7 +36,7 @@ export default function ActivityItem({ application }: { application: IncomingApp
           </div>
         </div>
         <Link
-          href="/aktivitas/kelolapostingan/tinjaupelamar"
+          href={`/activity/project/${application.projectId}/tinjaupelamar`}
           className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           Tinjau pelamar

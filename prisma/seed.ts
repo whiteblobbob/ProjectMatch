@@ -95,6 +95,7 @@ async function main() {
       await tx.projectStatusCriteria.deleteMany();
       await tx.project.deleteMany();
       await tx.userRole.deleteMany();
+      await tx.contactInfo.deleteMany();
       await tx.user.deleteMany();
       await tx.role.deleteMany();
       await tx.status.deleteMany();
@@ -141,7 +142,14 @@ async function main() {
             instance: "State University",
             status: { connect: { id: statusFor(0).id } },
             bio: "Computer science senior who loves shipping small web tools.",
-            contactInfo: "https://github.com/alicechen",
+            location: "Bandung, Jawa Barat",
+            portfolioLink: "https://alicechen.dev",
+            contactInfos: {
+              create: [
+                { value: "https://github.com/alicechen" },
+                { value: "https://alicechen.dev" },
+              ],
+            },
             userRoles: {
               create: [
                 { role: { connect: { id: fullstack.id } } },
@@ -157,7 +165,11 @@ async function main() {
             instance: "Nexa Software",
             status: { connect: { id: statusFor(1).id } },
             bio: "Product minded engineer tinker. React, PostgreSQL and clean DX.",
-            contactInfo: "https://linkedin.com/in/marcuswebb",
+            location: "Jakarta Selatan, DKI Jakarta",
+            portfolioLink: "https://marcuswebb.dev",
+            contactInfos: {
+              create: [{ value: "https://linkedin.com/in/marcuswebb" }],
+            },
             userRoles: {
               create: [
                 { role: { connect: { id: frontend.id } } },
@@ -173,7 +185,11 @@ async function main() {
             instance: "Coders Guild",
             status: { connect: { id: statusFor(2).id } },
             bio: "Mentoring juniors through their first production deploys for a decade.",
-            contactInfo: "priya@codersguild.dev",
+            location: "Yogyakarta, DI Yogyakarta",
+            portfolioLink: "https://priyaraman.dev",
+            contactInfos: {
+              create: [{ value: "https://linkedin.com/in/priyaraman" }],
+            },
             userRoles: {
               create: [
                 { role: { connect: { id: backend.id } } },
@@ -189,6 +205,11 @@ async function main() {
             instance: "TechWorks Bootcamp",
             status: { connect: { id: statusFor(3).id } },
             bio: "Bootcamp grad looking for teammates to practice with.",
+            location: "Surabaya, Jawa Timur",
+            portfolioLink: "https://github.com/diegoferrer",
+            contactInfos: {
+              create: [{ value: "https://github.com/diegoferrer" }],
+            },
             userRoles: { create: [{ role: { connect: { id: frontend.id } } }] },
           },
         }),
@@ -199,7 +220,11 @@ async function main() {
             instance: "Weekend Builders",
             status: { connect: { id: statusFor(4).id } },
             bio: "Ship tiny games on weekends. Pragmatic APIs on the side.",
-            contactInfo: "https://hanasuzuki.dev",
+            location: "Denpasar, Bali",
+            portfolioLink: "https://hanasuzuki.dev",
+            contactInfos: {
+              create: [{ value: "https://hanasuzuki.dev" }],
+            },
             userRoles: { create: [{ role: { connect: { id: backend.id } } }] },
           },
         }),
@@ -210,6 +235,11 @@ async function main() {
             instance: "Metro College",
             status: { connect: { id: statusFor(5).id } },
             bio: "Design student sketching interfaces before writing any code.",
+            location: "Depok, Jawa Barat",
+            portfolioLink: "https://omar.design",
+            contactInfos: {
+              create: [{ value: "https://omar.design" }],
+            },
             userRoles: { create: [{ role: { connect: { id: uidesigner.id } } }] },
           },
         }),
@@ -220,6 +250,11 @@ async function main() {
             instance: "Northside Academy",
             status: { connect: { id: statusFor(6).id } },
             bio: "Student organizer building tools for local study groups.",
+            location: "Bandung, Jawa Barat",
+            portfolioLink: "https://github.com/norapatel",
+            contactInfos: {
+              create: [{ value: "https://github.com/norapatel" }],
+            },
             userRoles: { create: [{ role: { connect: { id: frontend.id } } }] },
           },
         }),
@@ -230,7 +265,11 @@ async function main() {
             instance: "Open Source Lab",
             status: { connect: { id: statusFor(7).id } },
             bio: "Backend learner focused on reliable APIs and useful documentation.",
-            contactInfo: "https://github.com/liamokafor",
+            location: "Semarang, Jawa Tengah",
+            portfolioLink: "https://github.com/liamokafor",
+            contactInfos: {
+              create: [{ value: "https://github.com/liamokafor" }],
+            },
             userRoles: { create: [{ role: { connect: { id: backend.id } } }] },
           },
         }),
@@ -241,6 +280,11 @@ async function main() {
             instance: "Creative Coding Club",
             status: { connect: { id: statusFor(8).id } },
             bio: "Visual storyteller translating community ideas into friendly interfaces.",
+            location: "Makassar, Sulawesi Selatan",
+            portfolioLink: "https://behance.net/sofiaalvarez",
+            contactInfos: {
+              create: [{ value: "https://behance.net/sofiaalvarez" }],
+            },
             userRoles: { create: [{ role: { connect: { id: uidesigner.id } } }] },
           },
         }),
@@ -251,6 +295,11 @@ async function main() {
             instance: "Harbor Polytechnic",
             status: { connect: { id: statusFor(9).id } },
             bio: "Full-stack builder interested in civic technology and data tools.",
+            location: "Medan, Sumatera Utara",
+            portfolioLink: "https://github.com/kenjitan",
+            contactInfos: {
+              create: [{ value: "https://github.com/kenjitan" }],
+            },
             userRoles: { create: [{ role: { connect: { id: fullstack.id } } }] },
           },
         }),
@@ -261,6 +310,11 @@ async function main() {
             instance: "Riverside School",
             status: { connect: { id: statusFor(10).id } },
             bio: "Product-minded collaborator who enjoys turning rough ideas into plans.",
+            location: "Palembang, Sumatera Selatan",
+            portfolioLink: "https://linkedin.com/in/mayasingh",
+            contactInfos: {
+              create: [{ value: "https://linkedin.com/in/mayasingh" }],
+            },
             userRoles: { create: [{ role: { connect: { id: projectManager.id } } }] },
           },
         }),
@@ -271,6 +325,11 @@ async function main() {
             instance: "Maker House",
             status: { connect: { id: statusFor(11).id } },
             bio: "Weekend maker experimenting with accessible education projects.",
+            location: "Malang, Jawa Timur",
+            portfolioLink: "https://github.com/noahwilliams",
+            contactInfos: {
+              create: [{ value: "https://github.com/noahwilliams" }],
+            },
             userRoles: {
               create: [
                 { role: { connect: { id: frontend.id } } },
@@ -294,7 +353,11 @@ async function main() {
           description:
             "Buy and sell used textbooks and equipment inside one university. Chat, listings and safe hand-over checkpoints.",
           deadline: daysFromNow(60),
-          onSite: false,
+          collaborationMode: "ONLINE",
+          onlinePlatform: "ZOOM",
+          onlineLink: "https://zoom.us/j/9912345601",
+          meetDescription: "Kick-off daring setiap Selasa malam untuk membahas progres listing dan kurasi barang.",
+          collaborationTool: "Notion, Google Drive",
           workHoursPerWeek: 10,
           projectStatusCriteria: {
             create: [
@@ -319,7 +382,11 @@ async function main() {
           description:
             "A mobile habit tracker with streaks, gentle reminders and an importable on-device dataset.",
           deadline: daysFromNow(45),
-          onSite: false,
+          collaborationMode: "ONLINE",
+          onlinePlatform: "GOOGLE_MEET",
+          onlineLink: "https://meet.google.com/hbt-rack-trv",
+          meetDescription: "Sinkronisasi mingguan daring untuk membahas UI streak dan dataset on-device.",
+          collaborationTool: "Figma, GitHub",
           workHoursPerWeek: 8,
           projectStatusCriteria: {
             create: [
@@ -344,7 +411,11 @@ async function main() {
           description:
             "A cozy tile-sliding puzzle with a small coop mode and a lobby. Ships for web and desktop.",
           deadline: daysFromNow(90),
-          onSite: true,
+          collaborationMode: "OFFLINE",
+          offlinePlace: "KAMPUS",
+          offlineLink: "https://maps.google.com/?q=Gedung+Informatika+Kampus",
+          meetDescription: "Sesi co-working luring di perpustakaan kampus untuk menguji level dan animasi tile.",
+          collaborationTool: "Trello",
           workHoursPerWeek: 6,
           projectStatusCriteria: {
             create: [
@@ -370,7 +441,11 @@ async function main() {
           description:
             "An admin dashboard surface for a rising SaaS workspace with KPI charts and team management.",
           deadline: daysFromNow(30),
-          onSite: true,
+          collaborationMode: "OFFLINE",
+          offlinePlace: "KAFE",
+          offlineLink: "https://maps.google.com/?q=Kafe+Kopi+Kolaborasi",
+          meetDescription: "Pertemuan luring dua mingguan di kafe publik untuk demo KPI dashboard.",
+          collaborationTool: "Linear, Slack",
           workHoursPerWeek: 12,
           status: "IN_PROGRESS",
           projectStatusCriteria: {
@@ -403,7 +478,11 @@ async function main() {
           description:
             "A shared template site hosting mini portfolios for three students of the same design cohort.",
           deadline: daysAgo(5),
-          onSite: false,
+          collaborationMode: "ONLINE",
+          onlinePlatform: "DISCORD",
+          onlineLink: "https://discord.gg/portfoliohub",
+          meetDescription: "Review daring tiap Jumat melalui voice channel untuk membahas template portofolio.",
+          collaborationTool: "Figma, Notion",
           workHoursPerWeek: 5,
           status: "COMPLETED",
           projectStatusCriteria: {
@@ -437,7 +516,11 @@ async function main() {
           description:
             "A lightweight scheduler that helps classmates find overlapping study times and share agendas.",
           deadline: daysFromNow(35),
-          onSite: false,
+          collaborationMode: "ONLINE",
+          onlinePlatform: "GOOGLE_MEET",
+          onlineLink: "https://meet.google.com/sgs-cdul-time",
+          meetDescription: "Koordinasi daring untuk menyelaraskan algoritma pencarian jadwal belajar.",
+          collaborationTool: "Google Calendar",
           workHoursPerWeek: 7,
           projectStatusCriteria: {
             create: [
@@ -462,7 +545,11 @@ async function main() {
           description:
             "A searchable directory of neighborhood APIs, open datasets and examples for student projects.",
           deadline: daysFromNow(55),
-          onSite: false,
+          collaborationMode: "ONLINE",
+          onlinePlatform: "MICROSOFT_TEAMS",
+          onlineLink: "https://teams.microsoft.com/l/meetup-join/api-catalog",
+          meetDescription: "Pertemuan daring untuk kurasi API lingkungan dan penulisan contoh kode.",
+          collaborationTool: "GitHub Projects",
           workHoursPerWeek: 9,
           projectStatusCriteria: {
             create: [
@@ -487,7 +574,11 @@ async function main() {
           description:
             "An interactive map for a small museum that connects exhibits with short local history stories.",
           deadline: daysFromNow(70),
-          onSite: true,
+          collaborationMode: "OFFLINE",
+          offlinePlace: "RUANG_PUBLIK",
+          offlineLink: "https://maps.google.com/?q=Taman+Kota+Museum",
+          meetDescription: "Kunjungan luring ke taman kota dekat museum untuk memetakan titik cerita.",
+          collaborationTool: "Miro",
           workHoursPerWeek: 6,
           projectStatusCriteria: {
             create: [
@@ -512,7 +603,13 @@ async function main() {
           description:
             "A collaborative challenge turning public transport data into clear, useful community insights.",
           deadline: daysFromNow(80),
-          onSite: false,
+          collaborationMode: "HYBRID",
+          onlinePlatform: "ZOOM",
+          onlineLink: "https://zoom.us/j/8877660022",
+          offlinePlace: "KAMPUS",
+          offlineLink: "https://maps.google.com/?q=Lab+Data+Kampus",
+          meetDescription: "Sesi hybrid: sinkronisasi daring mingguan dan workshop luring di lab data kampus.",
+          collaborationTool: "Jupyter, GitHub",
           workHoursPerWeek: 11,
           projectStatusCriteria: {
             create: [
@@ -537,7 +634,11 @@ async function main() {
           description:
             "A set of accessible learning activities and reusable templates for after-school workshops.",
           deadline: daysFromNow(50),
-          onSite: true,
+          collaborationMode: "OFFLINE",
+          offlinePlace: "SEKOLAH",
+          offlineLink: "https://maps.google.com/?q=SMA+Negeri+1+Denpasar",
+          meetDescription: "Workshop luring di sekolah mitra untuk menguji aktivitas belajar yang aksesibel.",
+          collaborationTool: "Google Docs",
           workHoursPerWeek: 8,
           projectStatusCriteria: {
             create: [
@@ -564,28 +665,24 @@ async function main() {
             applicantId: users.marcus.id,
             roleId: frontend.id,
             message: "I have shipped two marketplaces before, happy to lead the frontend.",
-            portfolioLink: "https://github.com/marcuswebb",
           },
           {
             projectId: campusMarketplace.id,
             applicantId: users.omar.id,
             roleId: uidesigner.id,
             message: "I will sketch the listing flow in Figma for your review.",
-            portfolioLink: "https://omar.design",
           },
           {
             projectId: habitsTracker.id,
             applicantId: users.alice.id,
             roleId: frontend.id,
             message: "Daily streaks UI is a fun fit for my mobile web practice.",
-            portfolioLink: "https://github.com/alicechen",
           },
           {
             projectId: habitsTracker.id,
             applicantId: users.diego.id,
             roleId: backend.id,
             message: "Practice-first learner, I want to own the sync API.",
-            portfolioLink: "https://github.com/diegoferrer",
           },
           {
             projectId: puzzleGame.id,
@@ -701,6 +798,7 @@ async function main() {
     role: await prisma.role.count(),
     user: await prisma.user.count(),
     userRole: await prisma.userRole.count(),
+    contactInfo: await prisma.contactInfo.count(),
     project: await prisma.project.count(),
     projectStatusCriteria: await prisma.projectStatusCriteria.count(),
     projectRole: await prisma.projectRole.count(),

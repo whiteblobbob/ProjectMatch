@@ -1,6 +1,6 @@
 "use server"
-import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "../lib/prisma";
+import prisma from "@/generated/prisma/client";
+import prisma from "../lib/prisma";
 import { createClient } from "../lib/supabase/server";
 import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
 import { parseOrThrow } from "../lib/validator/global";
@@ -31,6 +31,7 @@ export const signup = actionWrapper(async (formData: SignupForm) => {
     await prisma.user.create({
       data: {
         id: userId,
+        name: data.name,
       }
     });
   } catch (error) {

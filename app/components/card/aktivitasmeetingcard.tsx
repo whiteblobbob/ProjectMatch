@@ -22,7 +22,7 @@ export default function Aktivitasmeetingcard() {
         <p className="flex items-center gap-2"><ClockIcon className="size-4 text-slate-400" />19.00–20.00 WITA</p>
         <p className="flex items-center gap-2"><VideoIcon className="size-4 text-slate-400" />Daring melalui Zoom</p>
       </div>
-      <Link href="/aktivitas/kelolapostingan/posisi" className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary">
+      <Link href="/activity/kelolapostingan/posisi" className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary">
         Ubah detail pertemuan
       </Link>
     </article>

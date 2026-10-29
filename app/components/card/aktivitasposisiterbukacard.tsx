@@ -18,7 +18,7 @@ export default function KelolaPosisiTerbuka() {
       </div>
 
       <Link
-        href="/aktivitas/kelolapostingan/posisi"
+        href="/activity/kelolapostingan/posisi"
         className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
         Ubah posisi

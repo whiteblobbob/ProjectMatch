@@ -9,8 +9,8 @@ export default function TinjauPelamar() {
         <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
           <Breadcrumbs
             items={[
-              { label: "Aktivitas", href: "/aktivitas" },
-              { label: "Kelola postingan", href: "/aktivitas/kelolapostingan" },
+              { label: "Aktivitas", href: "/activity" },
+              { label: "Kelola postingan", href: "/activity/kelolapostingan" },
               { label: "Tinjau pelamar" },
             ]}
           />

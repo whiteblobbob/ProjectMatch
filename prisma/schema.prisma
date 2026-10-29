@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+generator nextAdmin {
+    provider              = "next-admin-generator-prisma"
+  }
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -18,13 +21,40 @@ enum ProjectStatus {
   @@map("project_status")
 }
 
+enum CollaborationMode {
+  ONLINE
+  OFFLINE
+  HYBRID
+
+  @@map("collaboration_mode")
+}
+
+enum OnlinePlatform {
+  GOOGLE_MEET
+  ZOOM
+  MICROSOFT_TEAMS
+  DISCORD
+
+  @@map("online_platform")
+}
+
+enum OfflinePlace {
+  SEKOLAH
+  KAMPUS
+  RUANG_PUBLIK
+  KAFE
+
+  @@map("offline_place")
+}
+
 model User {
   id                     String          @id
-  name                   String?
+  name                   String
   instance               String?
   statusId               String?         @map("status_id")
   bio                    String?
-  contactInfo            String?         @map("contact_info")
+  location               String?
+  portfolioLink          String?         @map("portfolio_link")
   totalProjectsCompleted Int             @default(0) @map("total_projects_completed")
   avgCommitmentScore     Float           @default(0) @map("avg_commitment_score")
   createdAt              DateTime        @default(now()) @map("created_at")
@@ -32,6 +62,7 @@ model User {
 
   status                 Status?         @relation(fields: [statusId], references: [id], onDelete: SetNull)
   userRoles              UserRole[]
+  contactInfos           ContactInfo[]
   ownedProjects          Project[]       @relation("ProjectOwner")
   applications           Application[]
   projectMembers         ProjectMember[]
@@ -91,7 +122,13 @@ model Project {
   title                 String
   description           String
   deadline              DateTime?
-  onSite                Boolean                 @default(false) @map("on_site")
+  collaborationMode     CollaborationMode       @default(ONLINE) @map("collaboration_mode")
+  onlinePlatform        OnlinePlatform?         @map("online_platform")
+  onlineLink            String?                 @map("online_link")
+  offlinePlace          OfflinePlace?           @map("offline_place")
+  offlineLink           String?                 @map("offline_link")
+  meetDescription       String                  @map("meet_description")
+  collaborationTool     String?                 @map("collaboration_tool")
   workHoursPerWeek      Int                     @map("work_hours_per_week")
   status                ProjectStatus           @default(OPEN_RECRUITMENT)
   createdAt             DateTime                @default(now()) @map("created_at")
@@ -137,7 +174,6 @@ model Application {
   applicantId   String            @map("applicant_id")
   roleId        String            @map("role_id")
   message       String?
-  portfolioLink String?           @map("portfolio_link")
 
   project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   applicant     User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
@@ -145,6 +181,17 @@ model Application {
 
   @@unique([projectId, applicantId])
   @@map("application")
+}
+
+model ContactInfo {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("contact_info")
 }
 
 model ProjectMember {

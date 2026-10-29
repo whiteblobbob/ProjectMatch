@@ -1,8 +1,8 @@
 "use client";
 
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveProfileView } from "@/app/lib/ui/actions";
+import { updateProfile } from "@/app/actions/profile";
 import {
   ArrowRightIcon,
   BehanceIcon,
@@ -28,10 +28,7 @@ import {
 import { SelectControl } from "@/app/components/ui/select-control";
 import {
   MAX_PROFILE_CONTACTS,
-  ProfilePublicInfo,
-  decodeProfilePublicInfo,
   detectContactPlatform,
-  encodeProfilePublicInfo,
   isValidPublicUrl,
   normalizePublicUrl,
 } from "@/app/lib/ui/profile-public-info";
@@ -39,11 +36,18 @@ import {
   ProfileForm,
   ProfileView,
   profileEducationOptions,
-} from "@/app/lib/validator/profile";
+} from "@/app/lib/ui/profile";
 import VerificationForm from "../auth/verification/verification-form";
+
+type CatalogOption = {
+  id: string;
+  name: string;
+};
 
 type ProfilProps = {
   initialProfile: ProfileView;
+  statuses: CatalogOption[];
+  roles: CatalogOption[];
 };
 
 type AvatarPreview = {
@@ -60,16 +64,10 @@ function editableProfile(profile: ProfileView): ProfileForm {
     instance: profile.instance,
     educationLevel: profile.educationLevel ?? "HIGHER_EDUCATION",
     bio: profile.bio,
-    contactInfo: profile.contactInfo ?? "",
+    location: profile.location,
+    portfolioLink: profile.portfolioLink,
+    contacts: profile.contacts.length > 0 ? [...profile.contacts] : [""],
     skills: profile.skills,
-  };
-}
-
-function editablePublicInfo(profile: ProfileView): ProfilePublicInfo {
-  const info = decodeProfilePublicInfo(profile.contactInfo);
-  return {
-    ...info,
-    contacts: info.contacts.length > 0 ? [...info.contacts] : [""],
   };
 }
 
@@ -78,11 +76,10 @@ function getInitials(name: string) {
   return initials.toLocaleUpperCase("id-ID") || "PM";
 }
 
-export default function Profil({ initialProfile }: ProfilProps) {
+export default function Profil({ initialProfile, statuses, roles }: ProfilProps) {
   const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
   const [draft, setDraft] = useState<ProfileForm>(() => editableProfile(initialProfile));
-  const [draftPublicInfo, setDraftPublicInfo] = useState<ProfilePublicInfo>(() => editablePublicInfo(initialProfile));
   const [isEditing, setIsEditing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -92,7 +89,6 @@ export default function Profil({ initialProfile }: ProfilProps) {
   const [avatarPreview, setAvatarPreview] = useState<AvatarPreview | null>(null);
   const [draftAvatar, setDraftAvatar] = useState<AvatarPreview | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
-  const skillInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -102,7 +98,10 @@ export default function Profil({ initialProfile }: ProfilProps) {
     (option) => option.value === profile.educationLevel,
   )?.label ?? "Jenjang belum diisi";
 
-  const publicInfo = useMemo(() => decodeProfilePublicInfo(profile.contactInfo), [profile.contactInfo]);
+  const publicInfo = useMemo(
+    () => ({ location: profile.location, portfolioUrl: profile.portfolioLink, contacts: profile.contacts }),
+    [profile.location, profile.portfolioLink, profile.contacts],
+  );
 
   const completeness = useMemo(() => {
     const completed = [
@@ -126,6 +125,13 @@ export default function Profil({ initialProfile }: ProfilProps) {
     if (currentIndex < 0) return profileEducationOptions;
     return profileEducationOptions.slice(currentIndex);
   }, [profile.educationLevel]);
+
+  const availableSkillOptions = useMemo(
+    () => roles.filter(
+      (role) => !draft.skills.some((skill) => skill.toLocaleLowerCase("id-ID") === role.name.toLocaleLowerCase("id-ID")),
+    ),
+    [draft.skills, roles],
+  );
 
   useEffect(() => {
     if (!isEditing) return;
@@ -171,14 +177,13 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
   function openEditor(focusTarget?: "skills" | "photo") {
     setDraft(editableProfile(profile));
-    setDraftPublicInfo(editablePublicInfo(profile));
     setSkillInput("");
     setError("");
     setNotice("");
     setDraftAvatar(null);
     setRemoveAvatar(false);
     setIsEditing(true);
-    if (focusTarget === "skills") requestAnimationFrame(() => skillInputRef.current?.focus());
+    if (focusTarget === "skills") requestAnimationFrame(() => document.getElementById("profile-skill-select")?.focus());
     if (focusTarget === "photo") requestAnimationFrame(() => avatarButtonRef.current?.focus());
   }
 
@@ -222,12 +227,8 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
   function addSkill() {
     const skill = skillInput.trim();
-    if (skill.length < 2) {
-      setError("Nama keahlian minimal 2 karakter.");
-      return;
-    }
-    if (skill.length > 50) {
-      setError("Nama keahlian maksimal 50 karakter.");
+    if (!skill) {
+      setError("Pilih keahlian terlebih dahulu.");
       return;
     }
     if (draft.skills.length >= 12) {
@@ -242,32 +243,25 @@ export default function Profil({ initialProfile }: ProfilProps) {
     setDraft((current) => ({ ...current, skills: [...current.skills, skill] }));
     setSkillInput("");
     setError("");
-    requestAnimationFrame(() => skillInputRef.current?.focus());
-  }
-
-  function handleSkillKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      addSkill();
-    }
+    requestAnimationFrame(() => document.getElementById("profile-skill-select")?.focus());
   }
 
   function addContact() {
-    setDraftPublicInfo((current) => {
+    setDraft((current) => {
       if (current.contacts.length >= MAX_PROFILE_CONTACTS) return current;
       return { ...current, contacts: [...current.contacts, ""] };
     });
   }
 
   function updateContact(index: number, value: string) {
-    setDraftPublicInfo((current) => ({
+    setDraft((current) => ({
       ...current,
       contacts: current.contacts.map((contact, contactIndex) => contactIndex === index ? value : contact),
     }));
   }
 
   function removeContact(index: number) {
-    setDraftPublicInfo((current) => {
+    setDraft((current) => {
       const contacts = current.contacts.filter((_, contactIndex) => contactIndex !== index);
       return { ...current, contacts: contacts.length > 0 ? contacts : [""] };
     });
@@ -277,33 +271,57 @@ export default function Profil({ initialProfile }: ProfilProps) {
     event.preventDefault();
     setError("");
 
-    const invalidContact = draftPublicInfo.contacts.find((contact) => contact.trim() && !isValidPublicUrl(contact));
+    const invalidContact = draft.contacts.find((contact) => contact.trim() && !isValidPublicUrl(contact));
     if (invalidContact) {
       setError("Pastikan setiap kontak berupa tautan yang valid.");
       return;
     }
-    if (draftPublicInfo.portfolioUrl.trim() && !isValidPublicUrl(draftPublicInfo.portfolioUrl)) {
+    if (draft.portfolioLink.trim() && !isValidPublicUrl(draft.portfolioLink)) {
       setError("Link portofolio belum valid.");
+      return;
+    }
+
+    const statusName = profileEducationOptions.find((option) => option.value === draft.educationLevel)?.statusName;
+    const statusId = statuses.find((status) => status.name === statusName)?.id;
+    if (!statusId) {
+      setError("Status pendidikan tidak valid.");
+      return;
+    }
+
+    const resolvedRoles = draft.skills
+      .map((skill) => roles.find((role) => role.name.toLocaleLowerCase("id-ID") === skill.toLocaleLowerCase("id-ID"))?.id)
+      .filter((roleId): roleId is string => Boolean(roleId));
+
+    if (resolvedRoles.length !== draft.skills.length) {
+      const unmatched = draft.skills.filter(
+        (skill) => !roles.some((role) => role.name.toLocaleLowerCase("id-ID") === skill.toLocaleLowerCase("id-ID")),
+      );
+      setError(`Keahlian berikut belum tersedia: ${unmatched.join(", ")}. Pilih dari daftar keahlian.`);
       return;
     }
 
     setIsPending(true);
 
-    const result = await saveProfileView({
-      ...draft,
-      contactInfo: encodeProfilePublicInfo(draftPublicInfo),
+    const location = draft.location.trim();
+    const portfolioLink = draft.portfolioLink.trim() ? normalizePublicUrl(draft.portfolioLink) : "";
+    const contacts = draft.contacts.map(normalizePublicUrl).filter(Boolean);
+
+    const result = await updateProfile({
+      name: draft.name,
+      instance: draft.instance,
+      bio: draft.bio,
+      location,
+      portfolioLink,
+      contacts,
+      statusId,
+      userRoles: resolvedRoles.map((roleId) => ({ roleId })),
     });
+
     if (!result.success) {
       const details = result.fieldErrors
         ? Object.values(result.fieldErrors).flat().join(" ")
         : result.error;
       setError(details || result.error);
-      setIsPending(false);
-      return;
-    }
-
-    if (!("data" in result)) {
-      setError("Profil belum dapat diperbarui. Silakan coba lagi.");
       setIsPending(false);
       return;
     }
@@ -315,9 +333,20 @@ export default function Profil({ initialProfile }: ProfilProps) {
       setAvatarPreview(draftAvatar);
     }
 
-    setProfile(result.data);
-    setDraft(editableProfile(result.data));
-    setDraftPublicInfo(editablePublicInfo(result.data));
+    const nextProfile: ProfileView = {
+      ...profile,
+      name: draft.name,
+      instance: draft.instance,
+      bio: draft.bio,
+      location,
+      portfolioLink,
+      contacts,
+      educationLevel: draft.educationLevel,
+      skills: draft.skills,
+    };
+
+    setProfile(nextProfile);
+    setDraft(editableProfile(nextProfile));
     setDraftAvatar(null);
     setRemoveAvatar(false);
     setIsPending(false);
@@ -633,8 +662,8 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     <MapPinIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <input
                       id="profile-location"
-                      value={draftPublicInfo.location}
-                      onChange={(event) => setDraftPublicInfo((current) => ({ ...current, location: event.target.value }))}
+                      value={draft.location}
+                      onChange={(event) => setDraft((current) => ({ ...current, location: event.target.value }))}
                       maxLength={100}
                       disabled={isPending}
                       autoComplete="address-level2"
@@ -654,9 +683,9 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     <input
                       id="profile-portfolio"
                       type="url"
-                      value={draftPublicInfo.portfolioUrl}
-                      onChange={(event) => setDraftPublicInfo((current) => ({ ...current, portfolioUrl: event.target.value }))}
-                      onBlur={(event) => setDraftPublicInfo((current) => ({ ...current, portfolioUrl: normalizePublicUrl(event.target.value) }))}
+                      value={draft.portfolioLink}
+                      onChange={(event) => setDraft((current) => ({ ...current, portfolioLink: event.target.value }))}
+                      onBlur={(event) => setDraft((current) => ({ ...current, portfolioLink: normalizePublicUrl(event.target.value) }))}
                       maxLength={300}
                       disabled={isPending}
                       placeholder="https://figma.com/... atau https://behance.net/..."
@@ -667,9 +696,12 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
                 <fieldset>
                   <legend className="text-sm font-semibold text-slate-900">Keahlian</legend>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">Ketik keahlian custom dari bidang apa pun, lalu tekan Enter atau Tambah.</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Pilih keahlian dari daftar, lalu tekan Tambah.</p>
                   <div className="mt-2 flex gap-2">
-                    <input ref={skillInputRef} value={skillInput} onChange={(event) => setSkillInput(event.target.value)} onKeyDown={handleSkillKeyDown} maxLength={50} disabled={isPending || draft.skills.length >= 12} placeholder="Contoh: Menulis, Akuntansi, Ilustrasi" className={inputClass} aria-label="Nama keahlian baru" />
+                    <SelectControl id="profile-skill-select" value={skillInput} onChange={(event) => setSkillInput(event.target.value)} disabled={isPending || draft.skills.length >= 12 || availableSkillOptions.length === 0} containerClassName="flex-1" className="rounded-xl" aria-label="Pilih keahlian">
+                      <option value="" disabled>Pilih keahlian</option>
+                      {availableSkillOptions.map((role) => <option key={role.id} value={role.name}>{role.name}</option>)}
+                    </SelectControl>
                     <button type="button" onClick={addSkill} disabled={isPending || draft.skills.length >= 12} className="min-h-12 shrink-0 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50">Tambah</button>
                   </div>
                   <div className="mt-3 flex min-h-10 flex-wrap gap-2">
@@ -690,11 +722,11 @@ export default function Profil({ initialProfile }: ProfilProps) {
                       <legend className="text-sm font-semibold text-slate-900">Kontak dan media sosial</legend>
                       <p className="mt-1 text-xs leading-5 text-slate-500">Tempel tautan profil; jenis platform akan dikenali otomatis.</p>
                     </div>
-                    <span className="text-xs font-medium text-slate-500">{draftPublicInfo.contacts.filter((contact) => contact.trim()).length}/{MAX_PROFILE_CONTACTS} kontak</span>
+                    <span className="text-xs font-medium text-slate-500">{draft.contacts.filter((contact) => contact.trim()).length}/{MAX_PROFILE_CONTACTS} kontak</span>
                   </div>
 
                   <div className="mt-3 space-y-3">
-                    {draftPublicInfo.contacts.map((contact, index) => {
+                    {draft.contacts.map((contact, index) => {
                       const platform = detectContactPlatform(contact);
                       return (
                         <div key={index} className="flex items-center gap-2">
@@ -728,7 +760,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     })}
                   </div>
 
-                  {draftPublicInfo.contacts.length < MAX_PROFILE_CONTACTS && (
+                  {draft.contacts.length < MAX_PROFILE_CONTACTS && (
                     <button
                       type="button"
                       onClick={addContact}

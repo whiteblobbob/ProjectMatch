@@ -4,7 +4,6 @@ import Link from "next/link";
 import { CheckIcon } from "@/app/components/ui/icons";
 import { SelectControl } from "@/app/components/ui/select-control";
 import { useState, type ReactNode } from "react";
-import { InstitutionCombobox } from "./institution-combobox";
 import {
   type RegistrationData,
   type RegistrationErrors,
@@ -214,8 +213,6 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
                 checked={data.educationStatus === status}
                 onChange={() => {
                   onChange("educationStatus", status);
-                  onChange("institutionId", "");
-                  onChange("institutionName", "");
                   onChange("educationLevel", "");
                   onChange("studyProgram", "");
                   onChange("schoolGrade", "");
@@ -230,23 +227,6 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
         </div>
       </fieldset>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <InstitutionCombobox
-            kind={data.educationStatus}
-            value={data.institutionName}
-            selectedId={data.institutionId}
-            error={errors.institutionName}
-            disabled={disabled}
-            onQueryChange={(value) => {
-              onChange("institutionName", value);
-              onChange("institutionId", "");
-            }}
-            onSelect={(option) => {
-              onChange("institutionId", option.id);
-              onChange("institutionName", option.name);
-            }}
-          />
-        </div>
         {data.educationStatus === "university" ? (
           <TextInput field="studyProgram" label="Program studi" value={data.studyProgram} error={errors.studyProgram} onChange={(value) => onChange("studyProgram", value)} placeholder="Contoh: Desain Komunikasi Visual" disabled={disabled} />
         ) : null}
@@ -280,34 +260,9 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
         )}
         <TextInput field="graduationYear" label="Perkiraan tahun lulus" value={data.graduationYear} error={errors.graduationYear} onChange={(value) => onChange("graduationYear", value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" placeholder="2027" disabled={disabled} />
         <div className="sm:col-span-2">
-          <TextInput field="dateOfBirth" label="Tanggal lahir" value={data.dateOfBirth} error={errors.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} type="date" autoComplete="bday" hint="Tanggal lahir digunakan untuk menentukan apakah persetujuan wali diperlukan." disabled={disabled} />
+          <TextInput field="dateOfBirth" label="Tanggal lahir" value={data.dateOfBirth} error={errors.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} type="date" autoComplete="bday" hint="Tanggal lahir digunakan untuk menyesuaikan pengalaman yang relevan." disabled={disabled} />
         </div>
       </div>
-    </section>
-  );
-}
-
-export function GuardianStep({ data, errors, onChange, disabled }: StepProps) {
-  return (
-    <section aria-labelledby="guardian-step-title">
-      <div id="guardian-step-title">
-        <StepHeading eyebrow="Langkah tambahan" title="Persetujuan orang tua atau wali" description="Karena kamu belum berusia 18 tahun, informasi orang tua atau wali diperlukan untuk proses persetujuan." />
-      </div>
-      <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-        Gunakan alamat email wali yang aktif agar proses persetujuan dapat dilakukan dengan jelas.
-      </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <TextInput field="guardianName" label="Nama orang tua/wali" value={data.guardianName} error={errors.guardianName} onChange={(value) => onChange("guardianName", value)} autoComplete="name" placeholder="Nama lengkap wali" disabled={disabled} />
-        </div>
-        <TextInput field="guardianRelationship" label="Hubungan dengan pengguna" value={data.guardianRelationship} error={errors.guardianRelationship} onChange={(value) => onChange("guardianRelationship", value)} placeholder="Contoh: Ibu, ayah, kakak" disabled={disabled} />
-        <TextInput field="guardianEmail" label="Email orang tua/wali" value={data.guardianEmail} error={errors.guardianEmail} onChange={(value) => onChange("guardianEmail", value)} type="email" autoComplete="email" placeholder="wali@email.com" disabled={disabled} />
-      </div>
-      <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-700">
-        <input type="checkbox" checked={data.guardianConfirmed} onChange={(event) => onChange("guardianConfirmed", event.target.checked)} disabled={disabled} className="mt-1 size-4 shrink-0 accent-blue-700" aria-describedby={errors.guardianConfirmed ? "guardian-confirmed-error" : undefined} />
-        <span>Saya memastikan informasi wali di atas benar dan diisi dengan sepengetahuan wali.</span>
-      </label>
-      {errors.guardianConfirmed && <p id="guardian-confirmed-error" className="mt-2 text-xs font-medium text-red-700">{errors.guardianConfirmed}</p>}
     </section>
   );
 }
@@ -340,8 +295,7 @@ function ConsentCheckbox({ checked, onChange, error, id, children }: { checked: 
   );
 }
 
-export function RegistrationReviewStep({ data, errors, onChange, needsGuardian, onEdit }: StepProps & {
-  needsGuardian: boolean;
+export function RegistrationReviewStep({ data, errors, onChange, onEdit }: StepProps & {
   onEdit: (step: RegistrationStepId) => void;
 }) {
   return (
@@ -356,7 +310,6 @@ export function RegistrationReviewStep({ data, errors, onChange, needsGuardian, 
         </SummaryCard>
         <SummaryCard title="Pendidikan" onEdit={() => onEdit("education")}>
           <SummaryItem term="Status" detail={data.educationStatus === "student" ? "Pelajar" : "Mahasiswa"} />
-          <SummaryItem term="Institusi" detail={data.institutionName} />
           {data.educationStatus === "student" ? (
             <SummaryItem term="Kelas" detail={data.schoolGrade} />
           ) : (
@@ -366,13 +319,6 @@ export function RegistrationReviewStep({ data, errors, onChange, needsGuardian, 
           <SummaryItem term={data.educationStatus === "student" ? "Perkiraan lulus" : "Periode kuliah"} detail={data.educationStatus === "student" ? data.graduationYear : `${data.entryYear}–${data.graduationYear}`} />
           <SummaryItem term="Tanggal lahir" detail={data.dateOfBirth} />
         </SummaryCard>
-        {needsGuardian && (
-          <SummaryCard title="Orang tua atau wali" onEdit={() => onEdit("guardian")}>
-            <SummaryItem term="Nama" detail={data.guardianName} />
-            <SummaryItem term="Hubungan" detail={data.guardianRelationship} />
-            <SummaryItem term="Email" detail={data.guardianEmail} />
-          </SummaryCard>
-        )}
       </div>
       <fieldset className="mt-5 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
         <legend className="px-1 text-sm font-bold text-slate-900">Konfirmasi</legend>

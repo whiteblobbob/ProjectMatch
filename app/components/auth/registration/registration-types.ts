@@ -1,7 +1,6 @@
 export type RegistrationStepId =
   | "account"
   | "education"
-  | "guardian"
   | "review";
 
 export type EducationStatus = "student" | "university";
@@ -12,18 +11,12 @@ export type RegistrationData = {
   password: string;
   passwordConfirmation: string;
   educationStatus: EducationStatus;
-  institutionId: string;
-  institutionName: string;
   studyProgram: string;
   schoolGrade: string;
   educationLevel: string;
   entryYear: string;
   graduationYear: string;
   dateOfBirth: string;
-  guardianName: string;
-  guardianRelationship: string;
-  guardianEmail: string;
-  guardianConfirmed: boolean;
   acceptedTerms: boolean;
   acceptedPrivacy: boolean;
   confirmedAccuracy: boolean;
@@ -38,18 +31,12 @@ export const initialRegistrationData: RegistrationData = {
   password: "",
   passwordConfirmation: "",
   educationStatus: "student",
-  institutionId: "",
-  institutionName: "",
   studyProgram: "",
   schoolGrade: "",
   educationLevel: "",
   entryYear: "",
   graduationYear: "",
   dateOfBirth: "",
-  guardianName: "",
-  guardianRelationship: "",
-  guardianEmail: "",
-  guardianConfirmed: false,
   acceptedTerms: false,
   acceptedPrivacy: false,
   confirmedAccuracy: false,

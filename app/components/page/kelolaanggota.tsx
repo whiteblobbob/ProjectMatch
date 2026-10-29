@@ -33,8 +33,8 @@ export default function KelolaAnggota() {
         <div className="mx-auto max-w-[1100px] px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
           <Breadcrumbs
             items={[
-              { label: "Aktivitas", href: "/aktivitas" },
-              { label: "Kelola postingan", href: "/aktivitas/kelolapostingan" },
+              { label: "Aktivitas", href: "/activity" },
+              { label: "Kelola postingan", href: "/activity/kelolapostingan" },
               { label: "Anggota" },
             ]}
           />
@@ -48,7 +48,7 @@ export default function KelolaAnggota() {
               </p>
             </div>
             <Link
-              href="/aktivitas/kelolapostingan"
+              href="/activity/kelolapostingan"
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               <ArrowLeftIcon className="size-4" />
@@ -77,7 +77,7 @@ export default function KelolaAnggota() {
               <p className="mt-2 text-sm text-slate-500">Masih ada 1 tempat untuk UI/UX Designer.</p>
             </div>
             <Link
-              href="/aktivitas/kelolapostingan/tinjaupelamar"
+              href="/activity/kelolapostingan/tinjaupelamar"
               className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               Tinjau pelamar
@@ -142,7 +142,7 @@ export default function KelolaAnggota() {
               <p className="mt-1 text-sm leading-6 text-slate-500">Membantu merancang alur pengguna dan prototipe untuk dipelajari serta diuji bersama tim.</p>
             </div>
             <Link
-              href="/aktivitas/kelolapostingan/posisi"
+              href="/activity/kelolapostingan/posisi"
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-brand-primary px-4 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               Ubah kebutuhan posisi

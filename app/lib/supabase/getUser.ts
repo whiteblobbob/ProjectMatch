@@ -1,5 +1,5 @@
 import { User } from "@supabase/supabase-js";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 
 export async function getUser(user: User) {
   const record = await prisma.user.findUnique({

@@ -21,7 +21,7 @@ export default function Aktivitasmembercard() {
       </div>
 
       <Link
-        href="/aktivitas/kelolapostingan/anggota"
+        href="/activity/kelolapostingan/anggota"
         className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-primary hover:text-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
         Lihat anggota

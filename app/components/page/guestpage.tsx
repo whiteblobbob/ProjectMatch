@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { getProfileView, listGuestProjects } from "@/app/lib/ui/actions";
-import { institutionOptions } from "@/app/components/auth/registration/institution-combobox";
+import { queryProjects } from "@/app/actions/project";
+import { fetchProfile } from "@/app/actions/profile";
+import { institutionOptions } from "@/app/lib/institution-catalog";
 import { SelectControl } from "@/app/components/ui/select-control";
-import { decodeProfilePublicInfo } from "@/app/lib/ui/profile-public-info";
+import type { CollaborationMode } from "@/app/components/ui/collaboration-mode";
 import ExploreHero from "../explore/explore-hero";
 import { EmptyProjectState, ProjectListSkeleton } from "../explore/explore-states";
 import {
@@ -21,7 +22,7 @@ type ProjectSummary = {
   title: string;
   description: string;
   deadline: Date | string | null;
-  onSite: boolean;
+  collaborationMode: CollaborationMode;
   workHoursPerWeek: number;
   createdAt: Date | string;
   totalAvailableSlot: number;
@@ -88,7 +89,7 @@ export default function GuestPage() {
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     setError("");
-    const result = await listGuestProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 });
+    const result = await queryProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 });
 
     if (!result.success || !("data" in result)) {
       setProjects([]);
@@ -104,7 +105,7 @@ export default function GuestPage() {
   useEffect(() => {
     let cancelled = false;
 
-    void listGuestProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 }).then((result) => {
+    void queryProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 }).then((result) => {
       if (cancelled) return;
       if (!result.success || !("data" in result)) {
         setProjects([]);
@@ -128,16 +129,15 @@ export default function GuestPage() {
         const session = await sessionResponse.json() as { authenticated: boolean };
         if (!session.authenticated || cancelled) return;
 
-        const profileResult = await getProfileView();
+        const profileResult = await fetchProfile();
         if (!profileResult.success || !("data" in profileResult) || cancelled) return;
 
         const profile = profileResult.data;
-        const publicInfo = decodeProfilePublicInfo(profile.contactInfo);
-        const locationParts = publicInfo.location.split(",").map((part) => part.trim()).filter(Boolean);
+        const locationParts = (profile.location ?? "").split(",").map((part) => part.trim()).filter(Boolean);
         const catalogInstitution = institutionLocation(profile.instance);
 
         setViewerContext({
-          institution: profile.instance,
+          institution: profile.instance ?? "",
           city: locationParts[0] ?? catalogInstitution?.city ?? "",
           province: locationParts[1] ?? catalogInstitution?.province ?? "",
         });
@@ -195,10 +195,6 @@ export default function GuestPage() {
     () => [...new Set(projects.flatMap((project) => project.projectRoles.map((item) => item.role.name)))].sort(),
     [projects],
   );
-  const institutions = useMemo(
-    () => [...new Set(projects.map((project) => project.owner.instance).filter((item): item is string => Boolean(item)))].sort(),
-    [projects],
-  );
 
   const filteredProjects = useMemo(() => {
     const searchTerm = filters.search.trim().toLocaleLowerCase("id-ID");
@@ -223,8 +219,8 @@ export default function GuestPage() {
           && (!topicTerm || searchable.includes(topicTerm))
           && (!filters.category || project.category.name === filters.category)
           && (!filters.role || projectRoles.includes(filters.role))
-          && (!filters.mode || (project.onSite ? "ONSITE" : "REMOTE") === filters.mode)
-          && (!filters.institution || project.owner.instance === filters.institution)
+          && (!filters.mode || project.collaborationMode === filters.mode)
+          && (!filters.institution || normalize(project.owner.instance).includes(normalize(filters.institution)))
           && matchesProximity
           && matchesCommitment
         );
@@ -283,7 +279,7 @@ export default function GuestPage() {
                 <h2 className="font-bold text-slate-950">Filter proyek</h2>
                 {hasFilters && <button type="button" onClick={resetFilters} className="rounded px-1 text-xs font-semibold text-brand-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">Hapus semua</button>}
               </div>
-              <ProjectFilters idPrefix="desktop-filter" categories={categories} roles={roles} institutions={institutions} viewerContext={viewerContext} filters={filters} onChange={updateFilter} />
+              <ProjectFilters idPrefix="desktop-filter" categories={categories} roles={roles} viewerContext={viewerContext} filters={filters} onChange={updateFilter} />
             </div>
           </aside>
 
@@ -332,7 +328,7 @@ export default function GuestPage() {
                     description={project.description}
                     category={project.category.name}
                     roles={project.projectRoles.map((item) => item.role.name)}
-                    collaborationMode={project.onSite ? "ONSITE" : "REMOTE"}
+                    collaborationMode={project.collaborationMode}
                     workHoursPerWeek={project.workHoursPerWeek}
                     deadline={project.deadline ? new Date(project.deadline) : null}
                     slotsAvailable={project.totalAvailableSlot}
@@ -356,7 +352,7 @@ export default function GuestPage() {
               <div><h2 id={`${filterDrawerId}-title`} className="text-lg font-bold text-slate-950">Filter proyek</h2><p className="mt-0.5 text-xs text-slate-500">Persempit peluang yang paling sesuai.</p></div>
               <button ref={filterCloseRef} type="button" onClick={() => closeFilters()} className="inline-flex size-11 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label="Tutup filter"><XIcon className="size-5" /></button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><ProjectFilters idPrefix="mobile-filter" categories={categories} roles={roles} institutions={institutions} viewerContext={viewerContext} filters={filters} onChange={updateFilter} /></div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><ProjectFilters idPrefix="mobile-filter" categories={categories} roles={roles} viewerContext={viewerContext} filters={filters} onChange={updateFilter} /></div>
             <div className="flex gap-3 border-t border-slate-200 bg-white p-4">
               <button type="button" onClick={resetFilters} className="min-h-11 flex-1 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">Reset</button>
               <button type="button" onClick={() => closeFilters()} className="min-h-11 flex-1 rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Lihat {filteredProjects.length} hasil</button>

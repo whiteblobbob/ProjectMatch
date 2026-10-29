@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ActiveProjectPost } from "@/app/lib/ui/activity";
+import type { ActiveProjectPost } from "@/app/actions/activity";
 import { getCollaborationModeLabel } from "@/app/components/ui/collaboration-mode";
 import StatusBadge from "./status-badge";
 
@@ -33,7 +33,7 @@ export default function ProjectPostCard({ project }: { project: ActiveProjectPos
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4 text-sm">
         <div>
           <dt className="text-xs text-slate-500">Mode kolaborasi</dt>
-          <dd className="mt-0.5 font-medium text-slate-800">{getCollaborationModeLabel(project.onSite ? "ONSITE" : "REMOTE")}</dd>
+          <dd className="mt-0.5 font-medium text-slate-800">{getCollaborationModeLabel(project.collaborationMode)}</dd>
         </div>
         <div>
           <dt className="text-xs text-slate-500">Komitmen</dt>
@@ -56,7 +56,7 @@ export default function ProjectPostCard({ project }: { project: ActiveProjectPos
       </dl>
 
       <Link
-        href="/aktivitas/kelolapostingan"
+        href={`/activity/project/${project.id}`}
         className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
       >
         Kelola postingan

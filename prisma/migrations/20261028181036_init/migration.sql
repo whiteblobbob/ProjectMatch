@@ -1,14 +1,24 @@
 -- CreateEnum
 CREATE TYPE "project_status" AS ENUM ('OPEN_RECRUITMENT', 'IN_PROGRESS', 'COMPLETED');
 
+-- CreateEnum
+CREATE TYPE "collaboration_mode" AS ENUM ('ONLINE', 'OFFLINE', 'HYBRID');
+
+-- CreateEnum
+CREATE TYPE "online_platform" AS ENUM ('GOOGLE_MEET', 'ZOOM', 'MICROSOFT_TEAMS', 'DISCORD');
+
+-- CreateEnum
+CREATE TYPE "offline_place" AS ENUM ('SEKOLAH', 'KAMPUS', 'RUANG_PUBLIK', 'KAFE');
+
 -- CreateTable
 CREATE TABLE "user" (
     "id" TEXT NOT NULL,
-    "name" TEXT,
+    "name" TEXT NOT NULL,
     "instance" TEXT,
     "status_id" TEXT,
     "bio" TEXT,
-    "contact_info" TEXT,
+    "location" TEXT,
+    "portfolio_link" TEXT,
     "total_projects_completed" INTEGER NOT NULL DEFAULT 0,
     "avg_commitment_score" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -57,7 +67,13 @@ CREATE TABLE "project" (
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "deadline" TIMESTAMP(3),
-    "on_site" BOOLEAN NOT NULL DEFAULT false,
+    "collaboration_mode" "collaboration_mode" NOT NULL DEFAULT 'ONLINE',
+    "online_platform" "online_platform",
+    "online_link" TEXT,
+    "offline_place" "offline_place",
+    "offline_link" TEXT,
+    "meet_description" TEXT NOT NULL,
+    "collaboration_tool" TEXT,
     "work_hours_per_week" INTEGER NOT NULL,
     "status" "project_status" NOT NULL DEFAULT 'OPEN_RECRUITMENT',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -90,9 +106,18 @@ CREATE TABLE "application" (
     "applicant_id" TEXT NOT NULL,
     "role_id" TEXT NOT NULL,
     "message" TEXT,
-    "portfolio_link" TEXT,
 
     CONSTRAINT "application_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "contact_info" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "contact_info_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -167,6 +192,9 @@ ALTER TABLE "application" ADD CONSTRAINT "application_applicant_id_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "application" ADD CONSTRAINT "application_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "contact_info" ADD CONSTRAINT "contact_info_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "project_member" ADD CONSTRAINT "project_member_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;

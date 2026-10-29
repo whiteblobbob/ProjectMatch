@@ -23,7 +23,7 @@ export default function KelolaPelamar() {
         </div>
 
         <Link
-          href="/aktivitas/kelolapostingan/tinjaupelamar"
+          href="/activity/kelolapostingan/tinjaupelamar"
           className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           Tinjau pengajuan

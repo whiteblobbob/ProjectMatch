@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import CreateProjectForm from "../../components/project/create-project-form";
-import { getProjectFormOptions } from "../../lib/project-form";
+import { fetchCategories, fetchRoles, fetchStatuses, type CatalogOption } from "../../actions/catalog";
 import { requireSessionUser } from "../../lib/ui/session";
 
 export default function CreateProjectPage() {
@@ -18,12 +18,17 @@ export default function CreateProjectPage() {
 async function CreateProjectAccess() {
   await requireSessionUser();
 
-  const result = await getProjectFormOptions()
-    .then((options) => ({ options, error: null }))
-    .catch((error: unknown) => ({ options: null, error }));
+  const [categories, roles, statuses] = await Promise.all([
+    fetchCategories(),
+    fetchRoles(),
+    fetchStatuses(),
+  ]);
 
-  if (!result.options) {
-    console.error("Failed to load project form options", result.error);
+  const isOk = (result: { success: boolean }): result is { success: true; data: CatalogOption[] } =>
+    result.success && "data" in result;
+
+  if (!isOk(categories) || !isOk(roles) || !isOk(statuses)) {
+    console.error("Failed to load project form options");
     return (
       <main className="min-h-[calc(100dvh-4rem)] bg-slate-50 px-4 py-10 sm:px-6">
         <div role="alert" className="mx-auto max-w-2xl rounded-xl border border-red-200 bg-white p-6">
@@ -44,7 +49,7 @@ async function CreateProjectAccess() {
             Ceritakan proyekmu dan tentukan posisi yang dibutuhkan agar kandidat yang tepat dapat menemukannya.
           </p>
         </header>
-        <CreateProjectForm options={result.options} />
+        <CreateProjectForm categories={categories.data} roles={roles.data} statuses={statuses.data} />
       </div>
     </main>
   );

@@ -35,24 +35,25 @@ beforeEach(() => {
 
 describe("signup", () => {
   it("creates a Supabase account and local user", async () => {
-    const result = await signup({ email: "user@example.com", password: "password123" });
+    const result = await signup({ name: "Jane Doe", email: "user@example.com", password: "password123" });
 
     expect(result).toEqual({ success: true });
     expect(mocks.signUp).toHaveBeenCalledWith({
       email: "user@example.com",
       password: "password123",
     });
-    expect(mocks.userCreate).toHaveBeenCalledWith({ data: { id: "user-id" } });
+    expect(mocks.userCreate).toHaveBeenCalledWith({ data: { id: "user-id", name: "Jane Doe" } });
   });
 
   it("rejects invalid form data without calling external services", async () => {
-    const result = await signup({ email: "not-an-email", password: "short" });
+    const result = await signup({ name: "", email: "not-an-email", password: "short" });
 
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error).toBe("Please check your input");
       expect(result.fieldErrors?.password).toEqual(["Password must be at least 8 characters long"]);
       expect(result.fieldErrors?.email).toBeDefined();
+      expect(result.fieldErrors?.name).toBeDefined();
     }
     expect(mocks.signUp).not.toHaveBeenCalled();
     expect(mocks.userCreate).not.toHaveBeenCalled();
@@ -61,7 +62,7 @@ describe("signup", () => {
   it("hides unexpected server errors behind a generic message", async () => {
     mocks.signUp.mockRejectedValue(new Error("Internal Prisma internals leaked"));
 
-    const result = await signup({ email: "user@example.com", password: "password123" });
+    const result = await signup({ name: "Jane Doe", email: "user@example.com", password: "password123" });
 
     expect(result).toEqual({
       success: false,
@@ -76,7 +77,7 @@ describe("signup", () => {
       error: { message: "Email already registered" },
     });
 
-    const result = await signup({ email: "user@example.com", password: "password123" });
+    const result = await signup({ name: "Jane Doe", email: "user@example.com", password: "password123" });
 
     expect(result).toEqual({ success: false, error: "Email already registered" });
     expect(mocks.userCreate).not.toHaveBeenCalled();

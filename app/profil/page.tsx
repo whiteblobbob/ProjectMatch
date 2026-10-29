@@ -3,6 +3,9 @@ import Navbar from "../components/navigation-bar/guestnavbar";
 import Mainprofil from "../components/page/mainprofil";
 import { ActivitySkeleton } from "../components/activity/activity-states";
 import { fetchProfile } from "../actions/profile";
+import { fetchRoles, fetchStatuses } from "../actions/catalog";
+import { toProfileView } from "../lib/ui/profile";
+import { requireSessionUser } from "../lib/ui/session";
 import { connection } from "next/server";
 
 export default function ProfilPage() {
@@ -18,7 +21,12 @@ export default function ProfilPage() {
 
 async function ProfilAccess() {
   await connection();
-  const profile = await fetchProfile();
+  const user = await requireSessionUser();
+  const [profile, roles, statuses] = await Promise.all([
+    fetchProfile(),
+    fetchRoles(),
+    fetchStatuses(),
+  ]);
 
   if (!profile.success) {
     return (
@@ -31,9 +39,21 @@ async function ProfilAccess() {
     );
   }
 
-  if (!("data" in profile)) {
+  if (
+    !("data" in profile) ||
+    !roles.success ||
+    !("data" in roles) ||
+    !statuses.success ||
+    !("data" in statuses)
+  ) {
     return null;
   }
 
-  return <Mainprofil initialProfile={profile.data} />;
+  return (
+    <Mainprofil
+      initialProfile={toProfileView(profile.data, user.email ?? "")}
+      roles={roles.data}
+      statuses={statuses.data}
+    />
+  );
 }

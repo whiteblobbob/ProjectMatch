@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import ActivityItem from "../components/activity/activity-item";
 import ApplicationCard from "../components/activity/application-card";
@@ -6,8 +5,7 @@ import ActivitySection from "../components/activity/activity-section";
 import { ActivityError, ActivitySkeleton, EmptyState } from "../components/activity/activity-states";
 import ProjectPostCard from "../components/activity/project-post-card";
 import Navbar from "../components/navigation-bar/guestnavbar";
-import { getActivityOverview } from "../lib/ui/activity";
-import { requireSessionUser } from "../lib/ui/session";
+import { getActivityOverview, type ActivityOverview } from "../actions/activity";
 
 export default function AktivitasPage() {
   return (
@@ -21,21 +19,17 @@ export default function AktivitasPage() {
 }
 
 async function AktivitasAccess() {
-  const user = await requireSessionUser();
+  const result = await getActivityOverview();
 
-  const result = await getActivityOverview(user.id)
-    .then((data) => ({ data, error: null }))
-    .catch((error: unknown) => ({ data: null, error }));
-
-  if (!result.data) {
-    console.error("Failed to load activity overview", result.error);
+  if (!result.success || !("data" in result)) {
+    console.error("Failed to load activity overview", result.success ? "No data" : result.error);
     return <ActivityError />;
   }
 
   return <AktivitasContent data={result.data} />;
 }
 
-function AktivitasContent({ data }: { data: Awaited<ReturnType<typeof getActivityOverview>> }) {
+function AktivitasContent({ data }: { data: ActivityOverview }) {
   const summary = [
     { label: "Perlu respons", value: data.incomingApplications.length, attention: true },
     { label: "Lamaran aktif", value: data.activeApplications.length, attention: false },
@@ -74,18 +68,7 @@ function AktivitasContent({ data }: { data: Awaited<ReturnType<typeof getActivit
             )}
           </ActivitySection>
 
-          <ActivitySection
-            title="Postingan saya"
-            count={data.activeProjectPosts.length}
-            action={
-              <Link
-                href="/aktivitas/kelolapostingan"
-                className="rounded-md px-2 py-2 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-soft hover:text-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-              >
-                Lihat semua
-              </Link>
-            }
-          >
+          <ActivitySection title="Postingan saya" count={data.activeProjectPosts.length}>
             {data.activeProjectPosts.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {data.activeProjectPosts.map((project) => (

@@ -1,12 +1,11 @@
 "use client";
 
-import { type FormEvent, useMemo, useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { signup } from "@/app/actions/auth";
 import RegistrationStepper, { type RegistrationStep } from "./registration/registration-stepper";
 import {
   AccountStep,
   EducationStep,
-  GuardianStep,
   RegistrationReviewStep,
   RegistrationStatusCard,
 } from "./registration/registration-steps";
@@ -42,11 +41,6 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
   const graduationYear = Number(data.graduationYear);
   const age = calculateAge(data.dateOfBirth, new Date());
 
-  if (!data.institutionId) {
-    errors.institutionName = data.educationStatus === "student"
-      ? "Ketik nama sekolah, lalu pilih sekolah dari hasil pencarian."
-      : "Ketik nama kampus, lalu pilih kampus dari hasil pencarian.";
-  }
   if (!data.educationLevel) errors.educationLevel = data.educationStatus === "student" ? "Pilih jenjang sekolah." : "Pilih jenjang pendidikan.";
 
   if (data.educationStatus === "student") {
@@ -58,15 +52,6 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
     if (!/^\d{4}$/.test(data.graduationYear) || graduationYear < entryYear || graduationYear > currentYear + 12) errors.graduationYear = "Tahun lulus harus setelah tahun masuk dan masuk akal.";
   }
   if (age === null || age < 10 || age > 100) errors.dateOfBirth = "Masukkan tanggal lahir yang valid.";
-  return errors;
-}
-
-function validateGuardian(data: RegistrationData): RegistrationErrors {
-  const errors: RegistrationErrors = {};
-  if (data.guardianName.trim().length < 2) errors.guardianName = "Masukkan nama orang tua atau wali.";
-  if (data.guardianRelationship.trim().length < 2) errors.guardianRelationship = "Masukkan hubungan dengan pengguna.";
-  if (!emailPattern.test(data.guardianEmail.trim())) errors.guardianEmail = "Masukkan email wali yang valid.";
-  if (!data.guardianConfirmed) errors.guardianConfirmed = "Konfirmasi informasi wali untuk melanjutkan.";
   return errors;
 }
 
@@ -88,16 +73,7 @@ export default function RegisterForm() {
   const [announcement, setAnnouncement] = useState("Langkah Akun dibuka.");
   const formRef = useRef<HTMLFormElement>(null);
 
-  const age = calculateAge(data.dateOfBirth, new Date());
-  const needsGuardian = age !== null && age < 18;
-  const steps = useMemo<RegistrationStep[]>(() => needsGuardian
-    ? [
-        ...baseSteps.slice(0, baseSteps.length - 1),
-        { id: "guardian", label: "Wali" },
-        baseSteps[baseSteps.length - 1],
-      ]
-    : baseSteps,
-  [needsGuardian]);
+  const steps = baseSteps;
 
   const currentIndex = steps.findIndex((step) => step.id === currentStep);
 
@@ -110,16 +86,14 @@ export default function RegisterForm() {
   const getStepErrors = (step: RegistrationStepId) => {
     if (step === "account") return validateAccount(data);
     if (step === "education") return validateEducation(data);
-    if (step === "guardian") return validateGuardian(data);
     return validateReview(data);
   };
 
   const openStep = (step: RegistrationStepId) => {
-    const targetStep = step === "guardian" && !needsGuardian ? "review" : step;
-    setCurrentStep(targetStep);
+    setCurrentStep(step);
     setErrors({});
     setSubmitError("");
-    const label = steps.find((item) => item.id === targetStep)?.label ?? "Pendaftaran";
+    const label = steps.find((item) => item.id === step)?.label ?? "Pendaftaran";
     setAnnouncement(`Langkah ${label} dibuka.`);
     requestAnimationFrame(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -161,9 +135,9 @@ export default function RegisterForm() {
     setSubmitError("");
     setIsPending(true);
 
-    // Keep the existing production contract intact. Every other field in this
-    // flow is intentionally client-only until a backend integration exists.
-    const result = await signup({ email: data.email.trim(), password: data.password });
+    // Name, email, and password create the account. Education fields remain
+    // client-only until a backend integration exists.
+    const result = await signup({ name: data.fullName.trim(), email: data.email.trim(), password: data.password });
 
     if (!result.success) {
       setSubmitError(result.error);
@@ -186,8 +160,7 @@ export default function RegisterForm() {
       <div className="mt-7 border-t border-slate-200 pt-7">
         {currentStep === "account" && <AccountStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
         {currentStep === "education" && <EducationStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
-        {currentStep === "guardian" && <GuardianStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
-        {currentStep === "review" && <RegistrationReviewStep data={data} errors={errors} onChange={updateField} needsGuardian={needsGuardian} onEdit={openStep} disabled={isPending} />}
+        {currentStep === "review" && <RegistrationReviewStep data={data} errors={errors} onChange={updateField} onEdit={openStep} disabled={isPending} />}
       </div>
 
       {submitError && <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</div>}

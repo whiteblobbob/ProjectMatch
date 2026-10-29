@@ -25,7 +25,7 @@ export default function RegisterPage() {
               ))}
             </ul>
             <div className="mt-8 rounded-xl border border-white/20 bg-white/10 p-4 text-xs leading-5 text-blue-50">
-              Data verifikasi pada alur ini belum dikirim atau disimpan. Integrasi backend akan dilakukan pada tahap terpisah.
+              Nama, email, dan kata sandi akan membuat akunmu. Data pendidikan belum dikirim atau disimpan.
             </div>
           </aside>
 

@@ -1,6 +1,6 @@
 "use server";
 import { User } from "@supabase/supabase-js";
-import { prisma } from "../lib/prisma";
+import prisma from "../lib/prisma";
 import {
   ApplicationForm,
   ApplicationValidator,
@@ -12,6 +12,7 @@ import {
   UpdateProjectValidator,
   QueryProjectsForm,
   QueryProjectsValidator,
+  validateMeetingRequirements,
 } from "../lib/validator/project";
 import actionWrapper from "../lib/actionWrapper";
 import { IdValidator, parseOrThrow } from "../lib/validator/global";
@@ -29,7 +30,7 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
   const rows = await prisma.project.findMany({
     where: {
       ownerId: data.ownerId,
-      onSite: data.onSite,
+      collaborationMode: data.collaborationMode,
       status: data.status,
       projectRoles: data.projectRoles ? {
         some: {
@@ -53,6 +54,7 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
       owner: {
         select: {
           name: true,
+          instance: true,
         }
       },
       category: {
@@ -150,6 +152,7 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
 
 export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
   const data = parseOrThrow(CreateProjectValidator, formData);
+  validateMeetingRequirements(data);
 
   const project = await prisma.project.create({
     data: {
@@ -158,7 +161,13 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
       description: data.description,
       deadline: data.deadline,
       categoryId: data.categoryId,
-      onSite: data.onSite,
+      collaborationMode: data.collaborationMode,
+      onlinePlatform: data.onlinePlatform,
+      onlineLink: data.onlineLink,
+      offlinePlace: data.offlinePlace,
+      offlineLink: data.offlineLink,
+      meetDescription: data.meetDescription,
+      collaborationTool: data.collaborationTool,
       workHoursPerWeek: data.workHoursPerWeek,
       projectStatusCriteria: {
         create: data.projectStatusCriteria.map(statusId => ({
@@ -198,10 +207,6 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
 
   if (project.status !== "OPEN_RECRUITMENT") {
     throw new ActionError("This project is not open for applications");
-  }
-
-  if (!(data.roleId in project.projectRoles.map(role => role.roleId))) {
-    throw new ActionError("The selected role is not part of this project");
   }
 
   if (project.deadline && project.deadline < new Date()) {
@@ -253,7 +258,6 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
         projectId: validatedProjectId,
         roleId: data.roleId,
         message: data.message,
-        portfolioLink: data.portfolioLink,
       }
     });
 
@@ -409,6 +413,17 @@ export const rejectApplication = actionWrapper(async (user: User, applicationId:
 export const updateProject = actionWrapper(async (user: User, projectId: string, formData: UpdateProjectForm) => {
   const idResult = parseOrThrow(IdValidator, projectId);
   const data = parseOrThrow(UpdateProjectValidator, formData);
+
+  if (data.collaborationMode) {
+    validateMeetingRequirements({
+      collaborationMode: data.collaborationMode,
+      onlinePlatform: data.onlinePlatform,
+      onlineLink: data.onlineLink,
+      offlinePlace: data.offlinePlace,
+      offlineLink: data.offlineLink,
+    });
+  }
+
   const record = await prisma.project.findUnique({
     where: { id: idResult }
   });
@@ -432,7 +447,15 @@ export const updateProject = actionWrapper(async (user: User, projectId: string,
       description: data.description,
       deadline: data.deadline,
       workHoursPerWeek: data.workHoursPerWeek,
-      onSite: data.onSite,
+      collaborationMode: data.collaborationMode,
+      ...(data.collaborationMode ? {
+        onlinePlatform: data.collaborationMode === "OFFLINE" ? null : data.onlinePlatform,
+        onlineLink: data.collaborationMode === "OFFLINE" ? null : data.onlineLink,
+        offlinePlace: data.collaborationMode === "ONLINE" ? null : data.offlinePlace,
+        offlineLink: data.collaborationMode === "ONLINE" ? null : data.offlineLink,
+        meetDescription: data.meetDescription,
+        collaborationTool: data.collaborationTool,
+      } : {}),
       projectStatusCriteria: (data.projectStatusCriteria) ? {
         deleteMany: {},
         create: data.projectStatusCriteria.map(statusId => ({
@@ -632,7 +655,11 @@ export const fetchProjectApplications = actionWrapper(async (user: User, project
           name: true,
           instance: true,
           bio: true,
-          contactInfo: true,
+          location: true,
+          portfolioLink: true,
+          contactInfos: {
+            select: { value: true },
+          },
           status: true,
           userRoles: {
             include: { role: true },

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-import type { InstitutionOption } from "../auth/registration/institution-combobox";
 import {
   collaborationModes,
   getCollaborationModeLabel,
@@ -14,12 +13,21 @@ import Breadcrumbs from "../ui/breadcrumbs";
 import { ArrowLeftIcon, CheckIcon, MapPinIcon, VideoIcon, WarningIcon, UsersIcon } from "../ui/icons";
 import { SelectControl } from "../ui/select-control";
 
-export default function UbahPosisi() {
+type CatalogOption = {
+  id: string;
+  name: string;
+};
+
+type UbahPosisiProps = {
+  roles: CatalogOption[];
+};
+
+export default function UbahPosisi({ roles }: UbahPosisiProps) {
   const [saved, setSaved] = useState(false);
-  const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>("REMOTE");
+  const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>("ONLINE");
   const [hasCustomRequirements, setHasCustomRequirements] = useState(true);
   const [audienceScope, setAudienceScope] = useState<AudienceScope>("city");
-  const [selectedInstitutions, setSelectedInstitutions] = useState<InstitutionOption[]>([]);
+  const [selectedInstitutions, setSelectedInstitutions] = useState<string[]>([]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,8 +41,8 @@ export default function UbahPosisi() {
         <div className="mx-auto max-w-[980px] px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
           <Breadcrumbs
             items={[
-              { label: "Aktivitas", href: "/aktivitas" },
-              { label: "Kelola postingan", href: "/aktivitas/kelolapostingan" },
+              { label: "Aktivitas", href: "/activity" },
+              { label: "Kelola postingan", href: "/activity/kelolapostingan" },
               { label: "Ubah postingan" },
             ]}
           />
@@ -47,7 +55,7 @@ export default function UbahPosisi() {
               </p>
             </div>
             <Link
-              href="/aktivitas/kelolapostingan"
+              href="/activity/kelolapostingan"
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               <ArrowLeftIcon className="size-4" /> Kembali
@@ -76,7 +84,10 @@ export default function UbahPosisi() {
             <div className="grid gap-5 sm:grid-cols-[1fr_180px]">
               <label className="block">
                 <span className="text-sm font-semibold text-slate-900">Nama peran</span>
-                <input defaultValue="UI/UX Designer" required className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm text-slate-900 outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20" />
+                <SelectControl defaultValue="UI/UX Designer" required containerClassName="mt-2" className="rounded-xl">
+                  <option value="" disabled>Pilih peran</option>
+                  {roles.map((role) => <option key={role.id} value={role.name}>{role.name}</option>)}
+                </SelectControl>
               </label>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-900">Jumlah anggota</span>
@@ -110,7 +121,7 @@ export default function UbahPosisi() {
             <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5" aria-labelledby="meeting-detail-heading">
               <div className="flex items-start gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-primary shadow-sm">
-                  {collaborationMode === "ONSITE" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
+                  {collaborationMode === "OFFLINE" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
                 </span>
                 <div>
                   <h3 id="meeting-detail-heading" className="text-base font-bold text-slate-950">Detail pertemuan pertama</h3>
@@ -118,7 +129,7 @@ export default function UbahPosisi() {
                 </div>
               </div>
 
-              {(collaborationMode === "REMOTE" || collaborationMode === "HYBRID") ? (
+              {(collaborationMode === "ONLINE" || collaborationMode === "HYBRID") ? (
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-900">Platform pertemuan</span>
@@ -133,7 +144,7 @@ export default function UbahPosisi() {
                 </div>
               ) : null}
 
-              {(collaborationMode === "ONSITE" || collaborationMode === "HYBRID") ? (
+              {(collaborationMode === "OFFLINE" || collaborationMode === "HYBRID") ? (
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-900">Kategori tempat aman</span>
@@ -152,10 +163,10 @@ export default function UbahPosisi() {
               <label className="mt-4 block">
                 <span className="text-sm font-semibold text-slate-900">Deskripsi dan petunjuk pertemuan</span>
                 <span className="mt-1 block text-xs leading-5 text-slate-500">Berikan patokan yang jelas tanpa membagikan informasi pribadi atau alamat rumah.</span>
-                <textarea key={collaborationMode} defaultValue={collaborationMode === "REMOTE" ? "Masuk 10 menit lebih awal untuk perkenalan dan pembagian peran." : "Bertemu di area taman kampus, dekat perpustakaan utama."} rows={3} required className="mt-2 w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20" />
+                <textarea key={collaborationMode} defaultValue={collaborationMode === "ONLINE" ? "Masuk 10 menit lebih awal untuk perkenalan dan pembagian peran." : "Bertemu di area taman kampus, dekat perpustakaan utama."} rows={3} required className="mt-2 w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20" />
               </label>
 
-              {(collaborationMode === "ONSITE" || collaborationMode === "HYBRID") ? (
+              {(collaborationMode === "OFFLINE" || collaborationMode === "HYBRID") ? (
                 <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-amber-900">
                   <WarningIcon className="mt-0.5 size-5 shrink-0" />
                   <p className="text-xs leading-5">Gunakan sekolah, kampus, ruang publik, atau kafe yang dapat diverifikasi. Jangan mengarahkan calon anggota ke rumah pribadi atau tempat sepi.</p>
@@ -234,7 +245,7 @@ export default function UbahPosisi() {
           </div>
 
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-5 py-5 sm:flex-row sm:justify-end sm:px-7">
-            <Link href="/aktivitas/kelolapostingan" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 hover:bg-slate-100">Batal</Link>
+            <Link href="/activity/kelolapostingan" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 hover:bg-slate-100">Batal</Link>
             <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-primary px-6 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Simpan perubahan</button>
           </div>
         </form>

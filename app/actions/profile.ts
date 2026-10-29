@@ -1,6 +1,6 @@
 "use server";
 import { User } from "@supabase/supabase-js";
-import { prisma } from "../lib/prisma";
+import prisma from "../lib/prisma";
 import { ProfileForm, ProfileValidator } from "../lib/validator/profile";
 import { parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
@@ -14,6 +14,7 @@ export const fetchProfile = actionWrapper(async (user: User) => {
       userRoles: {
         include: { role: true },
       },
+      contactInfos: true,
     },
   });
 
@@ -54,7 +55,8 @@ export const updateProfile = actionWrapper(async (user: User, formData: Partial<
       name: data.name,
       instance: data.instance,
       bio: data.bio,
-      contactInfo: data.contactInfo,
+      location: data.location,
+      portfolioLink: data.portfolioLink === undefined ? undefined : (data.portfolioLink || null),
       statusId: data.statusId,
       userRoles: (data.userRoles) ? {
         deleteMany: {},
@@ -63,6 +65,10 @@ export const updateProfile = actionWrapper(async (user: User, formData: Partial<
             connect: { id: role.roleId }
           }
         })),
+      } : undefined,
+      contactInfos: (data.contacts) ? {
+        deleteMany: {},
+        create: data.contacts.map(value => ({ value })),
       } : undefined,
     }
   });

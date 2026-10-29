@@ -12,9 +12,9 @@ export default function ProfilPelamar() {
         <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
           <Breadcrumbs
             items={[
-              { label: "Aktivitas", href: "/aktivitas" },
-              { label: "Kelola postingan", href: "/aktivitas/kelolapostingan" },
-              { label: "Tinjau pelamar", href: "/aktivitas/kelolapostingan/tinjaupelamar" },
+              { label: "Aktivitas", href: "/activity" },
+              { label: "Kelola postingan", href: "/activity/kelolapostingan" },
+              { label: "Tinjau pelamar", href: "/activity/kelolapostingan/tinjaupelamar" },
               { label: "Profil Joshua" },
             ]}
           />
@@ -28,7 +28,7 @@ export default function ProfilPelamar() {
               </p>
             </div>
             <Link
-              href="/aktivitas/kelolapostingan/tinjaupelamar"
+              href="/activity/kelolapostingan/tinjaupelamar"
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               <ArrowLeftIcon className="size-4" />

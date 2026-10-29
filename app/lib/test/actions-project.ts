@@ -122,7 +122,11 @@ const project = (): CreateProjectForm => ({
   description: "A test project",
   deadline: new Date("2030-01-01"),
   categoryId: "category-id",
-  onSite: true,
+  collaborationMode: "ONLINE",
+  onlinePlatform: "GOOGLE_MEET",
+  onlineLink: "https://meet.google.com/abc-defg-hij",
+  meetDescription: "Weekly sync meeting",
+  collaborationTool: "Notion",
   workHoursPerWeek: 10,
   projectStatusCriteria: ["status-id"],
   projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
@@ -136,7 +140,6 @@ const queryProject = (): QueryProjectsForm => ({
 const application = (): ApplicationForm => ({
   roleId: "role-id",
   message: "I can help",
-  portfolioLink: "https://example.com/portfolio",
 });
 
 const peerReview = (): PeerReviewForm => ({
@@ -231,7 +234,7 @@ describe("queryProjects", () => {
       }),
       include: {
         projectRoles: { include: { role: true } },
-        owner: { select: { name: true } },
+        owner: { select: { name: true, instance: true } },
         category: { select: { name: true } },
         _count: { select: { projectMembers: true } },
       },
@@ -339,7 +342,13 @@ describe("createProject", () => {
         description: "A test project",
         deadline: new Date("2030-01-01"),
         categoryId: "category-id",
-        onSite: true,
+        collaborationMode: "ONLINE",
+        onlinePlatform: "GOOGLE_MEET",
+        onlineLink: "https://meet.google.com/abc-defg-hij",
+        offlinePlace: undefined,
+        offlineLink: undefined,
+        meetDescription: "Weekly sync meeting",
+        collaborationTool: "Notion",
         workHoursPerWeek: 10,
         projectStatusCriteria: {
           create: [{ status: { connect: { id: "status-id" } } }],
@@ -358,6 +367,26 @@ describe("createProject", () => {
       success: false,
       error: "Please check your input",
       fieldErrors: { title: ["Title is required"] },
+    });
+    expect(mocks.projectCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a create when the collaboration mode's meeting details are missing", async () => {
+    const withoutMeetingDetails: CreateProjectForm = {
+      ...project(),
+      onlinePlatform: undefined,
+      onlineLink: undefined,
+    };
+
+    const result = await createProject(withoutMeetingDetails);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Please check your input",
+      fieldErrors: {
+        onlinePlatform: ["Online platform is required for online collaboration"],
+        onlineLink: ["Online meeting link is required for online collaboration"],
+      },
     });
     expect(mocks.projectCreate).not.toHaveBeenCalled();
   });
@@ -383,7 +412,6 @@ describe("sendApplication", () => {
         projectId: "project-id",
         roleId: "role-id",
         message: "I can help",
-        portfolioLink: "https://example.com/portfolio",
       },
     });
     expect(mocks.createNotification).toHaveBeenCalledWith(
@@ -410,21 +438,6 @@ describe("sendApplication", () => {
     expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["javascript", "javascript:alert(1)"],
-    ["ftp", "ftp://files.example.com/cv.pdf"],
-    ["data", "data:text/html;base64,PHNjcmlwdD4="],
-    ["malformed", "not-a-valid-url"],
-  ])("rejects invalid portfolio URL scheme (%s)", async (_scheme, portfolioLink) => {
-    const result = await sendApplication("project-id", {
-      ...application(),
-      portfolioLink,
-    });
-
-    expect(result.success).toBe(false);
-    expect(mocks.projectFindUnique).not.toHaveBeenCalled();
-  });
-
   it("allows non-member users to apply when other members are in the team", async () => {
     mocks.projectFindUnique.mockResolvedValue({
       id: "project-id",
@@ -444,7 +457,6 @@ describe("sendApplication", () => {
         projectId: "project-id",
         roleId: "role-id",
         message: "I can help",
-        portfolioLink: "https://example.com/portfolio",
       },
     });
   });
@@ -906,7 +918,13 @@ describe("updateProject", () => {
         description: "A test project",
         deadline: new Date("2030-01-01"),
         workHoursPerWeek: 10,
-        onSite: true,
+        collaborationMode: "ONLINE",
+        onlinePlatform: "GOOGLE_MEET",
+        onlineLink: "https://meet.google.com/abc-defg-hij",
+        offlinePlace: null,
+        offlineLink: null,
+        meetDescription: "Weekly sync meeting",
+        collaborationTool: "Notion",
         projectStatusCriteria: {
           deleteMany: {},
           create: [{ status: { connect: { id: "status-id" } } }],
@@ -917,6 +935,20 @@ describe("updateProject", () => {
         },
       },
     });
+  });
+
+  it("rejects an update whose collaboration mode is missing meeting details", async () => {
+    const result = await updateProject("project-id", { collaborationMode: "OFFLINE" });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Please check your input",
+      fieldErrors: {
+        offlinePlace: ["Offline place is required for offline collaboration"],
+        offlineLink: ["Offline map link is required for offline collaboration"],
+      },
+    });
+    expect(mocks.projectFindUnique).not.toHaveBeenCalled();
   });
 
   it("rejects invalid IDs and form data", async () => {
@@ -1268,7 +1300,11 @@ describe("fetchProjectApplications", () => {
             name: true,
             instance: true,
             bio: true,
-            contactInfo: true,
+            location: true,
+            portfolioLink: true,
+            contactInfos: {
+              select: { value: true },
+            },
             status: true,
             userRoles: {
               include: { role: true },

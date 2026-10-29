@@ -22,7 +22,6 @@ type ProjectFiltersProps = {
   idPrefix: string;
   categories: string[];
   roles: string[];
-  institutions: string[];
   viewerContext: ExploreViewerContext | null;
   filters: ExploreFilters;
   onChange: (key: keyof ExploreFilters, value: string) => void;
@@ -34,7 +33,6 @@ export function ProjectFilters({
   idPrefix,
   categories,
   roles,
-  institutions,
   viewerContext,
   filters,
   onChange,
@@ -54,10 +52,7 @@ export function ProjectFilters({
 
       <div>
         <label htmlFor={`${idPrefix}-institution`} className="text-sm font-semibold text-slate-900">Sekolah atau kampus</label>
-        <SelectControl id={`${idPrefix}-institution`} value={filters.institution} onChange={(event) => onChange("institution", event.target.value)} containerClassName="mt-2">
-          <option value="">Semua institusi</option>
-          {institutions.map((item) => <option key={item} value={item}>{item}</option>)}
-        </SelectControl>
+        <input id={`${idPrefix}-institution`} type="search" value={filters.institution} onChange={(event) => onChange("institution", event.target.value)} placeholder="Contoh: SMA Negeri 1 Denpasar" className={`${inputClass} placeholder:text-slate-400`} />
       </div>
 
       <div>
@@ -86,8 +81,8 @@ export function ProjectFilters({
         <div className="mt-2 space-y-1">
           {[
             ["", "Semua mode"],
-            ["REMOTE", "Daring"],
-            ["ONSITE", "Luring"],
+            ["ONLINE", "Daring"],
+            ["OFFLINE", "Luring"],
             ["HYBRID", "Hybrid"],
           ].map(([value, label]) => (
             <label key={label} className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-50">
@@ -123,7 +118,7 @@ export function ActiveFilterChips({ filters, onRemove, onClear }: ActiveFilterCh
     filters.category ? { key: "category", label: `Jenis: ${filters.category}` } : null,
     filters.topic ? { key: "topic", label: `Topik: ${filters.topic}` } : null,
     filters.role ? { key: "role", label: `Peran: ${filters.role}` } : null,
-    filters.mode ? { key: "mode", label: filters.mode === "ONSITE" ? "Luring" : filters.mode === "HYBRID" ? "Hybrid" : "Daring" } : null,
+    filters.mode ? { key: "mode", label: filters.mode === "OFFLINE" ? "Luring" : filters.mode === "HYBRID" ? "Hybrid" : "Daring" } : null,
     filters.commitment ? {
       key: "commitment",
       label: filters.commitment === "light" ? "Maks. 5 jam" : filters.commitment === "medium" ? "6–10 jam" : ">10 jam",

@@ -3,6 +3,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalThisPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-export const prisma = globalThisPrisma.prisma || new PrismaClient({
+const prisma = globalThisPrisma.prisma || new PrismaClient({
   adapter: new PrismaPg({ connectionString: `${process.env.DATABASE_URL}` }),
 });
+
+export default prisma;

@@ -83,6 +83,7 @@ describe("fetchProfile", () => {
         userRoles: {
           include: { role: true },
         },
+        contactInfos: true,
       },
     });
   });
@@ -134,12 +135,14 @@ describe("updateProfile", () => {
         name: "Test User",
         instance: "Test University",
         bio: "A test profile",
-        contactInfo: undefined,
+        location: undefined,
+        portfolioLink: undefined,
         statusId: "status-id",
         userRoles: {
           deleteMany: {},
           create: [{ role: { connect: { id: "role-id" } } }],
         },
+        contactInfos: undefined,
       },
     });
   });

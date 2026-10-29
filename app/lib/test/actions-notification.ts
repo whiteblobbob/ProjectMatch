@@ -53,7 +53,7 @@ vi.mock("../prisma", () => ({
 
 import { fetchNotifications, markNotificationRead } from "../../actions/notification";
 import { createNotification } from "../notification";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 
 beforeEach(() => {
   vi.clearAllMocks();

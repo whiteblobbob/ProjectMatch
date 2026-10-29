@@ -8,13 +8,14 @@ import {
   CreateProjectValidator,
   PeerReviewValidator,
   QueryProjectsValidator,
+  validateMeetingRequirements,
 } from "../validator/project";
+import { ActionError } from "../errors";
 
 describe("Validators", () => {
-  it("validates application payload with valid roleId and portfolio link", () => {
+  it("validates application payload with valid roleId and message", () => {
     const result = ApplicationValidator.safeParse({
       roleId: "role-1",
-      portfolioLink: "https://portfolio.example.com",
       message: "Ready to contribute",
     });
 
@@ -27,6 +28,10 @@ describe("Validators", () => {
       description: "A test project description",
       deadline: new Date("2030-01-01"),
       categoryId: "category-id",
+      collaborationMode: "ONLINE",
+      onlinePlatform: "GOOGLE_MEET",
+      onlineLink: "https://meet.google.com/abc-defg-hij",
+      meetDescription: "Weekly sync meeting",
       workHoursPerWeek: 15,
       projectStatusCriteria: ["status-id"],
       projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
@@ -68,13 +73,23 @@ describe("Validators", () => {
     expect(result.success).toBe(true);
   });
 
-  it("validates signup payload with email and password", () => {
+  it("validates signup payload with name, email, and password", () => {
     const result = SignupValidator.safeParse({
+      name: "Jane Doe",
       email: "user@example.com",
       password: "password123",
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("requires a name for signup", () => {
+    const result = SignupValidator.safeParse({
+      email: "user@example.com",
+      password: "password123",
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it("validates login payload with credentials", () => {
@@ -107,5 +122,70 @@ describe("Validators", () => {
         pageSize: 10,
       },
     });
+  });
+});
+
+describe("validateMeetingRequirements", () => {
+  it("accepts a complete online meeting plan", () => {
+    expect(() =>
+      validateMeetingRequirements({
+        collaborationMode: "ONLINE",
+        onlinePlatform: "GOOGLE_MEET",
+        onlineLink: "https://meet.google.com/abc-defg-hij",
+      }),
+    ).not.toThrow();
+  });
+
+  it("accepts a complete offline meeting plan", () => {
+    expect(() =>
+      validateMeetingRequirements({
+        collaborationMode: "OFFLINE",
+        offlinePlace: "KAMPUS",
+        offlineLink: "https://maps.google.com/?q=Kampus",
+      }),
+    ).not.toThrow();
+  });
+
+  it("requires a platform and link for online collaboration", () => {
+    try {
+      validateMeetingRequirements({ collaborationMode: "ONLINE" });
+      throw new Error("expected validateMeetingRequirements to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ActionError);
+      expect((error as ActionError).fieldErrors).toEqual({
+        onlinePlatform: ["Online platform is required for online collaboration"],
+        onlineLink: ["Online meeting link is required for online collaboration"],
+      });
+    }
+  });
+
+  it("requires a place and map link for offline collaboration", () => {
+    try {
+      validateMeetingRequirements({ collaborationMode: "OFFLINE" });
+      throw new Error("expected validateMeetingRequirements to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ActionError);
+      expect((error as ActionError).fieldErrors).toEqual({
+        offlinePlace: ["Offline place is required for offline collaboration"],
+        offlineLink: ["Offline map link is required for offline collaboration"],
+      });
+    }
+  });
+
+  it("requires both online and offline details for hybrid collaboration", () => {
+    try {
+      validateMeetingRequirements({
+        collaborationMode: "HYBRID",
+        onlinePlatform: "ZOOM",
+        onlineLink: "https://zoom.us/j/123",
+      });
+      throw new Error("expected validateMeetingRequirements to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ActionError);
+      expect((error as ActionError).fieldErrors).toEqual({
+        offlinePlace: ["Offline place is required for offline collaboration"],
+        offlineLink: ["Offline map link is required for offline collaboration"],
+      });
+    }
   });
 });
