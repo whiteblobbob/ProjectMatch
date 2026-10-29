@@ -11,7 +11,7 @@
     "db:generate": "prisma generate",
     "db:reset": "dotenv run -f .env.development -- prisma migrate reset",
     "db:dev": "dotenv run -f .env.development -- prisma migrate dev",
-    "db:seed-example": "dotenv run -f .env.development -- tsx prisma/seed.ts",
+    "db:seed-example": "dotenv run -f .env.development -- tsx prisma/seed-example.ts",
     "db:seed": "dotenv run -f .env.development -- tsx prisma/seed.ts",
     "db:deploy": "dotenv run -f .env.production -- prisma migrate deploy",
     "db:studio:dev": "dotenv run -f .env.development -- prisma studio",
