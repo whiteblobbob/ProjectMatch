@@ -9,12 +9,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "db:generate": "prisma generate",
-    "db:reset": "dotenv -e .env.development -- prisma migrate reset",
-    "db:dev": "dotenv -e .env.development -- prisma migrate dev",
-    "db:seed": "dotenv -e .env.development -- tsx prisma/seed.ts",
-    "db:deploy": "dotenv -e .env.production -- prisma migrate deploy",
-    "db:studio:dev": "dotenv -e .env.development -- prisma studio",
-    "db:studio:prod": "dotenv -e .env.production -- prisma studio"
+    "db:reset": "dotenv run -f .env.development -- prisma migrate reset",
+    "db:dev": "dotenv run -f .env.development -- prisma migrate dev",
+    "db:seed": "dotenv run -f .env.development -- tsx prisma/seed.ts",
+    "db:deploy": "dotenv run -f .env.production -- prisma migrate deploy",
+    "db:studio:dev": "dotenv run -f .env.development -- prisma studio",
+    "db:studio:prod": "dotenv run -f .env.production -- prisma studio"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
@@ -28,6 +28,7 @@
     "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "resend": "^6.35.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
