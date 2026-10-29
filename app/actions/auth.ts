@@ -1,5 +1,5 @@
 "use server"
-import prisma from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import prisma from "../lib/prisma";
 import { createClient } from "../lib/supabase/server";
 import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";

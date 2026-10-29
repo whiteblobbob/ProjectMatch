@@ -5,6 +5,7 @@ import { fetchProfile } from "../../../actions/profile";
 import { fetchProject } from "../../../actions/project";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import ApplicationForm from "../../../components/project/application-form";
+import VerificationGate from "../../../components/project/verification-gate";
 import { toProfileView } from "../../../lib/ui/profile";
 import { requireSessionUser } from "../../../lib/ui/session";
 
@@ -42,6 +43,15 @@ async function ProjectApplicationAccess({ params }: ProjectApplicationPageProps)
             </p>
           </section>
         </main>
+      </>
+    );
+  }
+
+  if (!profile.data.verified) {
+    return (
+      <>
+        <Navbar />
+        <VerificationGate />
       </>
     );
   }

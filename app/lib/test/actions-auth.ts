@@ -10,13 +10,14 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../lib/supabase/server", () => ({
   createClient: mocks.createClient,
 }));
-vi.mock("../prisma", () => ({
-  prisma: {
+vi.mock("../prisma", () => {
+  const prisma = {
     user: {
       create: mocks.userCreate,
     },
-  },
-}));
+  };
+  return { default: prisma, prisma };
+});
 
 import { login, signup } from "../../actions/auth";
 

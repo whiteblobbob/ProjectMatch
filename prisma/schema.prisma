@@ -55,6 +55,9 @@ model User {
   bio                    String?
   location               String?
   portfolioLink          String?         @map("portfolio_link")
+  verified               Boolean         @default(false)
+  verificationToken      String?         @unique @map("verification_token")
+  verificationTokenExpiresAt DateTime?   @map("verification_token_expires_at")
   totalProjectsCompleted Int             @default(0) @map("total_projects_completed")
   avgCommitmentScore     Float           @default(0) @map("avg_commitment_score")
   createdAt              DateTime        @default(now()) @map("created_at")

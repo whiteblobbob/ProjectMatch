@@ -1,6 +1,10 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
+
+import { sendVerificationEmail } from "@/app/actions/verification";
+import { CheckIcon } from "@/app/components/ui/icons";
+import { isAcademicEmail } from "@/app/lib/validator/auth";
 import { Field, TextInput, inputClass } from "../registration/registration-steps";
 
 export type VerificationMethod = "institutional-email" | "document";
@@ -16,26 +20,16 @@ type InstitutionalEmailFieldProps = {
   value: string;
   error?: string;
   onChange: (value: string) => void;
-  onRequestCode?: (email: string) => void;
   disabled?: boolean;
 };
 
-export function InstitutionalEmailField({ value, error, onChange, onRequestCode, disabled }: InstitutionalEmailFieldProps) {
+export function InstitutionalEmailField({ value, error, onChange, disabled }: InstitutionalEmailFieldProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
       <TextInput field="institutionalEmail" label="Email sekolah atau kampus" value={value} error={error} onChange={onChange} type="email" placeholder="nama@institusi.ac.id" disabled={disabled} />
-      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          disabled={disabled || !onRequestCode}
-          onClick={() => onRequestCode?.(value)}
-          className="min-h-11 rounded-xl border border-brand-primary bg-white px-4 text-sm font-semibold text-brand-primary disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
-        >
-          Kirim kode
-        </button>
-        <input aria-label="Kode verifikasi" placeholder="6 digit kode" inputMode="numeric" disabled className="min-h-11 flex-1 rounded-xl border border-slate-300 bg-slate-100 px-3 text-sm text-slate-500" />
-      </div>
-      <p className="mt-3 text-xs leading-5 text-amber-800">Verifikasi akan diproses setelah integrasi backend tersedia.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500">
+        Gunakan alamat email yang berakhiran <span className="font-semibold">.ac.id</span> atau <span className="font-semibold">.edu</span>. Kami mengirim tautan verifikasi ke alamat tersebut.
+      </p>
     </div>
   );
 }
@@ -118,11 +112,51 @@ export default function VerificationForm() {
   const [documentType, setDocumentType] = useState("student-card");
   const [file, setFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<VerificationErrors>({});
+  const [isPending, setIsPending] = useState(false);
+  const [sentTo, setSentTo] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   const methods: Array<{ value: VerificationMethod; title: string; description: string }> = [
     { value: "institutional-email", title: "Email sekolah atau kampus", description: "Gunakan alamat email resmi institusimu." },
     { value: "document", title: "Dokumen pendidikan", description: "Pilih kartu pelajar/mahasiswa atau surat aktif." },
   ];
+
+  async function handleEmailSubmit() {
+    setSubmitError("");
+    setSentTo("");
+
+    const email = institutionalEmail.trim();
+    if (!email) {
+      setErrors((current) => ({ ...current, institutionalEmail: "Masukkan email sekolah atau kampus." }));
+      return;
+    }
+    if (!isAcademicEmail(email)) {
+      setErrors((current) => ({ ...current, institutionalEmail: "Gunakan email resmi sekolah atau kampus (.ac.id atau .edu)." }));
+      return;
+    }
+
+    setIsPending(true);
+    const result = await sendVerificationEmail({ email });
+    setIsPending(false);
+
+    if (!result.success) {
+      const emailFieldError = result.fieldErrors?.email?.[0];
+      if (emailFieldError) {
+        setErrors((current) => ({ ...current, institutionalEmail: emailFieldError }));
+      } else {
+        setSubmitError(result.error);
+      }
+      return;
+    }
+
+    setSentTo("data" in result ? result.data.email : email);
+  }
+
+  function handleSubmit() {
+    // Document verification is intentionally not wired up yet.
+    if (method !== "institutional-email") return;
+    void handleEmailSubmit();
+  }
 
   return (
     <section aria-labelledby="verification-form-title">
@@ -130,8 +164,8 @@ export default function VerificationForm() {
       <h2 id="verification-form-title" className="mt-2 text-2xl font-bold tracking-tight text-slate-950">Verifikasi status pelajar atau mahasiswa</h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">ProjectMatch hanya ditujukan untuk pelajar dan mahasiswa aktif. Pilih salah satu cara verifikasi di bawah ini.</p>
 
-      <div className="mt-5 mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-        <strong>Status integrasi:</strong> verifikasi pendidikan belum tersedia di backend. Pilihanmu saat ini hanya disimpan sementara di halaman ini dan tombol kirim belum berfungsi.
+      <div className="mt-5 mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
+        <strong>Verifikasi email akademik</strong> sudah tersedia. Verifikasi melalui dokumen masih dalam pengembangan.
       </div>
 
       <fieldset>
@@ -148,6 +182,8 @@ export default function VerificationForm() {
                   onChange={() => {
                     setMethod(item.value);
                     setErrors({});
+                    setSubmitError("");
+                    setSentTo("");
                   }}
                   className="mt-1 size-4 accent-blue-700"
                 />
@@ -163,14 +199,34 @@ export default function VerificationForm() {
 
       <div className="mt-5">
         {method === "institutional-email" ? (
-          <InstitutionalEmailField
-            value={institutionalEmail}
-            error={errors.institutionalEmail}
-            onChange={(value) => {
-              setInstitutionalEmail(value);
-              setErrors((current) => ({ ...current, institutionalEmail: undefined }));
-            }}
-          />
+          sentTo ? (
+            <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-white" aria-hidden="true">
+                  <CheckIcon className="size-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-bold">Tautan verifikasi terkirim</p>
+                  <p className="mt-1 text-sm leading-6">
+                    Kami mengirim tautan verifikasi ke <span className="font-semibold">{sentTo}</span>. Buka emailmu dan klik tautan untuk menyelesaikan verifikasi.
+                  </p>
+                  <button type="button" onClick={() => setSentTo("")} className="mt-3 text-sm font-semibold text-brand-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
+                    Kirim ke alamat lain
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <InstitutionalEmailField
+              value={institutionalEmail}
+              error={errors.institutionalEmail}
+              onChange={(value) => {
+                setInstitutionalEmail(value);
+                setErrors((current) => ({ ...current, institutionalEmail: undefined }));
+              }}
+              disabled={isPending}
+            />
+          )
         ) : (
           <div className="space-y-4">
             <Field id="verification-documentType" label="Jenis dokumen" error={errors.documentType}>
@@ -192,12 +248,20 @@ export default function VerificationForm() {
         )}
       </div>
 
+      {submitError ? (
+        <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {submitError}
+        </div>
+      ) : null}
+
       <div className="mt-6 flex justify-end">
         <button
           type="button"
-          className="min-h-12 rounded-xl bg-brand-primary px-6 text-sm font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+          onClick={handleSubmit}
+          disabled={isPending || (method === "institutional-email" && Boolean(sentTo))}
+          className="min-h-12 rounded-xl bg-brand-primary px-6 text-sm font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Kirim verifikasi
+          {isPending ? "Mengirim…" : "Kirim verifikasi"}
         </button>
       </div>
     </section>

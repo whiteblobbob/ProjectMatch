@@ -18,6 +18,7 @@ import actionWrapper from "../lib/actionWrapper";
 import { IdValidator, parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
 import { createNotification } from "../lib/notification";
+import { getUser } from "../lib/supabase/getUser";
 
 export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) => {
   const data = parseOrThrow(QueryProjectsValidator, formData);
@@ -151,6 +152,12 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
 }, { auth: false });
 
 export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
+  const userData = await getUser(user);
+
+  if (!userData.verified) {
+    throw new ActionError("You are not verified");
+  }
+
   const data = parseOrThrow(CreateProjectValidator, formData);
   validateMeetingRequirements(data);
 
@@ -191,6 +198,12 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
 }, { auth: true });
 
 export const sendApplication = actionWrapper(async (user: User, projectId: string, formData: ApplicationForm) => {
+  const userData = await getUser(user);
+
+  if (!userData.verified) {
+    throw new ActionError("You are not verified");
+  }
+
   const validatedProjectId = parseOrThrow(IdValidator, projectId);
   const data = parseOrThrow(ApplicationValidator, formData);
   const project = await prisma.project.findUnique({

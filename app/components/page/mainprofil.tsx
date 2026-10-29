@@ -521,10 +521,18 @@ export default function Profil({ initialProfile, statuses, roles }: ProfilProps)
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="verification-heading">
               <div className="flex items-center justify-between gap-3">
                 <h2 id="verification-heading" className="font-bold text-slate-950">Verifikasi pendidikan</h2>
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Belum terverifikasi</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${profile.verified ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                  {profile.verified ? "Terverifikasi" : "Belum terverifikasi"}
+                </span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Verifikasi status pelajar atau mahasiswamu agar profilmu lebih dipercaya calon rekan tim.</p>
-              <button type="button" onClick={() => setIsVerifying(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-primary px-4 text-sm font-semibold text-white transition hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Verifikasi</button>
+              {profile.verified ? (
+                <p className="mt-3 text-sm leading-6 text-slate-600">Akunmu sudah terverifikasi sebagai pelajar atau mahasiswa.</p>
+              ) : (
+                <>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">Verifikasi status pelajar atau mahasiswamu agar profilmu lebih dipercaya calon rekan tim.</p>
+                  <button type="button" onClick={() => setIsVerifying(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-primary px-4 text-sm font-semibold text-white transition hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Verifikasi</button>
+                </>
+              )}
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="contact-heading">

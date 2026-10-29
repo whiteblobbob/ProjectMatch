@@ -15,6 +15,7 @@ export async function getUser(user: User) {
   return await prisma.user.create({
     data: {
       id: user.id,
+      name: String(user.user_metadata?.name ?? user.email ?? "Pengguna"),
     },
   });
 }

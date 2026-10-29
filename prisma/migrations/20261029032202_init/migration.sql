@@ -19,6 +19,9 @@ CREATE TABLE "user" (
     "bio" TEXT,
     "location" TEXT,
     "portfolio_link" TEXT,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
+    "verification_token" TEXT,
+    "verification_token_expires_at" TIMESTAMP(3),
     "total_projects_completed" INTEGER NOT NULL DEFAULT 0,
     "avg_commitment_score" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -150,6 +153,9 @@ CREATE TABLE "notification" (
 
     CONSTRAINT "notification_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_verification_token_key" ON "user"("verification_token");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "application_project_id_applicant_id_key" ON "application"("project_id", "applicant_id");

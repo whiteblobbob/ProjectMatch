@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import Detail from "../../components/detail/projectdetail";
 import { fetchProject } from "../../actions/project";
+import { fetchProfile } from "../../actions/profile";
+import { getSessionUser } from "../../lib/ui/session";
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
     return (
@@ -20,11 +22,22 @@ async function ProjectDetailContent({ params }: { params: Promise<{ id: string }
         notFound();
     }
 
+    const sessionUser = await getSessionUser();
+    let viewer = { authenticated: false, verified: false };
+
+    if (sessionUser) {
+        const profile = await fetchProfile();
+        viewer = {
+            authenticated: true,
+            verified: profile.success && "data" in profile ? profile.data.verified : false,
+        };
+    }
+
     return (
         <>
             <Navbar />
             <div className="min-h-screen">
-                <Detail project={result.data} />
+                <Detail project={result.data} viewer={viewer} />
             </div>
         </>
     );

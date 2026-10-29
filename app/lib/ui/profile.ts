@@ -32,6 +32,7 @@ export type ProfileForm = {
 export type ProfileView = Omit<ProfileForm, "educationLevel"> & {
   educationLevel: ProfileEducationLevel | null;
   email: string;
+  verified: boolean;
   totalProjectsCompleted: number;
   avgCommitmentScore: number;
 };
@@ -42,6 +43,7 @@ export type ProfileRecord = {
   bio: string | null;
   location: string | null;
   portfolioLink: string | null;
+  verified: boolean;
   contactInfos: Array<{ value: string }>;
   status: { name: string } | null;
   userRoles: Array<{ role: { name: string } }>;
@@ -63,6 +65,7 @@ export function toProfileView(record: ProfileRecord, email: string): ProfileView
     bio: record.bio ?? "",
     location: record.location ?? "",
     portfolioLink: record.portfolioLink ?? "",
+    verified: record.verified,
     contacts: record.contactInfos.map((contact) => contact.value),
     skills: record.userRoles.map(({ role }) => role.name),
     email,

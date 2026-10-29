@@ -40,8 +40,8 @@ const mocks = vi.hoisted(() => ({
   peerReviewFindMany: vi.fn(),
 }));
 
-vi.mock("../prisma", () => ({
-  prisma: {
+vi.mock("../prisma", () => {
+  const prisma = {
     user: {
       findUnique: mocks.userFindUnique,
       update: mocks.userUpdate,
@@ -49,8 +49,9 @@ vi.mock("../prisma", () => ({
     peerReview: {
       findMany: mocks.peerReviewFindMany,
     },
-  },
-}));
+  };
+  return { default: prisma, prisma };
+});
 
 import { fetchProfile, fetchReviews, updateProfile } from "../../actions/profile";
 

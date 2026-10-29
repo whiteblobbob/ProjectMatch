@@ -22,6 +22,7 @@ import {
 } from "../ui/collaboration-mode";
 
 type ProjectDetailProps = {
+    viewer: { authenticated: boolean; verified: boolean };
     project: {
         id: string;
         title: string;
@@ -66,7 +67,7 @@ function initials(name: string | null) {
         .toLocaleUpperCase("id-ID");
 }
 
-export default function ProjectDetail({ project }: ProjectDetailProps) {
+export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
     const openRoles = project.projectRoles.filter((role) => role.slotsAvailable > 0);
     const openSlots = openRoles.reduce((total, role) => total + role.slotsAvailable, 0);
     const memberCount = project.projectMembers.length;
@@ -298,12 +299,22 @@ export default function ProjectDetail({ project }: ProjectDetailProps) {
                 {/* Application action */}
                 <div className="sticky bottom-0 -mx-4 border-t border-border-default bg-background/95 px-4 py-3 backdrop-blur-sm">
                     {canApply ? (
-                        <Link
-                            href={`/project/${project.id}/apply`}
-                            className="flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brand-secondary"
-                        >
-                            Ajukan Bergabung
-                        </Link>
+                        viewer.authenticated && !viewer.verified ? (
+                            <Link
+                                href="/profil"
+                                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-bold text-amber-900 transition-colors hover:bg-amber-100"
+                            >
+                                <WarningIcon className="size-4" />
+                                Verifikasi untuk melamar
+                            </Link>
+                        ) : (
+                            <Link
+                                href={`/project/${project.id}/apply`}
+                                className="flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brand-secondary"
+                            >
+                                Ajukan Bergabung
+                            </Link>
+                        )
                     ) : (
                         <button
                             type="button"

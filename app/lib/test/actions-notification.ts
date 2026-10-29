@@ -40,16 +40,17 @@ const mocks = vi.hoisted(() => ({
   notificationCreate: vi.fn(),
 }));
 
-vi.mock("../prisma", () => ({
-  prisma: {
+vi.mock("../prisma", () => {
+  const prisma = {
     notification: {
       findMany: mocks.notificationFindMany,
       findUnique: mocks.notificationFindUnique,
       update: mocks.notificationUpdate,
       create: mocks.notificationCreate,
     },
-  },
-}));
+  };
+  return { default: prisma, prisma };
+});
 
 import { fetchNotifications, markNotificationRead } from "../../actions/notification";
 import { createNotification } from "../notification";

@@ -61,6 +61,7 @@ const mocks = vi.hoisted(() => ({
   peerReviewAggregate: vi.fn(),
   userUpdate: vi.fn(),
   userUpdateMany: vi.fn(),
+  userFindUnique: vi.fn(),
   createNotification: vi.fn(),
 }));
 
@@ -68,8 +69,8 @@ vi.mock("../notification", () => ({
   createNotification: mocks.createNotification,
 }));
 
-vi.mock("../prisma", () => ({
-  prisma: {
+vi.mock("../prisma", () => {
+  const prisma = {
     project: {
       findUnique: mocks.projectFindUnique,
       findMany: mocks.projectFindMany,
@@ -96,12 +97,14 @@ vi.mock("../prisma", () => ({
       aggregate: mocks.peerReviewAggregate,
     },
     user: {
+      findUnique: mocks.userFindUnique,
       update: mocks.userUpdate,
       updateMany: mocks.userUpdateMany,
     },
     $transaction: mocks.transaction,
-  },
-}));
+  };
+  return { default: prisma, prisma };
+});
 
 import {
   acceptApplication,
@@ -168,6 +171,7 @@ beforeEach(() => {
   mocks.peerReviewAggregate.mockResolvedValue({ _avg: { commitmentScore: 4.5 } });
   mocks.userUpdate.mockResolvedValue({});
   mocks.userUpdateMany.mockResolvedValue({ count: 1 });
+  mocks.userFindUnique.mockResolvedValue({ id: "test-user-id", verified: true });
   mocks.createNotification.mockResolvedValue(undefined);
   // Route every model mock through the transaction client so transactional
   // app code resolves against the same fns as non-transactional code.
@@ -390,6 +394,15 @@ describe("createProject", () => {
     });
     expect(mocks.projectCreate).not.toHaveBeenCalled();
   });
+
+  it("rejects creating a project when the user is not verified", async () => {
+    mocks.userFindUnique.mockResolvedValue({ id: "test-user-id", verified: false });
+
+    const result = await createProject(project());
+
+    expect(result).toEqual({ success: false, error: "You are not verified" });
+    expect(mocks.projectCreate).not.toHaveBeenCalled();
+  });
 });
 
 describe("sendApplication", () => {
@@ -422,6 +435,16 @@ describe("sendApplication", () => {
         message: 'You have received a new application for project "Test Project".',
       },
     );
+  });
+
+  it("rejects sending an application when the user is not verified", async () => {
+    mocks.userFindUnique.mockResolvedValue({ id: "test-user-id", verified: false });
+
+    const result = await sendApplication("project-id", application());
+
+    expect(result).toEqual({ success: false, error: "You are not verified" });
+    expect(mocks.projectFindUnique).not.toHaveBeenCalled();
+    expect(mocks.applicationCreate).not.toHaveBeenCalled();
   });
 
   it("rejects invalid project IDs and application data without sending notifications", async () => {
