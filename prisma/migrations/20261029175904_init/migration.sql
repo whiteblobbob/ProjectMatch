@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "account_role" AS ENUM ('USER', 'ADMIN');
+
+-- CreateEnum
 CREATE TYPE "project_status" AS ENUM ('OPEN_RECRUITMENT', 'IN_PROGRESS', 'COMPLETED');
 
 -- CreateEnum
@@ -10,15 +13,26 @@ CREATE TYPE "online_platform" AS ENUM ('GOOGLE_MEET', 'ZOOM', 'MICROSOFT_TEAMS',
 -- CreateEnum
 CREATE TYPE "offline_place" AS ENUM ('SEKOLAH', 'KAMPUS', 'RUANG_PUBLIK', 'KAFE');
 
+-- CreateEnum
+CREATE TYPE "education_level" AS ENUM ('SMP', 'SMA', 'KULIAH');
+
 -- CreateTable
 CREATE TABLE "user" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "instance" TEXT,
-    "status_id" TEXT,
+    "education_level" "education_level",
+    "study_program" TEXT,
+    "school_grade" TEXT,
+    "entry_year" INTEGER,
+    "graduation_year" INTEGER,
+    "date_of_birth" TIMESTAMP(3),
     "bio" TEXT,
-    "location" TEXT,
+    "province" TEXT,
+    "city" TEXT,
+    "profile_cloud_id" TEXT,
     "portfolio_link" TEXT,
+    "role" "account_role" NOT NULL DEFAULT 'USER',
     "verified" BOOLEAN NOT NULL DEFAULT false,
     "verification_token" TEXT,
     "verification_token_expires_at" TIMESTAMP(3),
@@ -28,14 +42,6 @@ CREATE TABLE "user" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "status" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-
-    CONSTRAINT "status_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -76,8 +82,11 @@ CREATE TABLE "project" (
     "offline_place" "offline_place",
     "offline_link" TEXT,
     "meet_description" TEXT NOT NULL,
+    "meet_at" TIMESTAMP(3),
+    "meet_end_at" TIMESTAMP(3),
     "collaboration_tool" TEXT,
     "work_hours_per_week" INTEGER NOT NULL,
+    "education_levels" "education_level"[],
     "status" "project_status" NOT NULL DEFAULT 'OPEN_RECRUITMENT',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -86,11 +95,15 @@ CREATE TABLE "project" (
 );
 
 -- CreateTable
-CREATE TABLE "project_status_criteria" (
+CREATE TABLE "project_report" (
+    "id" TEXT NOT NULL,
     "project_id" TEXT NOT NULL,
-    "status_id" TEXT NOT NULL,
+    "reporter_id" TEXT NOT NULL,
+    "reason" TEXT NOT NULL,
+    "details" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "project_status_criteria_pkey" PRIMARY KEY ("project_id","status_id")
+    CONSTRAINT "project_report_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -154,6 +167,33 @@ CREATE TABLE "notification" (
     CONSTRAINT "notification_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "verification_document" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "document_cloud_id" TEXT NOT NULL,
+    "document_type" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "verification_document_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "school_institution" (
+    "npsn" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "school_institution_pkey" PRIMARY KEY ("npsn")
+);
+
+-- CreateTable
+CREATE TABLE "university_institution" (
+    "npsn" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "university_institution_pkey" PRIMARY KEY ("npsn")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "user_verification_token_key" ON "user"("verification_token");
 
@@ -163,8 +203,8 @@ CREATE UNIQUE INDEX "application_project_id_applicant_id_key" ON "application"("
 -- CreateIndex
 CREATE UNIQUE INDEX "peer_review_project_id_reviewer_id_reviewee_id_key" ON "peer_review"("project_id", "reviewer_id", "reviewee_id");
 
--- AddForeignKey
-ALTER TABLE "user" ADD CONSTRAINT "user_status_id_fkey" FOREIGN KEY ("status_id") REFERENCES "status"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "verification_document_user_id_key" ON "verification_document"("user_id");
 
 -- AddForeignKey
 ALTER TABLE "user_role" ADD CONSTRAINT "user_role_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -179,10 +219,10 @@ ALTER TABLE "project" ADD CONSTRAINT "project_owner_id_fkey" FOREIGN KEY ("owner
 ALTER TABLE "project" ADD CONSTRAINT "project_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "project_status_criteria" ADD CONSTRAINT "project_status_criteria_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "project_report" ADD CONSTRAINT "project_report_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "project_status_criteria" ADD CONSTRAINT "project_status_criteria_status_id_fkey" FOREIGN KEY ("status_id") REFERENCES "status"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "project_report" ADD CONSTRAINT "project_report_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "project_role" ADD CONSTRAINT "project_role_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -222,3 +262,6 @@ ALTER TABLE "peer_review" ADD CONSTRAINT "peer_review_reviewee_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "notification" ADD CONSTRAINT "notification_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "verification_document" ADD CONSTRAINT "verification_document_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
