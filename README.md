@@ -99,3 +99,7 @@ Buka [localhost:3000](http://localhost:3000). Pengunjung dapat menjelajahi proye
 | `npm start` | Menjalankan hasil build produksi. |
 
 Untuk produksi, isi variabel layanan pada lingkungan hosting, sesuaikan `NEXT_PUBLIC_SITE_URL` dan redirect Supabase dengan domain aplikasi, lalu terapkan migrasi dengan konfigurasi Prisma dan kredensial lingkungan tersebut sebelum menjalankan aplikasi.
+
+Sumber Data:
+- https://www.kaggle.com/datasets/renrenald/list-university-in-indonesia
+- https://github.com/wahyusmktel/API-Sekolah-Indonesia
