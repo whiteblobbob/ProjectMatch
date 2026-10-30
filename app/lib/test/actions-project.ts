@@ -247,6 +247,7 @@ describe("queryProjects", () => {
       },
     });
     expect(mocks.projectFindMany).toHaveBeenCalledWith({
+      omit: { onlinePlatform: true, onlineLink: true, offlinePlace: true, offlineLink: true, meetDescription: true, meetAt: true, meetEndAt: true },
       where: expect.objectContaining({
         status: "OPEN_RECRUITMENT",
         projectRoles: {
@@ -257,7 +258,7 @@ describe("queryProjects", () => {
       }),
       include: {
         projectRoles: { include: { role: true } },
-        owner: { select: { name: true, institution: true, institutionName: true, province: true, city: true } },
+        owner: { select: { name: true, profileCloudId: true, institution: true, institutionName: true, province: true, city: true } },
         category: { select: { name: true } },
         _count: { select: { projectMembers: true } },
       },
@@ -1426,6 +1427,7 @@ describe("fetchProjectApplications", () => {
           select: {
             id: true,
             name: true,
+          profileCloudId: true,
             institutionName: true,
             bio: true,
             province: true,
