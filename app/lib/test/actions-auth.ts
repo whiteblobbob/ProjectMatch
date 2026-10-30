@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   signUp: vi.fn(),
   signInWithPassword: vi.fn(),
+  resetPasswordForEmail: vi.fn(),
+  getUser: vi.fn(),
+  updateUser: vi.fn(),
   userCreate: vi.fn(),
   schoolInstitutionFindUnique: vi.fn(),
   universityInstitutionFindUnique: vi.fn(),
@@ -27,7 +30,7 @@ vi.mock("../prisma", () => {
   return { default: prisma, prisma };
 });
 
-import { login, signup } from "../../actions/auth";
+import { forgotPassword, login, resetPassword, signup } from "../../actions/auth";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -35,10 +38,16 @@ beforeEach(() => {
     auth: {
       signUp: mocks.signUp,
       signInWithPassword: mocks.signInWithPassword,
+      resetPasswordForEmail: mocks.resetPasswordForEmail,
+      getUser: mocks.getUser,
+      updateUser: mocks.updateUser,
     },
   });
   mocks.signUp.mockResolvedValue({ data: { user: { id: "user-id" } }, error: null });
   mocks.signInWithPassword.mockResolvedValue({ error: null });
+  mocks.resetPasswordForEmail.mockResolvedValue({ error: null });
+  mocks.getUser.mockResolvedValue({ data: { user: { id: "user-id" } }, error: null });
+  mocks.updateUser.mockResolvedValue({ error: null });
   mocks.userCreate.mockResolvedValue({});
   mocks.schoolInstitutionFindUnique.mockResolvedValue({
     npsn: "20100158",
@@ -47,6 +56,78 @@ beforeEach(() => {
   mocks.universityInstitutionFindUnique.mockResolvedValue({
     npsn: "93145",
     name: "Sekolah Tinggi Ilmu Kesehatan Mega Rezky",
+  });
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+describe("forgotPassword", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://projectmatch.example/base/");
+  });
+
+  it("sends a recovery email to the fixed callback and returns no account details", async () => {
+    expect(await forgotPassword({ email: "user@example.com" })).toEqual({ success: true });
+    expect(mocks.resetPasswordForEmail).toHaveBeenCalledWith("user@example.com", {
+      redirectTo: "https://projectmatch.example/api/reset-password",
+    });
+  });
+
+  it("rejects invalid email before calling Supabase", async () => {
+    const result = await forgotPassword({ email: "invalid" });
+    expect(result).toMatchObject({ success: false, fieldErrors: { email: expect.any(Array) } });
+    expect(mocks.resetPasswordForEmail).not.toHaveBeenCalled();
+  });
+
+  it("requires a configured site URL", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    expect(await forgotPassword({ email: "user@example.com" })).toMatchObject({ success: false });
+    expect(mocks.resetPasswordForEmail).not.toHaveBeenCalled();
+  });
+
+  it("does not expose provider diagnostics when sending fails", async () => {
+    mocks.resetPasswordForEmail.mockResolvedValue({ error: { message: "Private provider details" } });
+    expect(await forgotPassword({ email: "user@example.com" })).toEqual({
+      success: false,
+      error: "Gagal mengirim tautan pemulihan. Silakan coba lagi nanti.",
+    });
+  });
+});
+
+describe("resetPassword", () => {
+  const form = { password: "new-password123", confirmPassword: "new-password123" };
+
+  it("updates the authenticated user's password without signing out", async () => {
+    expect(await resetPassword(form)).toEqual({ success: true });
+    expect(mocks.getUser).toHaveBeenCalled();
+    expect(mocks.updateUser).toHaveBeenCalledWith({ password: form.password });
+  });
+
+  it.each([
+    { data: { user: null }, error: null },
+    { data: { user: { id: "user-id" } }, error: { message: "Session expired" } },
+  ])("rejects missing or invalid sessions before updating", async (authResponse) => {
+    mocks.getUser.mockResolvedValue(authResponse);
+    expect(await resetPassword(form)).toEqual({ success: false, error: "User is not authenticated" });
+    expect(mocks.updateUser).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { password: "short", confirmPassword: "short", field: "password" },
+    { password: "new-password123", confirmPassword: "different", field: "confirmPassword" },
+  ])("rejects invalid $field before updating", async ({ password, confirmPassword, field }) => {
+    expect(await resetPassword({ password, confirmPassword })).toMatchObject({
+      success: false,
+      fieldErrors: { [field]: expect.any(Array) },
+    });
+    expect(mocks.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("surfaces an expected password update error", async () => {
+    mocks.updateUser.mockResolvedValue({ error: { message: "New password must be different" } });
+    expect(await resetPassword(form)).toEqual({ success: false, error: "New password must be different" });
   });
 });
 

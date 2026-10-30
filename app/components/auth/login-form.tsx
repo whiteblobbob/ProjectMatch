@@ -69,7 +69,9 @@ export default function LoginForm() {
           <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
             Kata sandi
           </label>
-          <span className="text-xs text-slate-500">Minimal 8 karakter</span>
+          <Link href="/forgot-password" className="text-xs font-semibold text-brand-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
+            Lupa kata sandi?
+          </Link>
         </div>
         <input
           id="password"

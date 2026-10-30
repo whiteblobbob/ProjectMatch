@@ -23,6 +23,20 @@ export type SignupForm = z.infer<typeof SignupValidator>;
 export const LoginValidator = CredentialsValidator;
 export type LoginForm = z.infer<typeof LoginValidator>;
 
+export const ForgotPasswordValidator = z.object({
+  email: z.email("Masukkan alamat email yang valid."),
+});
+export type ForgotPasswordForm = z.infer<typeof ForgotPasswordValidator>;
+
+export const ResetPasswordValidator = z.object({
+  password: CredentialsValidator.shape.password,
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Konfirmasi kata sandi tidak cocok.",
+  path: ["confirmPassword"],
+});
+export type ResetPasswordForm = z.infer<typeof ResetPasswordValidator>;
+
 const ACADEMIC_EMAIL_DOMAINS = [".ac.id", ".edu"];
 
 export function isAcademicEmail(value: string) {

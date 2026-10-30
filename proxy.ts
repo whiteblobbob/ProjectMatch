@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import prisma from "@/app/lib/prisma";
 import { createProxyClient } from "@/app/lib/supabase/proxy-client";
 
-const PUBLIC_PATHS = new Set(["/", "/login", "/register", "/404"]);
+const PUBLIC_PATHS = new Set(["/", "/login", "/register", "/forgot-password", "/404"]);
 
 function notFound(request: NextRequest) {
   return NextResponse.rewrite(new URL("/404", request.url));

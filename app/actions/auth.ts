@@ -2,7 +2,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import prisma from "../lib/prisma";
 import { createClient } from "../lib/supabase/server";
-import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
+import { ForgotPasswordForm, ForgotPasswordValidator, LoginForm, LoginValidator, ResetPasswordForm, ResetPasswordValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
 import { parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
 import actionWrapper from "../lib/actionWrapper";
@@ -85,3 +85,30 @@ export const login = actionWrapper(async (formData: LoginForm) => {
       throw new ActionError(error.message);
     }
 });
+
+export const forgotPassword = actionWrapper(async (formData: ForgotPasswordForm) => {
+  const data = parseOrThrow(ForgotPasswordValidator, formData);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (!siteUrl) {
+    throw new ActionError("Pemulihan kata sandi belum dikonfigurasi.");
+  }
+
+  const redirectTo = new URL("/api/reset-password", siteUrl).toString();
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(data.email, { redirectTo });
+
+  if (error) {
+    throw new ActionError("Gagal mengirim tautan pemulihan. Silakan coba lagi nanti.");
+  }
+});
+
+export const resetPassword = actionWrapper(async (_user, formData: ResetPasswordForm) => {
+  const data = parseOrThrow(ResetPasswordValidator, formData);
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: data.password });
+
+  if (error) {
+    throw new ActionError(error.message);
+  }
+}, { auth: true });

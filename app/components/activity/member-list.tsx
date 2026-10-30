@@ -48,7 +48,7 @@ export default function MemberList({ project }: MemberListProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid md:grid-cols-2 gap-4">
       {entries.map((member, index) => (
         <article key={member.userId} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-start gap-4">
