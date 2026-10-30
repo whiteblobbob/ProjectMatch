@@ -10,9 +10,9 @@
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:reset": "dotenv run -f .env.development -- prisma migrate reset",
+    "db:seed:dev": "dotenv run -f .env.development -- tsx prisma/seed.ts",
+    "db:seed:prod": "dotenv run -f .env.production -- tsx prisma/seed.ts",
     "db:dev": "dotenv run -f .env.development -- prisma migrate dev",
-    "db:seed-example": "dotenv run -f .env.development -- tsx prisma/seed-example.ts",
-    "db:seed": "dotenv run -f .env.development -- tsx prisma/seed.ts",
     "db:deploy": "dotenv run -f .env.production -- prisma migrate deploy",
     "db:studio:dev": "dotenv run -f .env.development -- prisma studio",
     "db:studio:prod": "dotenv run -f .env.production -- prisma studio"
