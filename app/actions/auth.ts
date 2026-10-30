@@ -1,8 +1,7 @@
 "use server"
-import { Prisma } from "@/generated/prisma/client";
-import prisma from "../lib/prisma";
 import { createClient } from "../lib/supabase/server";
-import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
+import { ensureAppUser } from "../lib/supabase/ensureAppUser";
+import { ForgotPasswordForm, ForgotPasswordValidator, LoginForm, LoginValidator, RegistrationProfileValidator, ResetPasswordForm, ResetPasswordValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
 import { parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
 import actionWrapper from "../lib/actionWrapper";
@@ -28,10 +27,12 @@ export const signup = actionWrapper(async (formData: SignupForm) => {
     });
   }
 
+  const registrationProfile = RegistrationProfileValidator.parse(data);
   const supabase = await createClient();
   const { data: userData, error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
+    options: { data: { registrationProfile } },
   });
 
   // Supabase auth messages (invalid credentials, unconfirmed email, ...) are
@@ -40,43 +41,25 @@ export const signup = actionWrapper(async (formData: SignupForm) => {
     throw new ActionError(error.message);
   }
 
-  const userId = userData.user?.id;
-  if (!userId) {
+  if (!userData.user?.id) {
     throw new ActionError("Account could not be created. Please try again.");
   }
 
-  try {
-    await prisma.user.create({
-      data: {
-        id: userId,
-        name: data.name,
-        institution: institution.npsn,
-        institutionName: institution.name,
-        educationLevel: data.educationLevel,
-        province: data.province,
-        city: data.city,
-        studyProgram: data.studyProgram || null,
-        schoolGrade: data.schoolGrade || null,
-        entryYear: data.entryYear ?? null,
-        graduationYear: data.graduationYear ?? null,
-        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
-      }
-    });
-  } catch (error) {
-    // A unique constraint here means the local user row already exists.
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      throw new ActionError("An account with this email already exists");
-    }
+  // Supabase can return an obfuscated user with no identities for an already
+  // registered email. Do not provision a local row for that placeholder ID.
+  if (userData.user.identities?.length === 0) return;
 
-    throw error;
-  }
+  await ensureAppUser({
+    ...userData.user,
+    user_metadata: { ...userData.user.user_metadata, registrationProfile },
+  });
 });
 
 export const login = actionWrapper(async (formData: LoginForm) => {
     const data = parseOrThrow(LoginValidator, formData);
 
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: userData, error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     });
@@ -84,4 +67,37 @@ export const login = actionWrapper(async (formData: LoginForm) => {
     if (error) {
       throw new ActionError(error.message);
     }
+
+    if (!userData.user) {
+      throw new ActionError("Account could not be signed in. Please try again.");
+    }
+
+    await ensureAppUser(userData.user);
 });
+
+export const forgotPassword = actionWrapper(async (formData: ForgotPasswordForm) => {
+  const data = parseOrThrow(ForgotPasswordValidator, formData);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (!siteUrl) {
+    throw new ActionError("Pemulihan kata sandi belum dikonfigurasi.");
+  }
+
+  const redirectTo = new URL("/api/reset-password", siteUrl).toString();
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(data.email, { redirectTo });
+
+  if (error) {
+    throw new ActionError("Gagal mengirim tautan pemulihan. Silakan coba lagi nanti.");
+  }
+});
+
+export const resetPassword = actionWrapper(async (_user, formData: ResetPasswordForm) => {
+  const data = parseOrThrow(ResetPasswordValidator, formData);
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: data.password });
+
+  if (error) {
+    throw new ActionError(error.message);
+  }
+}, { auth: true, ensureProfile: false });

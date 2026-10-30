@@ -1,4 +1,5 @@
 import z from "zod";
+import { RoleNamesValidator } from "./role";
 import { MAX_PROFILE_CONTACTS } from "../ui/profile-public-info";
 
 export const EducationLevelValidator = z.enum(["SMP", "SMA", "MAHASISWA"]);
@@ -23,8 +24,6 @@ export const ProfileValidator = z.object({
     .max(MAX_PROFILE_CONTACTS, `At most ${MAX_PROFILE_CONTACTS} contacts are allowed`)
     .optional(),
   educationLevel: EducationLevelValidator,
-  userRoles: z.array(z.object({
-    roleId: z.string().min(1, "Role ID is required"),
-  })).min(1, "At least one user role is required"),
+  roles: RoleNamesValidator.refine((roles) => roles.length > 0, "At least one user role is required"),
 });
 export type ProfileForm = z.infer<typeof ProfileValidator>;

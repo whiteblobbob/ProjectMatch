@@ -12,7 +12,6 @@ export type EligibilityApplicant = {
   institution?: string | null;
   province?: string | null;
   city?: string | null;
-  roleIds: string[];
 };
 
 export type EligibilityProject = {
@@ -73,11 +72,6 @@ export function checkAudienceEligibility(
   }
 }
 
-/**
- * Education and audience eligibility are independent of the position chosen.
- * Role eligibility is per-position: callers check the applied role against
- * `applicant.roleIds` (see `ownsRole`).
- */
 export function checkProjectEligibility(
   applicant: EligibilityApplicant,
   project: EligibilityProject,
@@ -86,8 +80,4 @@ export function checkProjectEligibility(
   const audience = checkAudienceEligibility(applicant, project);
 
   return { education, audience, eligible: education && audience };
-}
-
-export function ownsRole(applicant: EligibilityApplicant, roleId: string) {
-  return applicant.roleIds.includes(roleId);
 }

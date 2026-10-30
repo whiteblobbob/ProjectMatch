@@ -17,12 +17,12 @@ import {
   validateMeetingRequirements,
   validateRangeRequirements,
 } from "../lib/validator/project";
-import { checkProjectEligibility, ownsRole } from "../lib/eligibility";
+import { checkProjectEligibility } from "../lib/eligibility";
+import { roleNameKey } from "../lib/validator/role";
 import actionWrapper from "../lib/actionWrapper";
 import { IdValidator, parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
 import { createNotification } from "../lib/notification";
-import { getUser } from "../lib/supabase/getUser";
 
 export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) => {
   const data = parseOrThrow(QueryProjectsValidator, formData);
@@ -38,15 +38,16 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
   const hasOwnerFilter = Boolean(data.ownerInstitution || data.ownerCity || data.ownerProvince);
 
   const rows = await prisma.project.findMany({
+    omit: { onlinePlatform: true, onlineLink: true, offlinePlace: true, offlineLink: true, meetDescription: true, meetAt: true, meetEndAt: true },
     where: {
       ownerId: data.ownerId,
       collaborationMode: data.collaborationMode,
       status: data.status,
       projectRoles: data.projectRoles ? {
         some: {
-          roleId: {
-            in: data.projectRoles
-          }
+          OR: data.projectRoles.map((name) => ({
+            roleName: { contains: name, mode: "insensitive" },
+          })),
         }
       } : undefined,
       educationLevels: data.educationLevels ? {
@@ -72,12 +73,11 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
       ] : undefined,
     },
     include: {
-      projectRoles: {
-        include: { role: true },
-      },
+      projectRoles: true,
       owner: {
         select: {
           name: true,
+          profileCloudId: true,
           institution: true,
           institutionName: true,
           province: true,
@@ -123,20 +123,20 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
 
   const project = await prisma.project.findUnique({
     where: { id: idResult },
+    omit: { onlinePlatform: true, onlineLink: true, offlinePlace: true, offlineLink: true, meetDescription: true, meetAt: true, meetEndAt: true },
     include: {
       owner: {
         select: {
           id: true,
           name: true,
+          profileCloudId: true,
           institution: true,
           institutionName: true,
           province: true,
           city: true,
           bio: true,
           educationLevel: true,
-          userRoles: {
-            include: { role: true },
-          },
+          roles: true,
           avgCommitmentScore: true,
           totalProjectsCompleted: true,
         },
@@ -146,26 +146,22 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
           name: true,
         },
       },
-      projectRoles: {
-        include: { role: true },
-      },
+      projectRoles: true,
       projectMembers: {
         include: {
           user: {
             select: {
               id: true,
               name: true,
+          profileCloudId: true,
               institutionName: true,
               bio: true,
               educationLevel: true,
-              userRoles: {
-                include: { role: true },
-              },
+              roles: true,
               avgCommitmentScore: true,
               totalProjectsCompleted: true,
             },
           },
-          role: true,
         },
       },
     },
@@ -178,10 +174,71 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
   return project;
 }, { auth: false });
 
-export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
-  const userData = await getUser(user);
+export const fetchActivityProject = actionWrapper(async (user: User, projectId: string) => {
+  const idResult = parseOrThrow(IdValidator, projectId);
 
-  if (!userData.verified) {
+  const project = await prisma.project.findUnique({
+    where: { id: idResult },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          profileCloudId: true,
+          institution: true,
+          institutionName: true,
+          province: true,
+          city: true,
+          bio: true,
+          educationLevel: true,
+          roles: true,
+          avgCommitmentScore: true,
+          totalProjectsCompleted: true,
+        },
+      },
+      category: {
+        select: {
+          name: true,
+        },
+      },
+      projectRoles: true,
+      projectMembers: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+          profileCloudId: true,
+              institutionName: true,
+              bio: true,
+              educationLevel: true,
+              roles: true,
+              avgCommitmentScore: true,
+              totalProjectsCompleted: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!project) {
+    throw new ActionError("Project not found");
+  }
+
+  if (project.ownerId !== user.id && !project.projectMembers.some(member => member.userId === user.id)) {
+    throw new ActionError("You are not authorized to view this project");
+  }
+  return project;
+}, { auth: true });
+
+export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
+  const userData = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { verified: true },
+  });
+
+  if (!userData?.verified) {
     throw new ActionError("You are not verified");
   }
 
@@ -215,9 +272,7 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
       projectRoles: {
         create: data.projectRoles.map(role => ({
           slotsAvailable: role.slotsAvailable,
-          role: {
-            connect: { id: role.roleId }
-          }
+          roleName: role.roleName,
         })),
       },
     }
@@ -227,9 +282,12 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
 }, { auth: true });
 
 export const sendApplication = actionWrapper(async (user: User, projectId: string, formData: ApplicationForm) => {
-  const userData = await getUser(user);
+  const userData = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { verified: true },
+  });
 
-  if (!userData.verified) {
+  if (!userData?.verified) {
     throw new ActionError("You are not verified");
   }
 
@@ -242,7 +300,6 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
       institution: true,
       province: true,
       city: true,
-      userRoles: { select: { roleId: true } },
     },
   });
 
@@ -294,9 +351,8 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
     throw new ActionError("You are already a member of this project");
   }
 
-  const roleIds = (applicant.userRoles ?? []).map((userRole) => userRole.roleId);
   const eligibility = checkProjectEligibility(
-    { ...applicant, roleIds },
+    applicant,
     project,
   );
 
@@ -308,23 +364,11 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
     throw new ActionError("This project is limited to a different audience");
   }
 
-  if (!ownsRole({ ...applicant, roleIds }, data.roleId)) {
-    throw new ActionError("You do not have the required role for this position");
-  }
+  const position = project.projectRoles.find(
+    (role) => roleNameKey(role.roleName) === roleNameKey(data.roleName),
+  );
 
-  let isAvailable = false;
-
-  for (const role of project.projectRoles) {
-    if (role.roleId === data.roleId) {
-      if (role.slotsAvailable > 0) {
-        isAvailable = true;
-      }
-
-      break;
-    }
-  };
-
-  if (!isAvailable) {
+  if (!position || position.slotsAvailable <= 0) {
     throw new ActionError("The selected role is not available for this project");
   }
 
@@ -334,7 +378,7 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
       data: {
         applicantId: user.id,
         projectId: validatedProjectId,
-        roleId: data.roleId,
+        roleName: position.roleName,
         message: data.message,
       }
     });
@@ -375,7 +419,7 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
     const updatedRole = await tx.projectRole.updateMany({
       where: {
         projectId: project.id,
-        roleId: application.roleId,
+        roleName: application.roleName,
         slotsAvailable: { gt: 0 },
       },
       data: {
@@ -393,7 +437,7 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
       data: {
         userId: application.applicantId,
         projectId: application.projectId,
-        roleId: application.roleId,
+        roleName: application.roleName,
       }
     });
 
@@ -402,7 +446,7 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
     });
 
     const role = await tx.projectRole.findUnique({
-      where: { projectId_roleId: { projectId: project.id, roleId: application.roleId } },
+      where: { projectId_roleName: { projectId: project.id, roleName: application.roleName } },
     });
 
     if (role && role.slotsAvailable <= 0) {
@@ -411,7 +455,7 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
       const otherApplications = await tx.application.findMany({
         where: {
           projectId: project.id,
-          roleId: application.roleId,
+          roleName: application.roleName,
         },
       });
 
@@ -419,7 +463,7 @@ export const acceptApplication = actionWrapper(async (user: User, applicationId:
         await tx.application.deleteMany({
           where: {
             projectId: project.id,
-            roleId: application.roleId,
+            roleName: application.roleName,
           },
         });
 
@@ -727,6 +771,7 @@ export const fetchProjectApplications = actionWrapper(async (user: User, project
         select: {
           id: true,
           name: true,
+          profileCloudId: true,
           institutionName: true,
           bio: true,
           province: true,
@@ -736,14 +781,11 @@ export const fetchProjectApplications = actionWrapper(async (user: User, project
             select: { value: true },
           },
           educationLevel: true,
-          userRoles: {
-            include: { role: true },
-          },
+          roles: true,
           avgCommitmentScore: true,
           totalProjectsCompleted: true,
         },
       },
-      role: true,
     },
   });
 

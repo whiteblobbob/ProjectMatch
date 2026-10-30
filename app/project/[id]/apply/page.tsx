@@ -57,20 +57,14 @@ async function ProjectApplicationAccess({ params }: ProjectApplicationPageProps)
     );
   }
 
-  const ownedRoleIds = profile.data.userRoles.map((userRole) => userRole.roleId);
   const eligibility = checkProjectEligibility(
     {
       educationLevel: profile.data.educationLevel,
       institution: profile.data.institution,
       province: profile.data.province,
       city: profile.data.city,
-      roleIds: ownedRoleIds,
     },
     project.data,
-  );
-  const ownedOpenRoles = project.data.projectRoles.filter(
-    (projectRole) =>
-      projectRole.slotsAvailable > 0 && ownedRoleIds.includes(projectRole.role.id),
   );
   const ineligibilityReasons = [
     eligibility.education
@@ -79,9 +73,6 @@ async function ProjectApplicationAccess({ params }: ProjectApplicationPageProps)
     eligibility.audience
       ? null
       : "Institusi atau wilayahmu berada di luar jangkauan proyek ini.",
-    ownedOpenRoles.length > 0
-      ? null
-      : "Belum ada posisi terbuka yang cocok dengan peran di profilmu.",
   ].filter((reason): reason is string => reason !== null);
 
   if (ineligibilityReasons.length > 0) {
@@ -103,7 +94,6 @@ async function ProjectApplicationAccess({ params }: ProjectApplicationPageProps)
       <ApplicationForm
         project={project.data}
         profile={toProfileView(profile.data, user.email ?? "")}
-        ownedRoleIds={ownedRoleIds}
       />
     </>
   );

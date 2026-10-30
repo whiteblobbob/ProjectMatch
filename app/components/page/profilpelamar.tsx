@@ -18,7 +18,7 @@ type PublicProfileRecord = {
   educationLevel: EducationLevel | null;
   avgCommitmentScore: number;
   totalProjectsCompleted: number;
-  userRoles: Array<{ role: { name: string } }>;
+  roles: string[];
 };
 
 function initials(name: string | null) {
@@ -28,7 +28,7 @@ function initials(name: string | null) {
 
 export default function PublicProfile({ profile, cloudName }: { profile: PublicProfileRecord; cloudName: string }) {
   const name = profile.name?.trim() || "Pengguna ProjectMatch";
-  const skills = profile.userRoles.map(({ role }) => role.name);
+  const skills = profile.roles;
   const educationLabel = educationLevelLabel(profile.educationLevel);
   const avatarUrl = profile.profileCloudId ? cloudinaryAvatarUrl(profile.profileCloudId, cloudName) : null;
 

@@ -17,19 +17,18 @@ type ApplicationProject = {
     category: { name: string };
     projectRoles: Array<{
         slotsAvailable: number;
-        role: { id: string; name: string };
+        roleName: string;
     }>;
 };
 
 type ApplicationFormProps = {
     project: ApplicationProject;
     profile: ProfileView;
-    ownedRoleIds: string[];
 };
 
-export default function ApplicationForm({ project, profile, ownedRoleIds }: ApplicationFormProps) {
+export default function ApplicationForm({ project, profile }: ApplicationFormProps) {
     const router = useRouter();
-    const [roleId, setRoleId] = useState("");
+    const [roleName, setRoleName] = useState("");
     const [message, setMessage] = useState("");
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState("");
@@ -37,25 +36,19 @@ export default function ApplicationForm({ project, profile, ownedRoleIds }: Appl
 
     const publicInfo = { location: formatRegion(profile.city, profile.province), portfolioUrl: profile.portfolioLink };
     const openRoles = project.projectRoles.filter((projectRole) => projectRole.slotsAvailable > 0);
-    const ownedOpenRoles = openRoles.filter((projectRole) => ownedRoleIds.includes(projectRole.role.id));
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setError("");
 
-        if (!roleId) {
+        if (!roleName) {
             setError("Pilih posisi yang ingin dilamar.");
-            return;
-        }
-
-        if (!ownedRoleIds.includes(roleId)) {
-            setError("Posisi ini belum ada di peran profilmu. Tambahkan peran tersebut di profil terlebih dahulu.");
             return;
         }
 
         setIsPending(true);
         const result = await sendApplication(project.id, {
-            roleId,
+            roleName,
             message: message.trim() || undefined,
         });
 
@@ -139,27 +132,18 @@ export default function ApplicationForm({ project, profile, ownedRoleIds }: Appl
 
                                     <SelectControl
                                         id="role"
-                                        value={roleId}
-                                        onChange={(event) => setRoleId(event.target.value)}
+                                        value={roleName}
+                                        onChange={(event) => setRoleName(event.target.value)}
                                         disabled={isPending}
                                         required
                                         className="border-border-input text-text-heading focus:ring-2 focus:ring-brand-soft"
                                     >
                                         <option value="" disabled>Pilih posisi yang kamu inginkan</option>
-                                        {openRoles.map((projectRole) => {
-                                            const isOwned = ownedRoleIds.includes(projectRole.role.id);
-
-                                            return (
-                                                <option
-                                                    key={projectRole.role.id}
-                                                    value={projectRole.role.id}
-                                                    disabled={!isOwned}
-                                                >
-                                                    {projectRole.role.name} ({projectRole.slotsAvailable} slot)
-                                                    {isOwned ? "" : " · belum ada di profil"}
-                                                </option>
-                                            );
-                                        })}
+                                        {openRoles.map((projectRole) => (
+                                            <option key={projectRole.roleName} value={projectRole.roleName}>
+                                                {projectRole.roleName} ({projectRole.slotsAvailable} slot)
+                                            </option>
+                                        ))}
                                     </SelectControl>
                                 </div>
                             ) : (
@@ -167,12 +151,6 @@ export default function ApplicationForm({ project, profile, ownedRoleIds }: Appl
                                     Proyek ini tidak memiliki posisi terbuka saat ini.
                                 </p>
                             )}
-
-                            {openRoles.length > 0 && ownedOpenRoles.length === 0 ? (
-                                <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                                    Belum ada posisi terbuka yang cocok dengan peran di profilmu. Tambahkan peran yang sesuai di profil terlebih dahulu.
-                                </p>
-                            ) : null}
 
                             {/* Contribution */}
                             <div className="flex min-w-0 flex-col gap-2">
@@ -223,7 +201,7 @@ export default function ApplicationForm({ project, profile, ownedRoleIds }: Appl
                         <div className="sticky bottom-0 -mx-4 border-t border-border-default bg-background/95 px-4 pb-4 pt-3 backdrop-blur-sm">
                             <button
                                 type="submit"
-                                disabled={isPending || ownedOpenRoles.length === 0}
+                                disabled={isPending || openRoles.length === 0}
                                 className="flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
                             >
                                 {isPending ? "Mengirim pengajuan…" : "Kirim pengajuan"}

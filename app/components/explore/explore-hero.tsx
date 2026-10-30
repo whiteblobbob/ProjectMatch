@@ -73,10 +73,10 @@ export default function ExploreHero({
 
           <div className="min-w-0">
             <label htmlFor="search-role" className="sr-only">Peran</label>
-            <SelectControl id="search-role" value={role} onChange={(event) => onRoleChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
-              <option value="">Semua peran</option>
-              {roles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </SelectControl>
+            <input id="search-role" list="search-role-suggestions" value={role} onChange={(event) => onRoleChange(event.target.value)} placeholder="Semua peran" className="min-h-12 w-full min-w-0 rounded-lg border border-slate-200 bg-transparent px-3 text-sm text-slate-900 outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100 lg:rounded-none lg:border-0" />
+            <datalist id="search-role-suggestions">
+              {roles.map((item) => <option key={item.id} value={item.name} />)}
+            </datalist>
           </div>
 
           <button type="submit" className="inline-flex min-h-12 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-brand-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 lg:w-auto">

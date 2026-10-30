@@ -1,6 +1,7 @@
 import { User } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
 import { ActionError } from "./errors";
+import { ensureAppUser } from "./supabase/ensureAppUser";
 
 export type ActionResult<T> =
   | { success: true; data: T }
@@ -8,7 +9,7 @@ export type ActionResult<T> =
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
 type ActionOptions = { auth?: false };
-type AuthenticatedActionOptions = { auth: true };
+type AuthenticatedActionOptions = { auth: true; ensureProfile?: boolean };
 
 export default function actionWrapper<Args extends unknown[], Result>(
   action: (user: User, ...args: Args) => Result | Promise<Result>,
@@ -37,6 +38,10 @@ export default function actionWrapper<Args extends unknown[], Result>(
 
         if (authError || !user) {
           return { success: false, error: "User is not authenticated" };
+        }
+
+        if (options.ensureProfile !== false) {
+          await ensureAppUser(user);
         }
 
         data = await (action as (user: User, ...args: Args) => Result | Promise<Result>)(

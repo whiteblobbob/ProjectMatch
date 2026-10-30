@@ -1,3 +1,4 @@
+import UserAvatar from "@/app/components/ui/user-avatar";
 import Link from "next/link";
 
 import type { ProjectDetail } from "@/app/lib/ui/kelola-project";
@@ -11,23 +12,14 @@ type MemberCardProps = {
 
 const avatarTones = ["bg-slate-900", "bg-indigo-500", "bg-emerald-500", "bg-amber-500"];
 
-function initialsOf(name: string | null | undefined) {
-  const initials = (name ?? "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-  return initials || "PM";
-}
+
 
 export default function MemberCard({ project, projectId, canManage = true }: MemberCardProps) {
   const members = [
-    { userId: project.owner.id, name: project.owner.name },
+    { userId: project.owner.id, name: project.owner.name, profileCloudId: project.owner.profileCloudId },
     ...project.projectMembers
       .filter((member) => member.userId !== project.ownerId)
-      .map((member) => ({ userId: member.userId, name: member.user.name })),
+      .map((member) => ({ userId: member.userId, name: member.user.name, profileCloudId: member.user.profileCloudId })),
   ];
   const memberCount = members.length;
   const openSlots = project.projectRoles.reduce((total, projectRole) => total + projectRole.slotsAvailable, 0);
@@ -49,12 +41,10 @@ export default function MemberCard({ project, projectId, canManage = true }: Mem
 
       <div className="mt-4 flex -space-x-2" aria-label={`${memberCount} anggota terkonfirmasi`}>
         {members.slice(0, 4).map((member, index) => (
-          <span
+          <UserAvatar 
             key={member.userId}
             className={`flex size-9 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white ${avatarTones[index % avatarTones.length]}`}
-          >
-            {initialsOf(member.name)}
-          </span>
+           name={member.name} profileCloudId={member.profileCloudId} />
         ))}
         {openSlots > 0 ? (
           <span className="flex size-9 items-center justify-center rounded-full border-2 border-dashed border-slate-300 bg-white text-xs font-bold text-slate-400">

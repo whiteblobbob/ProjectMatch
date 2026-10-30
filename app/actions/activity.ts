@@ -10,6 +10,7 @@ export type IncomingApplication = {
   id: string;
   projectId: string;
   applicantName: string | null;
+  applicantProfileCloudId: string | null;
   applicantInstitution: string | null;
   projectTitle: string;
   roleName: string;
@@ -75,14 +76,12 @@ export const getActivityOverview = actionWrapper(
         select: {
           id: true,
           applicant: {
-            select: { name: true, institutionName: true },
+            select: { name: true, institutionName: true, profileCloudId: true },
           },
           project: {
             select: { id: true, title: true },
           },
-          role: {
-            select: { name: true },
-          },
+          roleName: true,
         },
       }),
       prisma.project.findMany({
@@ -108,17 +107,13 @@ export const getActivityOverview = actionWrapper(
             where: { slotsAvailable: { gt: 0 } },
             select: {
               slotsAvailable: true,
-              role: {
-                select: { name: true },
-              },
+              roleName: true,
             },
           },
           projectMembers: {
             where: { userId: user.id },
             select: {
-              role: {
-                select: { name: true },
-              },
+              roleName: true,
             },
           },
           _count: {
@@ -138,9 +133,7 @@ export const getActivityOverview = actionWrapper(
         select: {
           id: true,
           projectId: true,
-          role: {
-            select: { name: true },
-          },
+          roleName: true,
           project: {
             select: {
               title: true,
@@ -177,9 +170,7 @@ export const getActivityOverview = actionWrapper(
           projectMembers: {
             where: { userId: user.id },
             select: {
-              role: {
-                select: { name: true },
-              },
+              roleName: true,
             },
           },
           _count: {
@@ -195,9 +186,10 @@ export const getActivityOverview = actionWrapper(
         id: application.id,
         projectId: application.project.id,
         applicantName: application.applicant.name,
+        applicantProfileCloudId: application.applicant.profileCloudId,
         applicantInstitution: application.applicant.institutionName,
         projectTitle: application.project.title,
-        roleName: application.role.name,
+        roleName: application.roleName,
       })),
       activeProjectPosts: activeRows.map((project) => ({
         id: project.id,
@@ -208,14 +200,14 @@ export const getActivityOverview = actionWrapper(
         collaborationMode: project.collaborationMode,
         workHoursPerWeek: project.workHoursPerWeek,
         roles: project.projectRoles.map((projectRole) => ({
-          name: projectRole.role.name,
+          name: projectRole.roleName,
           slotsAvailable: projectRole.slotsAvailable,
         })),
         applicantCount: project._count.applications,
         memberCount: project._count.projectMembers + 1,
         viewerRole: project.ownerId === user.id ? "OWNER" : "MEMBER",
         memberRoleName:
-          project.ownerId === user.id ? null : (project.projectMembers[0]?.role.name ?? null),
+          project.ownerId === user.id ? null : (project.projectMembers[0]?.roleName ?? null),
       })),
       activeApplications: applicationRows.map((application) => ({
         id: application.id,
@@ -223,7 +215,7 @@ export const getActivityOverview = actionWrapper(
         projectTitle: application.project.title,
         categoryName: application.project.category.name,
         ownerName: application.project.owner.name,
-        roleName: application.role.name,
+        roleName: application.roleName,
         collaborationMode: application.project.collaborationMode,
         workHoursPerWeek: application.project.workHoursPerWeek,
       })),
@@ -237,7 +229,7 @@ export const getActivityOverview = actionWrapper(
         memberCount: project._count.projectMembers + 1,
         viewerRole: project.ownerId === user.id ? "OWNER" : "MEMBER",
         memberRoleName:
-          project.ownerId === user.id ? null : (project.projectMembers[0]?.role.name ?? null),
+          project.ownerId === user.id ? null : (project.projectMembers[0]?.roleName ?? null),
       })),
     };
   },

@@ -40,7 +40,7 @@ export type ProfileRecord = {
   verified: boolean;
   educationLevel: EducationLevel | null;
   contactInfos: Array<{ value: string }>;
-  userRoles: Array<{ role: { name: string } }>;
+  roles: string[];
   totalProjectsCompleted: number;
   avgCommitmentScore: number;
 };
@@ -62,7 +62,7 @@ export function toProfileView(record: ProfileRecord, email: string): ProfileView
     verified: record.verified,
     profileCloudId: record.profileCloudId ?? null,
     contacts: record.contactInfos.map((contact) => contact.value),
-    skills: record.userRoles.map(({ role }) => role.name),
+    skills: record.roles,
     email,
     totalProjectsCompleted: record.totalProjectsCompleted,
     avgCommitmentScore: record.avgCommitmentScore,

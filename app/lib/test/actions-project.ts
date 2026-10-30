@@ -141,16 +141,16 @@ const project = (): CreateProjectForm => ({
   workHoursPerWeek: 10,
   educationLevels: ["SMP", "SMA"],
   range: "ALL",
-  projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
+  projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 2 }],
 });
 
 const queryProject = (): QueryProjectsForm => ({
   status: "OPEN_RECRUITMENT",
-  projectRoles: ["role-id"],
+  projectRoles: ["Custom Developer"],
 });
 
 const application = (): ApplicationForm => ({
-  roleId: "role-id",
+  roleName: "Custom Developer",
   message: "I can help",
 });
 
@@ -188,7 +188,7 @@ beforeEach(() => {
     institution: "npsn-user",
     province: "Bali",
     city: "Denpasar",
-    userRoles: [{ roleId: "role-id" }],
+    roles: ["Custom Developer"],
   });
   mocks.createNotification.mockResolvedValue(undefined);
   mocks.projectReportCreate.mockResolvedValue({});
@@ -226,6 +226,19 @@ beforeEach(() => {
 });
 
 describe("queryProjects", () => {
+  it("matches any trimmed role-name fragment without catalog IDs", async () => {
+    mocks.projectFindMany.mockResolvedValue([]);
+    expect((await queryProjects({ projectRoles: [" DESIGN ", "mentor"] })).success).toBe(true);
+    expect(mocks.projectFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        projectRoles: { some: { OR: [
+          { roleName: { contains: "DESIGN", mode: "insensitive" } },
+          { roleName: { contains: "mentor", mode: "insensitive" } },
+        ] } },
+      }),
+    }));
+  });
+
   it("queries projects with provided filters and default pagination", async () => {
     const record = [{
       id: "project-id",
@@ -247,17 +260,18 @@ describe("queryProjects", () => {
       },
     });
     expect(mocks.projectFindMany).toHaveBeenCalledWith({
+      omit: { onlinePlatform: true, onlineLink: true, offlinePlace: true, offlineLink: true, meetDescription: true, meetAt: true, meetEndAt: true },
       where: expect.objectContaining({
         status: "OPEN_RECRUITMENT",
         projectRoles: {
           some: {
-            roleId: { in: ["role-id"] },
+            OR: [{ roleName: { contains: "Custom Developer", mode: "insensitive" } }],
           },
         },
       }),
       include: {
-        projectRoles: { include: { role: true } },
-        owner: { select: { name: true, institution: true, institutionName: true, province: true, city: true } },
+        projectRoles: true,
+        owner: { select: { name: true, profileCloudId: true, institution: true, institutionName: true, province: true, city: true } },
         category: { select: { name: true } },
         _count: { select: { projectMembers: true } },
       },
@@ -327,7 +341,7 @@ describe("fetchProject", () => {
       where: { id: "project-id" },
       include: expect.objectContaining({
         owner: expect.any(Object),
-        projectRoles: { include: { role: true } },
+        projectRoles: true,
         projectMembers: expect.any(Object),
       }),
     }));
@@ -378,7 +392,7 @@ describe("createProject", () => {
         extraCriteria: undefined,
         sourceLink: undefined,
         projectRoles: {
-          create: [{ slotsAvailable: 2, role: { connect: { id: "role-id" } } }],
+          create: [{ slotsAvailable: 2, roleName: "Custom Developer" }],
         },
       },
     });
@@ -441,6 +455,19 @@ describe("createProject", () => {
 });
 
 describe("sendApplication", () => {
+  it("matches an open position ignoring case and saves its display name", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id", title: "Project", ownerId: "owner-id",
+      status: "OPEN_RECRUITMENT", projectMembers: [],
+      projectRoles: [{ roleName: "Robotics Mentor", slotsAvailable: 1 }],
+    });
+
+    expect(await sendApplication("project-id", { roleName: "  ROBOTICS mentor  " })).toEqual({ success: true });
+    expect(mocks.applicationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ roleName: "Robotics Mentor" }),
+    });
+  });
+
   it("creates an application for an available role and notifies the owner", async () => {
     mocks.projectFindUnique.mockResolvedValue({
       id: "project-id",
@@ -448,7 +475,7 @@ describe("sendApplication", () => {
       ownerId: "owner-id",
       status: "OPEN_RECRUITMENT",
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -458,7 +485,7 @@ describe("sendApplication", () => {
       data: {
         applicantId: "test-user-id",
         projectId: "project-id",
-        roleId: "role-id",
+        roleName: "Custom Developer",
         message: "I can help",
       },
     });
@@ -482,7 +509,7 @@ describe("sendApplication", () => {
       range: "ALL",
       allowedInstitutions: [],
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -504,7 +531,7 @@ describe("sendApplication", () => {
       range: "INSTITUTIONS",
       allowedInstitutions: ["npsn-other"],
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -516,7 +543,7 @@ describe("sendApplication", () => {
     expect(mocks.applicationCreate).not.toHaveBeenCalled();
   });
 
-  it("rejects an application for a role the user does not have in their profile", async () => {
+  it("accepts an application without matching profile roles", async () => {
     mocks.userFindUnique.mockResolvedValue({
       id: "test-user-id",
       verified: true,
@@ -524,7 +551,7 @@ describe("sendApplication", () => {
       institution: "npsn-user",
       province: "Bali",
       city: "Denpasar",
-      userRoles: [],
+      roles: [],
     });
     mocks.projectFindUnique.mockResolvedValue({
       id: "project-id",
@@ -535,16 +562,15 @@ describe("sendApplication", () => {
       range: "ALL",
       allowedInstitutions: [],
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
 
-    expect(result).toEqual({
-      success: false,
-      error: "You do not have the required role for this position",
+    expect(result).toEqual({ success: true });
+    expect(mocks.applicationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ roleName: "Custom Developer" }),
     });
-    expect(mocks.applicationCreate).not.toHaveBeenCalled();
   });
 
   it("rejects sending an application when the user is not verified", async () => {
@@ -564,7 +590,7 @@ describe("sendApplication", () => {
       error: expect.stringContaining("ID is required"),
     });
 
-    const dataResult = await sendApplication("project-id", { roleId: "" });
+    const dataResult = await sendApplication("project-id", { roleName: "" });
     expect(dataResult.success).toBe(false);
 
     expect(mocks.projectFindUnique).not.toHaveBeenCalled();
@@ -578,7 +604,7 @@ describe("sendApplication", () => {
       ownerId: "owner-id",
       status: "OPEN_RECRUITMENT",
       projectMembers: [{ userId: "other-member-id" }],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -588,7 +614,7 @@ describe("sendApplication", () => {
       data: {
         applicantId: "test-user-id",
         projectId: "project-id",
-        roleId: "role-id",
+        roleName: "Custom Developer",
         message: "I can help",
       },
     });
@@ -608,7 +634,7 @@ describe("sendApplication", () => {
       ownerId: "test-user-id",
       status: "OPEN_RECRUITMENT",
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -625,7 +651,7 @@ describe("sendApplication", () => {
       ownerId: "owner-id",
       status: "OPEN_RECRUITMENT",
       projectMembers: [{ userId: "test-user-id" }],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -644,7 +670,7 @@ describe("sendApplication", () => {
       ownerId: "owner-id",
       status: "IN_PROGRESS",
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -664,7 +690,7 @@ describe("sendApplication", () => {
       status: "OPEN_RECRUITMENT",
       deadline: new Date("2020-01-01"),
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -684,7 +710,7 @@ describe("sendApplication", () => {
       ownerId: "owner-id",
       status: "OPEN_RECRUITMENT",
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 1 }],
     });
     mocks.applicationFindUnique.mockResolvedValue({ id: "existing-app-id" });
 
@@ -703,7 +729,7 @@ describe("sendApplication", () => {
       ownerId: "owner-id",
       status: "OPEN_RECRUITMENT",
       projectMembers: [],
-      projectRoles: [{ roleId: "other-role-id", slotsAvailable: 1 }],
+      projectRoles: [{ roleName: "Other Role", slotsAvailable: 1 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -720,7 +746,7 @@ describe("sendApplication", () => {
       ownerId: "owner-id",
       status: "OPEN_RECRUITMENT",
       projectMembers: [],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 0 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 0 }],
     });
 
     const result = await sendApplication("project-id", application());
@@ -760,7 +786,7 @@ describe.each([
   it("rejects a non-owner", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", ownerId: "other-user-id" },
     });
@@ -779,7 +805,7 @@ describe("acceptApplication", () => {
   it("decrements the role, deletes the application, adds the member, and notifies the applicant", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
@@ -793,16 +819,16 @@ describe("acceptApplication", () => {
     expect(mocks.projectRoleUpdateMany).toHaveBeenCalledWith({
       where: {
         projectId: "project-id",
-        roleId: "role-id",
+        roleName: "Custom Developer",
         slotsAvailable: { gt: 0 },
       },
       data: { slotsAvailable: { decrement: 1 } },
     });
     expect(mocks.projectRoleFindUnique).toHaveBeenCalledWith({
-      where: { projectId_roleId: { projectId: "project-id", roleId: "role-id" } },
+      where: { projectId_roleName: { projectId: "project-id", roleName: "Custom Developer" } },
     });
     expect(mocks.projectMemberCreate).toHaveBeenCalledWith({
-      data: { userId: "applicant-id", projectId: "project-id", roleId: "role-id" },
+      data: { userId: "applicant-id", projectId: "project-id", roleName: "Custom Developer" },
     });
     expect(mocks.applicationDelete).toHaveBeenCalledWith({
       where: { id: "application-id" },
@@ -829,14 +855,14 @@ describe("acceptApplication", () => {
   it("auto-deletes other applications for the role when slots reach 0 and notifies each applicant", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
     mocks.projectRoleFindUnique.mockResolvedValue({ slotsAvailable: 0 });
     mocks.applicationFindMany.mockResolvedValue([
-      { id: "other-app-1", applicantId: "comp-user-1", roleId: "role-id" },
-      { id: "other-app-2", applicantId: "comp-user-2", roleId: "role-id" },
+      { id: "other-app-1", applicantId: "comp-user-1", roleName: "Custom Developer" },
+      { id: "other-app-2", applicantId: "comp-user-2", roleName: "Custom Developer" },
     ]);
     mocks.projectRoleCount.mockResolvedValue(1);
 
@@ -846,13 +872,13 @@ describe("acceptApplication", () => {
     expect(mocks.applicationFindMany).toHaveBeenCalledWith({
       where: {
         projectId: "project-id",
-        roleId: "role-id",
+        roleName: "Custom Developer",
       },
     });
     expect(mocks.applicationDeleteMany).toHaveBeenCalledWith({
       where: {
         projectId: "project-id",
-        roleId: "role-id",
+        roleName: "Custom Developer",
       },
     });
     expect(mocks.createNotification).toHaveBeenCalledWith(
@@ -884,7 +910,7 @@ describe("acceptApplication", () => {
   it("does not delete other applications when slots reach 0 if there are none", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
@@ -898,7 +924,7 @@ describe("acceptApplication", () => {
     expect(mocks.applicationFindMany).toHaveBeenCalledWith({
       where: {
         projectId: "project-id",
-        roleId: "role-id",
+        roleName: "Custom Developer",
       },
     });
     expect(mocks.applicationDeleteMany).not.toHaveBeenCalled();
@@ -916,7 +942,7 @@ describe("acceptApplication", () => {
   it("does not reject competing applications if slots remain available after acceptance", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
@@ -942,7 +968,7 @@ describe("acceptApplication", () => {
   it("automatically updates project status to IN_PROGRESS when all slots are filled", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
@@ -969,7 +995,7 @@ describe("acceptApplication", () => {
   it("does not update project status if project is not OPEN_RECRUITMENT", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "IN_PROGRESS" },
     });
@@ -993,7 +1019,7 @@ describe("acceptApplication", () => {
   it("rejects the application when the role no longer has available slots (guard)", async () => {
     mocks.applicationFindUnique.mockResolvedValue({
       applicantId: "applicant-id",
-      roleId: "role-id",
+      roleName: "Custom Developer",
       projectId: "project-id",
       project: { id: "project-id", title: "Test Project", ownerId: "test-user-id", status: "OPEN_RECRUITMENT" },
     });
@@ -1403,7 +1429,7 @@ describe("fetchProjectApplications", () => {
       ownerId: "test-user-id",
     });
     const sampleApplications = [
-      { id: "app-1", applicant: { name: "Alice" }, role: { roleName: "Developer" } },
+      { id: "app-1", applicant: { name: "Alice" }, roleName: "Developer" },
     ];
     mocks.applicationFindMany.mockResolvedValue(sampleApplications);
 
@@ -1426,6 +1452,7 @@ describe("fetchProjectApplications", () => {
           select: {
             id: true,
             name: true,
+          profileCloudId: true,
             institutionName: true,
             bio: true,
             province: true,
@@ -1435,14 +1462,11 @@ describe("fetchProjectApplications", () => {
               select: { value: true },
             },
             educationLevel: true,
-            userRoles: {
-              include: { role: true },
-            },
+            roles: true,
             avgCommitmentScore: true,
             totalProjectsCompleted: true,
           },
         },
-        role: true,
       },
     });
   });

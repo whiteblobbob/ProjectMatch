@@ -29,8 +29,7 @@ type CatalogOption = {
 };
 
 type Position = {
-  roleId: string;
-  name: string;
+  roleName: string;
   slotsAvailable: number;
 };
 
@@ -85,7 +84,7 @@ export default function CreateProjectForm({
 
     const formData = new FormData(event.currentTarget);
     const selectedEducationLevels = formData.getAll("educationLevels").map(String) as EducationLevel[];
-    const selectedPositions = positions.filter((position) => position.roleId);
+    const selectedPositions = positions.filter((position) => position.roleName);
 
     if (selectedEducationLevels.length === 0) {
       setError("Pilih minimal satu jenjang pelajar.");
@@ -102,7 +101,7 @@ export default function CreateProjectForm({
       return;
     }
 
-    if (new Set(selectedPositions.map((position) => position.roleId)).size !== selectedPositions.length) {
+    if (new Set(selectedPositions.map((position) => position.roleName.trim().toLocaleLowerCase("id-ID"))).size !== selectedPositions.length) {
       setError("Setiap posisi hanya boleh ditambahkan sekali.");
       return;
     }
@@ -140,7 +139,7 @@ export default function CreateProjectForm({
       extraCriteria: extraCriteria || undefined,
       sourceLink: sourceLink || undefined,
       projectRoles: selectedPositions.map((position) => ({
-        roleId: position.roleId,
+        roleName: position.roleName,
         slotsAvailable: position.slotsAvailable,
       })),
     });
@@ -297,16 +296,16 @@ export default function CreateProjectForm({
         ) : (
           <div className="mt-5 space-y-3">
             {positions.map((position, index) => (
-              <article key={`${position.name}-${index}`} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <article key={`${position.roleName}-${index}`} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-950">{position.name}</p>
+                  <p className="text-sm font-bold text-slate-950">{position.roleName}</p>
                   <p className="mt-1 text-xs text-slate-500">Membutuhkan {position.slotsAvailable} orang</p>
                 </div>
                 <div className="flex gap-2 sm:shrink-0">
                   <button type="button" disabled={isPending} onClick={() => openEditPositionDialog(index)} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary sm:flex-none">
                     <PencilIcon className="size-4 shrink-0" /> Ubah
                   </button>
-                  <button type="button" disabled={isPending} onClick={() => setPositions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`Hapus posisi ${position.name}`} className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">
+                  <button type="button" disabled={isPending} onClick={() => setPositions((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`Hapus posisi ${position.roleName}`} className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">
                     <TrashIcon className="size-4" />
                   </button>
                 </div>
@@ -378,7 +377,7 @@ export default function CreateProjectForm({
 
     {positionDialogOpen ? (
       <PositionDialog
-        key={`${editingPositionIndex ?? "new"}-${editingPositionIndex === null ? "" : positions[editingPositionIndex]?.name}`}
+        key={`${editingPositionIndex ?? "new"}-${editingPositionIndex === null ? "" : positions[editingPositionIndex]?.roleName}`}
         initialPosition={editingPositionIndex === null ? undefined : positions[editingPositionIndex]}
         existingPositions={positions}
         editingIndex={editingPositionIndex}
@@ -401,7 +400,7 @@ type PositionDialogProps = {
 };
 
 function PositionDialog({ initialPosition, existingPositions, editingIndex, roles, onCancel, onSave }: PositionDialogProps) {
-  const [roleId, setRoleId] = useState(initialPosition?.roleId ?? "");
+  const [roleName, setRoleName] = useState(initialPosition?.roleName ?? "");
   const [slotsAvailable, setSlotsAvailable] = useState(initialPosition?.slotsAvailable ?? 1);
   const [dialogError, setDialogError] = useState("");
   const titleId = useId();
@@ -411,7 +410,7 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, role
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusFrame = requestAnimationFrame(() =>
-      dialogRef.current?.querySelector<HTMLElement>("select")?.focus(),
+      dialogRef.current?.querySelector<HTMLElement>("input")?.focus(),
     );
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -440,17 +439,17 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, role
 
   function handleDialogSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const role = roles.find((item) => item.id === roleId);
-    if (!role) {
-      setDialogError("Pilih posisi terlebih dahulu.");
+    const name = roleName.trim();
+    if (!name) {
+      setDialogError("Tulis posisi terlebih dahulu.");
       return;
     }
-    const isDuplicate = existingPositions.some((position, index) => index !== editingIndex && position.roleId === roleId);
+    const isDuplicate = existingPositions.some((position, index) => index !== editingIndex && position.roleName.toLocaleLowerCase("id-ID") === name.toLocaleLowerCase("id-ID"));
     if (isDuplicate) {
       setDialogError("Posisi tersebut sudah ditambahkan.");
       return;
     }
-    onSave({ roleId: role.id, name: role.name, slotsAvailable });
+    onSave({ roleName: name, slotsAvailable });
   }
 
   return (
@@ -465,10 +464,10 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, role
         <form onSubmit={handleDialogSubmit} className="mt-5 space-y-4">
           <label className="block">
             <span className="text-sm font-semibold text-slate-900">Posisi</span>
-            <SelectControl value={roleId} onChange={(event) => setRoleId(event.target.value)} required containerClassName="mt-2" className="rounded-xl">
-              <option value="" disabled>Pilih posisi</option>
-              {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-            </SelectControl>
+            <input list={`${titleId}-suggestions`} value={roleName} onChange={(event) => setRoleName(event.target.value)} required placeholder="Tulis posisi atau pilih saran" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
+            <datalist id={`${titleId}-suggestions`}>
+              {roles.map((role) => <option key={role.id} value={role.name} />)}
+            </datalist>
           </label>
           <label className="block">
             <span className="text-sm font-semibold text-slate-900">Jumlah anggota</span>

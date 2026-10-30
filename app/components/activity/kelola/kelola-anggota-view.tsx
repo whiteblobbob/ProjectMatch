@@ -64,7 +64,7 @@ export default function KelolaAnggotaView({ project }: { project: ProjectDetail 
                 <div className="h-full rounded-full bg-brand-primary" style={{ width: `${progress}%` }} />
               </div>
               <p className="mt-2 text-sm text-slate-500">
-                {openSlots > 0 ? `Masih ada ${openSlots} tempat untuk ${openRoles.map((role) => role.role.name).join(", ")}.` : "Semua tempat sudah terisi."}
+                {openSlots > 0 ? `Masih ada ${openSlots} tempat untuk ${openRoles.map((role) => role.roleName).join(", ")}.` : "Semua tempat sudah terisi."}
               </p>
             </div>
             {canManage ? (
@@ -96,7 +96,7 @@ export default function KelolaAnggotaView({ project }: { project: ProjectDetail 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">{openSlots} tempat tersedia</p>
                 <h2 id="open-member-heading" className="mt-1 text-lg font-bold text-slate-950">
-                  {openRoles.map((role) => role.role.name).join(", ")}
+                  {openRoles.map((role) => role.roleName).join(", ")}
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   Buka posisi ini agar calon anggota yang tepat dapat bergabung dengan tim.

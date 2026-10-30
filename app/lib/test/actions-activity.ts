@@ -50,7 +50,7 @@ function mockActivityRows() {
       return [{
         id: "application-outgoing",
         projectId: "project-other",
-        role: { name: "Designer" },
+        roleName: "Designer",
         project: {
           title: "Other Project",
           collaborationMode: "HYBRID",
@@ -65,7 +65,7 @@ function mockActivityRows() {
       id: "application-incoming",
       applicant: { name: "Applicant", institutionName: "Campus" },
       project: { id: "project-open", title: "Open Project" },
-      role: { name: "Developer" },
+      roleName: "Developer",
     }];
   });
 
@@ -94,7 +94,7 @@ function mockActivityRows() {
         collaborationMode: "ONLINE",
         workHoursPerWeek: 5,
         category: { name: "Web" },
-        projectRoles: [{ slotsAvailable: 2, role: { name: "Developer" } }],
+        projectRoles: [{ slotsAvailable: 2, roleName: "Developer" }],
         projectMembers: [],
         _count: { applications: 1, projectMembers: 3 },
       },
@@ -108,7 +108,7 @@ function mockActivityRows() {
         workHoursPerWeek: 6,
         category: { name: "AI" },
         projectRoles: [],
-        projectMembers: [{ role: { name: "Analyst" } }],
+        projectMembers: [{ roleName: "Analyst" }],
         _count: { applications: 0, projectMembers: 4 },
       },
     ];

@@ -1,24 +1,17 @@
+import UserAvatar from "@/app/components/ui/user-avatar";
 import Link from "next/link";
 import type { IncomingApplication } from "@/app/actions/activity";
 import StatusBadge from "./status-badge";
 
 export default function ActivityItem({ application }: { application: IncomingApplication }) {
   const applicantName = application.applicantName?.trim() || "Seorang kandidat";
-  const initials = applicantName
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
 
   return (
     <article className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 sm:p-5">
       <span className="absolute inset-y-0 left-0 w-1 bg-accent-opportunity" aria-hidden="true" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-start gap-3.5">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent-text" aria-hidden="true">
-            {initials || "PM"}
-          </div>
+          <UserAvatar  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent-text"  name={applicantName} profileCloudId={application.applicantProfileCloudId} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-sm font-semibold leading-6 text-slate-950 sm:text-base">

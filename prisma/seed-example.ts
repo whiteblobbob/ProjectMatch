@@ -96,7 +96,6 @@ async function main() {
       await tx.application.deleteMany();
       await tx.projectRole.deleteMany();
       await tx.project.deleteMany();
-      await tx.userRole.deleteMany();
       await tx.contactInfo.deleteMany();
       await tx.user.deleteMany();
       await tx.role.deleteMany();
@@ -145,12 +144,7 @@ async function main() {
                 { value: "https://alicechen.dev" },
               ],
             },
-            userRoles: {
-              create: [
-                { role: { connect: { id: fullstack.id } } },
-                { role: { connect: { id: uidesigner.id } } },
-              ],
-            },
+            roles: [fullstack.name, uidesigner.name],
           },
         }),
         marcus: await tx.user.create({
@@ -167,12 +161,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://linkedin.com/in/marcuswebb" }],
             },
-            userRoles: {
-              create: [
-                { role: { connect: { id: frontend.id } } },
-                { role: { connect: { id: projectManager.id } } },
-              ],
-            },
+            roles: [frontend.name, projectManager.name],
           },
         }),
         priya: await tx.user.create({
@@ -189,12 +178,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://linkedin.com/in/priyaraman" }],
             },
-            userRoles: {
-              create: [
-                { role: { connect: { id: backend.id } } },
-                { role: { connect: { id: projectManager.id } } },
-              ],
-            },
+            roles: [backend.name, projectManager.name],
           },
         }),
         diego: await tx.user.create({
@@ -211,7 +195,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://github.com/diegoferrer" }],
             },
-            userRoles: { create: [{ role: { connect: { id: frontend.id } } }] },
+            roles: [frontend.name],
           },
         }),
         hana: await tx.user.create({
@@ -228,7 +212,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://hanasuzuki.dev" }],
             },
-            userRoles: { create: [{ role: { connect: { id: backend.id } } }] },
+            roles: [backend.name],
           },
         }),
         omar: await tx.user.create({
@@ -245,7 +229,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://omar.design" }],
             },
-            userRoles: { create: [{ role: { connect: { id: uidesigner.id } } }] },
+            roles: [uidesigner.name],
           },
         }),
         nora: await tx.user.create({
@@ -262,7 +246,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://github.com/norapatel" }],
             },
-            userRoles: { create: [{ role: { connect: { id: frontend.id } } }] },
+            roles: [frontend.name],
           },
         }),
         liam: await tx.user.create({
@@ -279,7 +263,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://github.com/liamokafor" }],
             },
-            userRoles: { create: [{ role: { connect: { id: backend.id } } }] },
+            roles: [backend.name],
           },
         }),
         sofia: await tx.user.create({
@@ -296,7 +280,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://behance.net/sofiaalvarez" }],
             },
-            userRoles: { create: [{ role: { connect: { id: uidesigner.id } } }] },
+            roles: [uidesigner.name],
           },
         }),
         kenji: await tx.user.create({
@@ -313,7 +297,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://github.com/kenjitan" }],
             },
-            userRoles: { create: [{ role: { connect: { id: fullstack.id } } }] },
+            roles: [fullstack.name],
           },
         }),
         maya: await tx.user.create({
@@ -330,7 +314,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://linkedin.com/in/mayasingh" }],
             },
-            userRoles: { create: [{ role: { connect: { id: projectManager.id } } }] },
+            roles: [projectManager.name],
           },
         }),
         noah: await tx.user.create({
@@ -347,12 +331,7 @@ async function main() {
             contactInfos: {
               create: [{ value: "https://github.com/noahwilliams" }],
             },
-            userRoles: {
-              create: [
-                { role: { connect: { id: frontend.id } } },
-                { role: { connect: { id: backend.id } } },
-              ],
-            },
+            roles: [frontend.name, backend.name],
           },
         }),
       };
@@ -379,8 +358,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(0), educationLevelFor(1)])],
           projectRoles: {
             create: [
-              { roleId: frontend.id, slotsAvailable: 1 },
-              { roleId: uidesigner.id, slotsAvailable: 2 },
+              { roleName: frontend.name, slotsAvailable: 1 },
+              { roleName: uidesigner.name, slotsAvailable: 2 },
             ],
           },
         },
@@ -403,8 +382,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(2), educationLevelFor(3)])],
           projectRoles: {
             create: [
-              { roleId: backend.id, slotsAvailable: 1 },
-              { roleId: frontend.id, slotsAvailable: 2 },
+              { roleName: backend.name, slotsAvailable: 1 },
+              { roleName: frontend.name, slotsAvailable: 2 },
             ],
           },
         },
@@ -427,8 +406,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(4), educationLevelFor(5)])],
           projectRoles: {
             create: [
-              { roleId: uidesigner.id, slotsAvailable: 1 },
-              { roleId: frontend.id, slotsAvailable: 2 },
+              { roleName: uidesigner.name, slotsAvailable: 1 },
+              { roleName: frontend.name, slotsAvailable: 2 },
             ],
           },
         },
@@ -453,14 +432,14 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(6), educationLevelFor(7)])],
           projectRoles: {
             create: [
-              { roleId: frontend.id, slotsAvailable: 0 },
-              { roleId: uidesigner.id, slotsAvailable: 0 },
+              { roleName: frontend.name, slotsAvailable: 0 },
+              { roleName: uidesigner.name, slotsAvailable: 0 },
             ],
           },
           projectMembers: {
             create: [
-              { userId: users.marcus.id, roleId: frontend.id },
-              { userId: users.diego.id, roleId: uidesigner.id },
+              { userId: users.marcus.id, roleName: frontend.name },
+              { userId: users.diego.id, roleName: uidesigner.name },
             ],
           },
         },
@@ -485,16 +464,16 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(8), educationLevelFor(9)])],
           projectRoles: {
             create: [
-              { roleId: frontend.id, slotsAvailable: 0 },
-              { roleId: fullstack.id, slotsAvailable: 0 },
-              { roleId: uidesigner.id, slotsAvailable: 0 },
+              { roleName: frontend.name, slotsAvailable: 0 },
+              { roleName: fullstack.name, slotsAvailable: 0 },
+              { roleName: uidesigner.name, slotsAvailable: 0 },
             ],
           },
           projectMembers: {
             create: [
-              { userId: users.alice.id, roleId: frontend.id },
-              { userId: users.marcus.id, roleId: fullstack.id },
-              { userId: users.omar.id, roleId: uidesigner.id },
+              { userId: users.alice.id, roleName: frontend.name },
+              { userId: users.marcus.id, roleName: fullstack.name },
+              { userId: users.omar.id, roleName: uidesigner.name },
             ],
           },
         },
@@ -517,8 +496,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(10), educationLevelFor(11)])],
           projectRoles: {
             create: [
-              { roleId: frontend.id, slotsAvailable: 1 },
-              { roleId: projectManager.id, slotsAvailable: 1 },
+              { roleName: frontend.name, slotsAvailable: 1 },
+              { roleName: projectManager.name, slotsAvailable: 1 },
             ],
           },
         },
@@ -541,8 +520,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(0), educationLevelFor(2)])],
           projectRoles: {
             create: [
-              { roleId: backend.id, slotsAvailable: 2 },
-              { roleId: uidesigner.id, slotsAvailable: 1 },
+              { roleName: backend.name, slotsAvailable: 2 },
+              { roleName: uidesigner.name, slotsAvailable: 1 },
             ],
           },
         },
@@ -565,8 +544,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(1), educationLevelFor(2)])],
           projectRoles: {
             create: [
-              { roleId: uidesigner.id, slotsAvailable: 1 },
-              { roleId: frontend.id, slotsAvailable: 1 },
+              { roleName: uidesigner.name, slotsAvailable: 1 },
+              { roleName: frontend.name, slotsAvailable: 1 },
             ],
           },
         },
@@ -591,8 +570,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(3), educationLevelFor(5)])],
           projectRoles: {
             create: [
-              { roleId: fullstack.id, slotsAvailable: 1 },
-              { roleId: backend.id, slotsAvailable: 1 },
+              { roleName: fullstack.name, slotsAvailable: 1 },
+              { roleName: backend.name, slotsAvailable: 1 },
             ],
           },
         },
@@ -615,8 +594,8 @@ async function main() {
           educationLevels: [...new Set([educationLevelFor(6), educationLevelFor(8)])],
           projectRoles: {
             create: [
-              { roleId: projectManager.id, slotsAvailable: 1 },
-              { roleId: uidesigner.id, slotsAvailable: 1 },
+              { roleName: projectManager.name, slotsAvailable: 1 },
+              { roleName: uidesigner.name, slotsAvailable: 1 },
             ],
           },
         },
@@ -630,37 +609,37 @@ async function main() {
           {
             projectId: campusMarketplace.id,
             applicantId: users.marcus.id,
-            roleId: frontend.id,
+            roleName: frontend.name,
             message: "I have shipped two marketplaces before, happy to lead the frontend.",
           },
           {
             projectId: campusMarketplace.id,
             applicantId: users.omar.id,
-            roleId: uidesigner.id,
+            roleName: uidesigner.name,
             message: "I will sketch the listing flow in Figma for your review.",
           },
           {
             projectId: habitsTracker.id,
             applicantId: users.alice.id,
-            roleId: frontend.id,
+            roleName: frontend.name,
             message: "Daily streaks UI is a fun fit for my mobile web practice.",
           },
           {
             projectId: habitsTracker.id,
             applicantId: users.diego.id,
-            roleId: backend.id,
+            roleName: backend.name,
             message: "Practice-first learner, I want to own the sync API.",
           },
           {
             projectId: puzzleGame.id,
             applicantId: users.omar.id,
-            roleId: frontend.id,
+            roleName: frontend.name,
             message: "I can turn your tile animations into playable web mocks.",
           },
           {
             projectId: puzzleGame.id,
             applicantId: users.priya.id,
-            roleId: uidesigner.id,
+            roleName: uidesigner.name,
             message: "Happy to bring my guild design reviews into the cozy frames.",
           },
         ],
@@ -763,7 +742,6 @@ async function main() {
     category: await prisma.category.count(),
     role: await prisma.role.count(),
     user: await prisma.user.count(),
-    userRole: await prisma.userRole.count(),
     contactInfo: await prisma.contactInfo.count(),
     project: await prisma.project.count(),
     projectRole: await prisma.projectRole.count(),

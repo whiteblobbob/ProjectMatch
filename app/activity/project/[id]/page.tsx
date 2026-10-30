@@ -51,7 +51,7 @@ async function KelolaPostinganAccess({ params }: KelolaPostinganPageProps) {
     return (
       <>
         <Navbar />
-        <ProjectWorkspaceView project={project} memberRoleName={membership?.role.name ?? null} />
+        <ProjectWorkspaceView project={project} memberRoleName={membership?.roleName ?? null} />
       </>
     );
   }
