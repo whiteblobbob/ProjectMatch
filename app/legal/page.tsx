@@ -14,7 +14,7 @@ export default function LegalPage() {
             menggunakan layanan.
           </p>
           <div aria-label="Informasi dokumen" className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-5 text-xs font-medium leading-5 text-brand-primary [&>span]:rounded-lg [&>span]:bg-brand-soft [&>span]:px-3 [&>span]:py-1.5">
-            <span>Terakhir diperbarui: 30 Oktober 2026</span>
+            <span>Terakhir diperbarui: 31 Oktober 2026</span>
             <span>Versi 1.0</span>
             <span>Berlaku di Indonesia</span>
           </div>
@@ -57,7 +57,6 @@ export default function LegalPage() {
               <li><a href="#penangguhan">Penangguhan dan Pengakhiran</a></li>
               <li><a href="#perubahan">Perubahan Layanan dan Ketentuan</a></li>
               <li><a href="#hukum">Hukum dan Penyelesaian Perselisihan</a></li>
-              <li><a href="#kontak">Kontak</a></li>
             </ol>
             <p><strong>Bagian B. Kebijakan Privasi dan Penggunaan Data</strong></p>
             <ol>
@@ -97,10 +96,10 @@ export default function LegalPage() {
               "[&_a:hover]:text-brand-secondary [&_a:hover]:decoration-brand-secondary [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-2 [&_a:focus-visible]:outline-brand-primary",
             ].join(" ")}
           >
-            <aside aria-label="Pemberitahuan draf">
-              <strong>Draf untuk peninjauan sebelum dipublikasikan</strong>
-              Lengkapi seluruh bagian bertanda kurung siku dan minta peninjauan penasihat hukum Indonesia, terutama untuk
-              mekanisme persetujuan orang tua atau wali, kebijakan privasi, dan klasifikasi risiko layanan bagi anak.
+            <aside aria-label="Informasi layanan">
+              <strong>Untuk keamanan pengguna</strong>
+              ProjectMatch digunakan untuk kegiatan kolaborasi pendidikan. Pengguna di bawah 18 tahun hanya dapat
+              menggunakan layanan setelah persyaratan persetujuan orang tua atau wali dipenuhi sesuai hukum.
             </aside>
 
             <h2>Bagian A. Syarat Penggunaan</h2>
@@ -108,8 +107,7 @@ export default function LegalPage() {
             <section id="pendahuluan">
               <h2>1. Pendahuluan dan Persetujuan</h2>
               <p>
-                Syarat dan Ketentuan ini merupakan perjanjian antara pengguna dan
-                <span>[NAMA BADAN HUKUM ATAU PENGELOLA]</span> sebagai pengelola ProjectMatch.
+                Syarat Penggunaan ini mengatur hubungan antara pengguna dan Tim Pengembang ProjectMatch sebagai pengelola layanan.
                 Istilah “kami” merujuk kepada pengelola ProjectMatch, sedangkan istilah “Anda” merujuk kepada setiap orang
                 yang mengakses, membuat akun, atau menggunakan layanan ProjectMatch.
               </p>
@@ -160,8 +158,9 @@ export default function LegalPage() {
                   orang tua atau wali sesuai peraturan perundang-undangan yang berlaku.
                 </li>
                 <li>
-                  Persetujuan orang tua atau wali untuk pemrosesan data anak akan dilakukan melalui
-                  <span>[JELASKAN MEKANISME PERSETUJUAN DAN VERIFIKASI USIA]</span>.
+                  Akun pengguna yang belum berusia 18 tahun hanya boleh diaktifkan setelah pengelola dapat memeriksa
+                  usia dan memperoleh persetujuan orang tua atau wali yang dapat dibuktikan. Jika proses tersebut belum
+                  tersedia, pendaftaran pengguna anak harus ditunda.
                 </li>
                 <li>
                   Orang tua atau wali yang memberikan persetujuan menyatakan telah membaca Syarat dan Ketentuan serta
@@ -304,7 +303,7 @@ export default function LegalPage() {
                 <li>Kami dapat melakukan tindakan segera jika terdapat risiko terhadap keselamatan anak, penipuan, eksploitasi, ancaman, atau pelanggaran hukum.</li>
                 <li>Pelaporan palsu, berulang, atau digunakan untuk mengganggu pengguna lain merupakan pelanggaran.</li>
                 <li>Kami dapat menyimpan bukti yang relevan dan bekerja sama dengan sekolah, kampus, orang tua atau wali, penyedia layanan, dan aparat yang berwenang sesuai hukum.</li>
-                <li>Keputusan moderasi dapat diajukan untuk ditinjau kembali melalui <span>[KANAL BANDING MODERASI]</span>.</li>
+                <li>Pengguna dapat meminta peninjauan ulang atas keputusan moderasi melalui fitur pelaporan yang tersedia pada ProjectMatch.</li>
               </ol>
             </section>
 
@@ -324,10 +323,10 @@ export default function LegalPage() {
             <section id="privasi">
               <h2>12. Privasi dan Data Pribadi</h2>
               <ol>
-                <li>Pengumpulan dan penggunaan data pribadi dijelaskan lebih lanjut dalam <a href="[URL_KEBIJAKAN_PRIVASI]">Kebijakan Privasi ProjectMatch</a>.</li>
+                <li>Pengumpulan dan penggunaan data pribadi dijelaskan dalam Bagian B, Kebijakan Privasi dan Penggunaan Data, pada halaman ini.</li>
                 <li>Kami hanya memproses data untuk tujuan yang jelas, terbatas, sah, dan disampaikan kepada pengguna.</li>
                 <li>Data anak diproses secara khusus dan memerlukan persetujuan orang tua atau wali sesuai hukum yang berlaku.</li>
-                <li>Pengguna dapat mengajukan permintaan akses, perbaikan, penghapusan, atau hak lain yang tersedia berdasarkan hukum melalui <span>[EMAIL PRIVASI]</span>.</li>
+                <li>Pengguna memiliki hak untuk meminta akses, perbaikan, dan penghapusan data sesuai hukum. Pengelola wajib menyediakan cara untuk mengajukan permintaan tersebut sebelum layanan dibuka untuk umum.</li>
                 <li>Pengguna dilarang mengambil, mengumpulkan, atau menggunakan data pengguna lain di luar tujuan kolaborasi yang disetujui.</li>
                 <li>Kami menerapkan langkah keamanan yang wajar, tetapi tidak ada sistem elektronik yang sepenuhnya bebas dari risiko.</li>
               </ol>
@@ -410,11 +409,9 @@ export default function LegalPage() {
                 tanggung jawab orang tua atau wali, dan pelindungan yang diwajibkan oleh hukum.
               </p>
               <p>
-                Jika ProjectMatch dioperasikan oleh badan hukum, hubungan kontraktual pengguna adalah dengan badan hukum yang
-                disebutkan pada bagian Kontak. Anggota tim, pengembang, relawan, dan pengurus tidak menjadi pihak pribadi dalam
-                perjanjian ini sepanjang mereka bertindak untuk dan atas nama badan hukum tersebut. Ketentuan ini tidak
-                menghapus tanggung jawab pribadi yang tetap berlaku berdasarkan hukum karena kesengajaan, penipuan, kelalaian
-                berat, pelanggaran data pribadi, atau pelanggaran kewajiban pelindungan anak.
+                Pengelola bertanggung jawab menjalankan ProjectMatch sesuai hukum yang berlaku. Pembagian tugas di dalam tim
+                tidak menghapus tanggung jawab yang dapat timbul berdasarkan hukum, termasuk akibat kesengajaan, penipuan,
+                kelalaian berat, pelanggaran data pribadi, atau pelanggaran kewajiban pelindungan anak.
               </p>
             </section>
 
@@ -444,7 +441,7 @@ export default function LegalPage() {
             <section id="penangguhan">
               <h2>17. Penangguhan, Pengakhiran, dan Penghapusan Akun</h2>
               <ol>
-                <li>Pengguna dapat berhenti menggunakan layanan dan meminta penghapusan akun melalui <span>[CARA MENGHAPUS AKUN]</span>.</li>
+                <li>Pengguna dapat berhenti menggunakan layanan dan berhak meminta penghapusan akun. Pengelola wajib menyediakan mekanisme permintaan penghapusan sebelum layanan dibuka untuk umum.</li>
                 <li>Kami dapat membatasi atau menangguhkan akun ketika diperlukan untuk pemeriksaan keamanan, pelindungan anak, penanganan laporan, atau pencegahan kerugian.</li>
                 <li>Kami dapat mengakhiri akun yang melakukan pelanggaran berat, berulang, ilegal, membahayakan pengguna, atau menghindari tindakan moderasi.</li>
                 <li>Sebelum tindakan permanen, kami dapat memberikan pemberitahuan dan kesempatan menjelaskan, kecuali tindakan segera diperlukan untuk keselamatan atau kepatuhan hukum.</li>
@@ -473,21 +470,9 @@ export default function LegalPage() {
                 <li>Syarat dan Ketentuan ini tunduk pada hukum Republik Indonesia.</li>
                 <li>Keluhan atau perselisihan terlebih dahulu disampaikan melalui kanal dukungan agar dapat diselesaikan secara musyawarah.</li>
                 <li>Jika tidak tercapai penyelesaian, para pihak dapat menggunakan mekanisme penyelesaian sengketa yang tersedia berdasarkan hukum Indonesia.</li>
-                <li>Sepanjang diperbolehkan oleh hukum, domisili penyelesaian sengketa ditetapkan pada <span>[DOMISILI PENGELOLA ATAU PENGADILAN YANG BERWENANG]</span>.</li>
+                <li>Jika musyawarah tidak menghasilkan penyelesaian, perselisihan dapat diajukan kepada lembaga atau pengadilan yang berwenang menurut hukum Indonesia.</li>
                 <li>Hak pengguna untuk melapor kepada instansi yang berwenang atau menggunakan mekanisme perlindungan konsumen dan data pribadi tetap berlaku.</li>
               </ol>
-            </section>
-
-            <section id="kontak">
-              <h2>20. Kontak</h2>
-              <p>Untuk pertanyaan, laporan, permintaan data, atau keluhan mengenai ProjectMatch, hubungi:</p>
-              <div>
-                <p><strong>Pengelola:</strong> <span>[NAMA BADAN HUKUM ATAU PENGELOLA]</span></p>
-                <p><strong>Alamat:</strong> <span>[ALAMAT PENGELOLA]</span></p>
-                <p><strong>Email dukungan:</strong> <span>[EMAIL DUKUNGAN]</span></p>
-                <p><strong>Email privasi:</strong> <span>[EMAIL PRIVASI]</span></p>
-                <p><strong>Situs:</strong> <span>[URL PROJECTMATCH]</span></p>
-              </div>
             </section>
 
             <h2>Bagian B. Kebijakan Privasi dan Penggunaan Data</h2>
@@ -495,8 +480,8 @@ export default function LegalPage() {
             <section id="privasi-pendahuluan">
               <h2>B.1 Ruang Lingkup Kebijakan Privasi</h2>
               <p>
-                Kebijakan Privasi ini menjelaskan cara <span>[NAMA BADAN HUKUM ATAU PENGELOLA]</span> sebagai pengelola
-                ProjectMatch memproses data pribadi pengguna. Kebijakan ini berlaku ketika pengguna membuat akun, melengkapi
+                Kebijakan Privasi ini menjelaskan cara Tim Pengembang ProjectMatch memproses data pribadi pengguna.
+                Kebijakan ini berlaku ketika pengguna membuat akun, melengkapi
                 profil, membuat atau mengikuti proyek, mengirim pengajuan, menerima informasi pertemuan, menyampaikan laporan,
                 menghubungi dukungan, atau menggunakan bagian lain dari ProjectMatch.
               </p>
@@ -626,8 +611,8 @@ export default function LegalPage() {
               <h2>B.6 Data Pengguna Anak</h2>
               <ol>
                 <li>Data pengguna di bawah 18 tahun diperlakukan sebagai data anak dan diproses secara khusus.</li>
-                <li>Pembuatan akun anak memerlukan persetujuan orang tua atau wali yang dapat dibuktikan melalui <span>[MEKANISME PERSETUJUAN ORANG TUA ATAU WALI]</span>.</li>
-                <li>ProjectMatch akan menggunakan mekanisme pemeriksaan usia yang sesuai dengan tingkat risiko layanan dan ketentuan yang berlaku.</li>
+                <li>Pembuatan akun anak memerlukan pemeriksaan usia dan persetujuan orang tua atau wali yang dapat dibuktikan. Pendaftaran anak ditunda sampai mekanisme tersebut tersedia.</li>
+                <li>Metode pemeriksaan usia dan persetujuan harus disesuaikan dengan tingkat risiko layanan serta ketentuan yang berlaku sebelum diaktifkan.</li>
                 <li>Informasi kepada anak dan orang tua atau wali akan disampaikan dengan bahasa yang jelas dan mudah dipahami.</li>
                 <li>Data anak hanya digunakan untuk tujuan yang berkaitan dengan layanan, keselamatan, verifikasi, dan kepatuhan hukum.</li>
                 <li>Orang tua atau wali dapat meminta akses, perbaikan, pembatasan, atau penghapusan data anak sesuai hukum.</li>
@@ -671,7 +656,7 @@ export default function LegalPage() {
               <ul>
                 <li><strong>Supabase</strong> untuk autentikasi dan penyimpanan basis data</li>
                 <li><strong>Cloudinary</strong> untuk penyimpanan dan penyajian gambar</li>
-                <li><strong><span>[NAMA LAYANAN DEPLOYMENT]</span></strong> untuk menjalankan aplikasi web</li>
+                <li><strong>Penyedia hosting</strong> untuk menjalankan aplikasi web. Identitas penyedia dan lokasi pemrosesan harus diumumkan setelah layanan hosting ditetapkan.</li>
                 <li><strong>Zoom</strong> jika pemilik proyek menggunakan tautan Zoom untuk pertemuan pertama</li>
                 <li><strong>Layanan peta</strong> jika pengguna membuka tautan lokasi ruang publik</li>
               </ul>
@@ -684,12 +669,12 @@ export default function LegalPage() {
 
             <section id="retensi-data">
               <h2>B.10 Penyimpanan dan Penghapusan Data</h2>
-              <p>Data disimpan selama diperlukan untuk menyediakan layanan dan memenuhi tujuan pemrosesan. Ketentuan retensi yang perlu ditetapkan meliputi:</p>
+              <p>Data disimpan hanya selama diperlukan untuk menyediakan layanan, menangani laporan, dan memenuhi kewajiban hukum. Masa penyimpanan harus ditetapkan berdasarkan jenis data sebelum layanan dibuka untuk umum. Prinsipnya meliputi:</p>
               <ul>
                 <li>data akun disimpan selama akun aktif</li>
-                <li>data proyek dan pengajuan disimpan selama proyek berlangsung serta selama <span>[MASA RETENSI PROYEK]</span> setelah proyek ditutup</li>
-                <li>data laporan dan keamanan disimpan selama <span>[MASA RETENSI LAPORAN]</span> untuk pemeriksaan dan pencegahan pelanggaran berulang</li>
-                <li>data pada cadangan dihapus atau ditimpa dalam waktu paling lama <span>[MASA RETENSI CADANGAN]</span></li>
+                <li>data proyek dan pengajuan dihapus atau dianonimkan ketika tujuan penyimpanannya telah berakhir, kecuali masih diperlukan untuk sengketa atau kewajiban hukum</li>
+                <li>data laporan dan keamanan disimpan selama diperlukan untuk pemeriksaan, pencegahan pelanggaran berulang, atau kewajiban hukum</li>
+                <li>data pada cadangan dihapus sesuai siklus pencadangan yang harus ditetapkan dan diumumkan oleh pengelola</li>
               </ul>
               <p>
                 Ketika akun atau data dihapus, data akan dihapus dari sistem aktif atau dibuat tidak dapat dikaitkan kembali
@@ -713,8 +698,8 @@ export default function LegalPage() {
               </ul>
               <p>
                 Pengguna tetap bertanggung jawab menjaga keamanan akun, perangkat, dan informasi masuk. Jika pengguna menduga
-                terjadi akses tanpa izin, pengguna harus segera mengganti informasi masuk yang relevan dan menghubungi
-                <span>[EMAIL KEAMANAN]</span>.
+                terjadi akses tanpa izin, pengguna harus segera mengganti informasi masuk yang relevan dan melaporkan kejadian
+                melalui fitur pelaporan yang tersedia pada ProjectMatch.
               </p>
             </section>
 
@@ -726,7 +711,7 @@ export default function LegalPage() {
                 atau menerapkan perlindungan lain yang diwajibkan hukum, termasuk perjanjian, penilaian risiko, dan persetujuan
                 jika diperlukan.
               </p>
-              <p>Informasi lokasi pusat data yang digunakan: <span>[NEGARA ATAU WILAYAH PENYIMPANAN DATA]</span>.</p>
+              <p>Lokasi pemrosesan data bergantung pada wilayah layanan yang dipilih pengelola pada Supabase, Cloudinary, dan penyedia hosting. Pengelola wajib mencatat dan mengumumkan wilayah tersebut sebelum layanan dibuka untuk umum.</p>
             </section>
 
             <section id="hak-pengguna">
@@ -744,9 +729,9 @@ export default function LegalPage() {
                 <li>mengajukan keluhan dan meminta ganti rugi sesuai ketentuan yang berlaku</li>
               </ul>
               <p>
-                Permintaan dapat disampaikan melalui <span>[EMAIL PRIVASI ATAU FORMULIR HAK DATA]</span>. ProjectMatch dapat
-                meminta informasi tambahan untuk memeriksa identitas pemohon. Untuk akun anak, permintaan dapat diajukan oleh
-                anak sesuai kapasitasnya atau oleh orang tua dan wali yang telah diverifikasi.
+                Pengelola wajib menyediakan mekanisme permintaan hak data dalam layanan sebelum ProjectMatch dibuka untuk umum.
+                ProjectMatch dapat meminta informasi yang diperlukan untuk memeriksa identitas pemohon. Untuk akun anak,
+                permintaan dapat diajukan oleh anak sesuai kapasitasnya atau oleh orang tua dan wali yang telah diverifikasi.
               </p>
             </section>
 
@@ -760,7 +745,7 @@ export default function LegalPage() {
               <p>
                 Jika ProjectMatch menggunakan analitik tambahan pada masa mendatang, pengguna akan diberi informasi mengenai
                 penyedia, jenis data, tujuan, masa penyimpanan, serta pilihan persetujuan sebelum analitik yang tidak wajib
-                diaktifkan. Daftar cookie aktual tersedia pada <span>[URL KEBIJAKAN COOKIE]</span>.
+                diaktifkan. Informasi cookie yang digunakan harus dicantumkan pada halaman ini sebelum penggunaan analitik tambahan.
               </p>
             </section>
 
@@ -773,7 +758,7 @@ export default function LegalPage() {
               </p>
               <p>
                 Pemberitahuan akan menjelaskan data yang terdampak, waktu kejadian, kemungkinan akibat, langkah penanganan, dan
-                tindakan yang dapat dilakukan pengguna. Dugaan insiden dapat dilaporkan melalui <span>[EMAIL KEAMANAN]</span>.
+                tindakan yang dapat dilakukan pengguna. Dugaan insiden dapat dilaporkan melalui fitur pelaporan ProjectMatch.
               </p>
             </section>
 
@@ -788,10 +773,7 @@ export default function LegalPage() {
                 Jika perubahan menimbulkan tujuan pemrosesan baru yang memerlukan persetujuan, ProjectMatch akan meminta
                 persetujuan baru dari pengguna atau orang tua dan wali sebelum pemrosesan dilakukan.
               </p>
-              <p>
-                Pertanyaan atau permintaan mengenai privasi dapat disampaikan kepada
-                <span>[NAMA PETUGAS ATAU KONTAK PELINDUNGAN DATA]</span> melalui <span>[EMAIL PRIVASI]</span>.
-              </p>
+              <p>Permintaan terkait privasi diproses melalui mekanisme hak data yang wajib disediakan dalam layanan.</p>
             </section>
 
             <section id="dasar-regulasi">
@@ -813,7 +795,7 @@ export default function LegalPage() {
         </div>
 
         <p className="mt-6 px-2 text-center text-xs leading-6 text-slate-500 sm:mt-8">
-          © 2026 ProjectMatch. Draf Syarat Penggunaan dan Kebijakan Privasi versi 1.0.
+          © 2026 ProjectMatch. Syarat Penggunaan dan Kebijakan Privasi versi 1.0.
         </p>
       </div>
     </main>
