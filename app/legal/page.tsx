@@ -49,11 +49,8 @@ export default function LegalPage() {
               <li><a href="#privasi">Privasi dan Data Pribadi</a></li>
               <li><a href="#pihak-ketiga">Layanan Pihak Ketiga</a></li>
               <li><a href="#batas-layanan">Batasan Layanan</a></li>
-              <li><a href="#tanggung-jawab">Tanggung Jawab Pengguna</a></li>
-              <li><a href="#tanggung-gugat">Batasan Tanggung Gugat</a></li>
-              <li><a href="#perlindungan-pengelola">Pernyataan Pengguna dan Perlindungan Pengelola</a></li>
-              <li><a href="#keadaan-kahar">Keadaan Kahar</a></li>
-              <li><a href="#ketentuan-umum">Ketentuan Umum</a></li>
+              <li><a href="#tanggung-jawab">Tanggung Jawab Bersama</a></li>
+              <li><a href="#tanggung-gugat">Batas Layanan</a></li>
               <li><a href="#penangguhan">Penangguhan dan Pengakhiran</a></li>
               <li><a href="#perubahan">Perubahan Layanan dan Ketentuan</a></li>
               <li><a href="#hukum">Hukum dan Penyelesaian Perselisihan</a></li>
@@ -97,9 +94,8 @@ export default function LegalPage() {
             ].join(" ")}
           >
             <aside aria-label="Informasi layanan">
-              <strong>Untuk keamanan pengguna</strong>
-              ProjectMatch digunakan untuk kegiatan kolaborasi pendidikan. Pengguna di bawah 18 tahun hanya dapat
-              menggunakan layanan setelah persyaratan persetujuan orang tua atau wali dipenuhi sesuai hukum.
+              <strong>Ruang kolaborasi pelajar</strong>
+              ProjectMatch ditujukan bagi siswa SMP, SMA/SMK/MA, dan mahasiswa untuk menemukan rekan dan membuat karya bersama.
             </aside>
 
             <h2>Bagian A. Syarat Penggunaan</h2>
@@ -151,45 +147,20 @@ export default function LegalPage() {
             <section id="kelayakan">
               <h2>3. Kelayakan dan Usia Pengguna</h2>
               <ol>
-                <li>ProjectMatch ditujukan bagi siswa SMP, SMA, SMK, MA, dan mahasiswa.</li>
-                <li>Pengguna harus berusia sekurang-kurangnya 13 tahun untuk membuat akun.</li>
-                <li>
-                  Pengguna yang belum berusia 18 tahun hanya dapat menggunakan ProjectMatch setelah memperoleh persetujuan
-                  orang tua atau wali sesuai peraturan perundang-undangan yang berlaku.
-                </li>
-                <li>
-                  Akun pengguna yang belum berusia 18 tahun hanya boleh diaktifkan setelah pengelola dapat memeriksa
-                  usia dan memperoleh persetujuan orang tua atau wali yang dapat dibuktikan. Jika proses tersebut belum
-                  tersedia, pendaftaran pengguna anak harus ditunda.
-                </li>
-                <li>
-                  Orang tua atau wali yang memberikan persetujuan menyatakan telah membaca Syarat dan Ketentuan serta
-                  Kebijakan Privasi ProjectMatch dan memahami jenis kegiatan yang dapat dilakukan anak melalui platform.
-                </li>
-                <li>
-                  ProjectMatch dapat meminta informasi yang wajar untuk memeriksa usia, status pendidikan, dan keabsahan
-                  persetujuan. Pengguna dilarang memalsukan usia atau identitas pendidikan.
-                </li>
-                <li>
-                  Akses terhadap fitur tertentu dapat dibatasi berdasarkan usia, profil risiko layanan, dan ketentuan
-                  pelindungan anak yang berlaku.
-                </li>
+                <li>ProjectMatch ditujukan bagi siswa SMP, SMA/SMK/MA, dan mahasiswa.</li>
+                <li>Pengguna memberikan informasi pendidikan yang benar dan menggunakan akun miliknya sendiri.</li>
+                <li>Untuk pengguna yang masih termasuk anak menurut hukum, pengelola memproses data dengan memperhatikan ketentuan persetujuan orang tua atau wali dan pelindungan anak yang berlaku.</li>
               </ol>
-              <aside>
-                <strong>Ketentuan penting bagi peluncuran</strong>
-                Akun pengguna anak tidak boleh diaktifkan hanya berdasarkan pernyataan usia. Mekanisme persetujuan orang tua
-                atau wali dan verifikasi usia perlu tersedia sebelum ProjectMatch menerima pengguna di bawah 18 tahun.
-              </aside>
             </section>
 
             <section id="akun">
               <h2>4. Akun dan Informasi Pengguna</h2>
               <ol>
-                <li>Anda wajib memberikan informasi yang benar, akurat, terkini, dan tidak menyesatkan.</li>
+                <li>Isi profil dan pengajuan dengan informasi yang benar.</li>
                 <li>Satu pengguna hanya boleh menggunakan akun miliknya sendiri dan tidak boleh membuat akun untuk menyamar sebagai orang lain.</li>
-                <li>Anda bertanggung jawab menjaga keamanan informasi masuk dan setiap aktivitas yang terjadi melalui akun Anda.</li>
-                <li>Anda wajib segera menghubungi kami jika mengetahui atau menduga akun digunakan tanpa izin.</li>
-                <li>Informasi sekolah, kampus, program studi, tingkat pendidikan, keterampilan, dan portofolio harus sesuai dengan keadaan sebenarnya.</li>
+                <li>Jaga informasi masuk akun agar tidak digunakan orang lain. Pengelola juga bertanggung jawab menerapkan pengamanan yang wajar pada sistem.</li>
+                <li>Jika akun diduga digunakan tanpa izin, pengguna dapat melaporkannya melalui fitur pelaporan.</li>
+                <li>Informasi pendidikan, keterampilan, dan portofolio yang ditampilkan hendaknya sesuai dengan keadaan sebenarnya.</li>
                 <li>Anda tidak boleh menjual, memindahtangankan, meminjamkan, atau membagikan akun kepada pihak lain.</li>
                 <li>Kami dapat meminta pembaruan informasi apabila data akun tidak lengkap, tidak konsisten, atau diduga tidak benar.</li>
               </ol>
@@ -252,11 +223,11 @@ export default function LegalPage() {
                 <li>Pertemuan daring dapat menggunakan tautan Zoom atau layanan konferensi yang ditentukan pemilik proyek.</li>
                 <li>Pertemuan luring harus dilakukan di ruang publik yang wajar, mudah dikenali, dan dapat ditemukan melalui tautan peta.</li>
                 <li>Pertemuan luring di rumah pribadi, penginapan, lokasi terpencil, kendaraan pribadi, atau tempat yang tidak sesuai bagi pelajar dilarang.</li>
-                <li>Pengguna wajib memeriksa profil pemilik proyek, informasi proyek, alamat tujuan, waktu pertemuan, dan pihak yang akan hadir.</li>
-                <li>Pengguna anak dianjurkan memberi tahu orang tua atau wali mengenai waktu dan lokasi pertemuan serta mengikuti ketentuan pendampingan yang berlaku.</li>
+                <li>Sebelum hadir, pengguna dapat memeriksa profil pemilik proyek, informasi proyek, waktu, dan lokasi pertemuan.</li>
+                <li>Pengguna yang masih anak disarankan memberi tahu orang tua atau wali mengenai rencana pertemuan.</li>
                 <li>Jangan memberikan kata sandi, kode verifikasi, data keuangan, dokumen identitas lengkap, atau informasi pribadi yang tidak diperlukan.</li>
                 <li>Jika terdapat permintaan uang, perubahan lokasi yang mencurigakan, ancaman, tekanan, atau perilaku tidak pantas, batalkan pertemuan dan gunakan fitur pelaporan.</li>
-                <li>Dalam keadaan darurat, pengguna harus menghubungi orang tua, wali, pengelola lokasi, sekolah, kampus, atau layanan darurat yang sesuai.</li>
+                <li>Jika merasa tidak aman, tinggalkan lokasi dan cari bantuan dari orang tepercaya atau layanan darurat setempat.</li>
               </ol>
             </section>
 
@@ -326,15 +297,11 @@ export default function LegalPage() {
                 <li>Pengumpulan dan penggunaan data pribadi dijelaskan dalam Bagian B, Kebijakan Privasi dan Penggunaan Data, pada halaman ini.</li>
                 <li>Kami hanya memproses data untuk tujuan yang jelas, terbatas, sah, dan disampaikan kepada pengguna.</li>
                 <li>Data anak diproses secara khusus dan memerlukan persetujuan orang tua atau wali sesuai hukum yang berlaku.</li>
-                <li>Pengguna memiliki hak untuk meminta akses, perbaikan, dan penghapusan data sesuai hukum. Pengelola wajib menyediakan cara untuk mengajukan permintaan tersebut sebelum layanan dibuka untuk umum.</li>
+                <li>Pengguna dapat menggunakan hak atas data pribadinya sesuai ketentuan yang berlaku.</li>
                 <li>Pengguna dilarang mengambil, mengumpulkan, atau menggunakan data pengguna lain di luar tujuan kolaborasi yang disetujui.</li>
                 <li>Kami menerapkan langkah keamanan yang wajar, tetapi tidak ada sistem elektronik yang sepenuhnya bebas dari risiko.</li>
               </ol>
-              <p>
-                Kebijakan Privasi harus menjelaskan setidaknya jenis data yang dikumpulkan, tujuan pemrosesan, dasar
-                pemrosesan, masa penyimpanan, penyedia layanan, transfer data, keamanan, hak pengguna, prosedur insiden, serta
-                mekanisme persetujuan orang tua atau wali.
-              </p>
+              <p>Penjelasan mengenai data yang digunakan ProjectMatch tersedia pada Bagian B di bawah ini.</p>
             </section>
 
             <section id="pihak-ketiga">
@@ -346,8 +313,8 @@ export default function LegalPage() {
               </p>
               <p>
                 Tautan Zoom, peta, portofolio, atau situs lain dapat dibuat atau dikelola oleh pengguna dan pihak ketiga.
-                ProjectMatch tidak mengendalikan seluruh isi atau ketersediaan layanan tersebut. Pengguna wajib memeriksa
-                tujuan tautan sebelum membukanya dan tidak memasukkan informasi sensitif pada halaman yang mencurigakan.
+                ProjectMatch tidak mengendalikan seluruh isi atau ketersediaan layanan tersebut. Periksa tujuan tautan
+                sebelum membukanya dan hindari memasukkan informasi sensitif pada halaman yang mencurigakan.
               </p>
             </section>
 
@@ -357,85 +324,33 @@ export default function LegalPage() {
                 <li>ProjectMatch berusaha menjaga informasi tetap akurat, tetapi tidak menjamin seluruh informasi pengguna, proyek, portofolio, atau institusi selalu lengkap dan benar.</li>
                 <li>Tanda verifikasi menunjukkan bahwa pemeriksaan tertentu telah dilakukan dan bukan jaminan atas karakter, kemampuan, keamanan, atau keberhasilan pengguna.</li>
                 <li>ProjectMatch tidak menjamin pengguna akan menemukan rekan, diterima dalam proyek, memenangkan lomba, memperoleh nilai, atau menghasilkan karya tertentu.</li>
-                <li>ProjectMatch tidak bertanggung jawab mengelola pembagian tugas, hak kepemilikan hasil karya, konflik tim, atau kelanjutan proyek setelah tim terbentuk.</li>
+                <li>Anggota tim menentukan sendiri pembagian tugas dan penggunaan hasil karya mereka.</li>
                 <li>Layanan dapat mengalami pemeliharaan, gangguan teknis, perubahan, atau penghentian sementara.</li>
               </ol>
             </section>
 
             <section id="tanggung-jawab">
-              <h2>15. Tanggung Jawab Pengguna</h2>
-              <p>Setiap pengguna bertanggung jawab untuk:</p>
+              <h2>15. Tanggung Jawab Bersama</h2>
+              <p>Pengguna ProjectMatch perlu:</p>
               <ul>
-                <li>mematuhi hukum, ketentuan ProjectMatch, dan aturan institusi pendidikan yang berlaku</li>
-                <li>menilai kecocokan proyek dan calon rekan secara wajar</li>
-                <li>menjaga komunikasi tetap sopan, aman, dan berkaitan dengan proyek</li>
-                <li>menetapkan pembagian tugas, penggunaan karya, kredit kontribusi, dan keputusan tim secara terbuka</li>
-                <li>menjaga keamanan akun dan perangkat</li>
-                <li>menghindari pertemuan atau permintaan yang mencurigakan</li>
-                <li>melaporkan pelanggaran dan meminta bantuan orang dewasa tepercaya jika diperlukan</li>
+                <li>memberikan informasi yang benar dan menghormati pengguna lain</li>
+                <li>menggunakan proyek dan portofolio secara jujur tanpa mengambil karya orang lain</li>
+                <li>menjaga informasi masuk akun dan tidak membagikannya kepada orang lain</li>
+                <li>menggunakan fitur pelaporan jika menemukan konten atau ajakan yang mencurigakan</li>
               </ul>
+              <p>Tim ProjectMatch mengelola platform, menindaklanjuti laporan yang diterima, dan menjaga data pengguna sesuai ketentuan yang berlaku.</p>
             </section>
 
             <section id="tanggung-gugat">
-              <h2>16. Batasan Tanggung Gugat</h2>
+              <h2>16. Batas Layanan</h2>
               <p>
-                Sejauh diizinkan oleh hukum, ProjectMatch disediakan berdasarkan ketersediaan. Kami tidak memberikan jaminan
-                bahwa layanan selalu bebas gangguan, bebas kesalahan, atau memenuhi seluruh harapan pengguna.
+                ProjectMatch membantu pelajar menemukan proyek dan calon rekan. Keputusan menerima anggota, pembagian tugas,
+                pelaksanaan proyek, dan hasil karya ditentukan oleh anggota tim yang berkolaborasi.
               </p>
               <p>
-                Sejauh diizinkan oleh hukum, pengelola tidak bertanggung jawab atas kerugian tidak langsung yang timbul dari
-                tindakan pengguna lain, informasi palsu, proyek yang tidak selesai, perselisihan tim, tautan pihak ketiga,
-                atau pertemuan yang dilakukan di luar kendali langsung ProjectMatch.
+                ProjectMatch tidak menjamin setiap pengajuan diterima atau setiap proyek berhasil. Pengelola tetap menangani
+                hal yang menjadi tanggung jawabnya sebagai penyedia platform sesuai hukum yang berlaku.
               </p>
-              <p>
-                Ketentuan ini tidak menghapus tanggung jawab yang tidak dapat dikecualikan berdasarkan hukum, termasuk
-                kewajiban terkait pelindungan data pribadi, keselamatan anak, kesengajaan, atau kelalaian berat.
-              </p>
-            </section>
-
-            <section id="perlindungan-pengelola">
-              <h2>16A. Pernyataan Pengguna dan Perlindungan Pengelola</h2>
-              <p>Dengan mengirim konten, membuat proyek, atau mengajukan diri, pengguna menyatakan bahwa:</p>
-              <ul>
-                <li>informasi yang diberikan benar dan tidak menyesatkan</li>
-                <li>pengguna memiliki hak atau izin atas konten, gambar, dan portofolio yang dikirim</li>
-                <li>kegiatan proyek tidak melanggar hukum, hak pihak lain, atau aturan institusi pendidikan</li>
-                <li>pengguna tidak meminta ProjectMatch bertindak sebagai pemberi kerja, penjamin, pengawas proyek, atau pihak dalam kesepakatan antaranggota</li>
-              </ul>
-              <p>
-                Sejauh diizinkan oleh hukum, pengguna bertanggung jawab atas tuntutan, kerugian, biaya, atau kewajiban yang
-                timbul akibat pelanggaran hukum, pelanggaran hak pihak lain, informasi palsu, atau penyalahgunaan layanan yang
-                dilakukan pengguna. Untuk pengguna anak, penerapan ketentuan ini tetap memperhatikan kapasitas hukum anak,
-                tanggung jawab orang tua atau wali, dan pelindungan yang diwajibkan oleh hukum.
-              </p>
-              <p>
-                Pengelola bertanggung jawab menjalankan ProjectMatch sesuai hukum yang berlaku. Pembagian tugas di dalam tim
-                tidak menghapus tanggung jawab yang dapat timbul berdasarkan hukum, termasuk akibat kesengajaan, penipuan,
-                kelalaian berat, pelanggaran data pribadi, atau pelanggaran kewajiban pelindungan anak.
-              </p>
-            </section>
-
-            <section id="keadaan-kahar">
-              <h2>16B. Keadaan Kahar</h2>
-              <p>
-                Sejauh diizinkan oleh hukum, pengelola tidak dianggap melanggar kewajiban apabila keterlambatan atau gangguan
-                layanan disebabkan oleh keadaan di luar kendali yang wajar, seperti bencana alam, gangguan jaringan luas,
-                kegagalan layanan pihak ketiga, serangan siber berskala besar, perubahan kebijakan pemerintah, kerusuhan, atau
-                keadaan darurat. Pengelola tetap akan mengambil langkah yang wajar untuk mengurangi dampak dan memulihkan
-                layanan.
-              </p>
-            </section>
-
-            <section id="ketentuan-umum">
-              <h2>16C. Ketentuan Umum</h2>
-              <ol>
-                <li>Syarat ini tidak membentuk hubungan kerja, keagenan, kemitraan usaha, waralaba, atau usaha patungan antara pengguna dan ProjectMatch.</li>
-                <li>Jika satu ketentuan dinyatakan tidak berlaku, ketentuan lain tetap berlaku sejauh diizinkan hukum.</li>
-                <li>Kegagalan menegakkan satu ketentuan tidak berarti pengelola melepaskan hak untuk menegakkannya kemudian.</li>
-                <li>Pengguna tidak dapat mengalihkan hak atau akun tanpa persetujuan tertulis pengelola.</li>
-                <li>Pengelola dapat mengalihkan pengoperasian layanan kepada badan hukum atau pengelola penerus setelah memberikan pemberitahuan dan tetap melindungi hak pengguna.</li>
-                <li>Syarat Penggunaan dan Kebijakan Privasi merupakan keseluruhan kesepakatan mengenai penggunaan ProjectMatch, tanpa mengurangi hak yang diberikan hukum kepada pengguna.</li>
-              </ol>
             </section>
 
             <section id="penangguhan">
@@ -611,12 +526,11 @@ export default function LegalPage() {
               <h2>B.6 Data Pengguna Anak</h2>
               <ol>
                 <li>Data pengguna di bawah 18 tahun diperlakukan sebagai data anak dan diproses secara khusus.</li>
-                <li>Pembuatan akun anak memerlukan pemeriksaan usia dan persetujuan orang tua atau wali yang dapat dibuktikan. Pendaftaran anak ditunda sampai mekanisme tersebut tersedia.</li>
-                <li>Metode pemeriksaan usia dan persetujuan harus disesuaikan dengan tingkat risiko layanan serta ketentuan yang berlaku sebelum diaktifkan.</li>
-                <li>Informasi kepada anak dan orang tua atau wali akan disampaikan dengan bahasa yang jelas dan mudah dipahami.</li>
-                <li>Data anak hanya digunakan untuk tujuan yang berkaitan dengan layanan, keselamatan, verifikasi, dan kepatuhan hukum.</li>
-                <li>Orang tua atau wali dapat meminta akses, perbaikan, pembatasan, atau penghapusan data anak sesuai hukum.</li>
-                <li>Jika persetujuan tidak dapat diverifikasi atau ditarik, akun anak dapat dibatasi atau dihapus setelah kewajiban hukum dipenuhi.</li>
+                <li>ProjectMatch ditujukan bagi pelajar sejak jenjang SMP. Data pengguna yang masih anak diproses dengan pelindungan khusus sesuai hukum.</li>
+                <li>Untuk memproses data anak, persetujuan orang tua atau wali diperlukan sesuai ketentuan yang berlaku.</li>
+                <li>Informasi privasi disampaikan dengan bahasa yang dapat dipahami pelajar dan orang tua atau wali.</li>
+                <li>Data anak digunakan untuk penyediaan layanan, keamanan, dan penanganan laporan, sesuai tujuan yang dijelaskan pada kebijakan ini.</li>
+                <li>Orang tua atau wali dapat menggunakan hak terkait data anak sesuai ketentuan yang berlaku.</li>
               </ol>
             </section>
 
