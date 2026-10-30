@@ -3,6 +3,7 @@ import ActivityItem from "../components/activity/activity-item";
 import ApplicationCard from "../components/activity/application-card";
 import ActivitySection from "../components/activity/activity-section";
 import { ActivityError, ActivitySkeleton, EmptyState } from "../components/activity/activity-states";
+import CompletedProjectCard from "../components/activity/completed-project-card";
 import ProjectPostCard from "../components/activity/project-post-card";
 import Navbar from "../components/navigation-bar/guestnavbar";
 import { getActivityOverview, type ActivityOverview } from "../actions/activity";
@@ -33,7 +34,7 @@ function AktivitasContent({ data }: { data: ActivityOverview }) {
   const summary = [
     { label: "Perlu respons", value: data.incomingApplications.length, attention: true },
     { label: "Lamaran aktif", value: data.activeApplications.length, attention: false },
-    { label: "Postingan aktif", value: data.activeProjectPosts.length, attention: false },
+    { label: "Proyek aktif", value: data.activeProjectPosts.length, attention: false },
   ];
 
   return (
@@ -68,7 +69,7 @@ function AktivitasContent({ data }: { data: ActivityOverview }) {
             )}
           </ActivitySection>
 
-          <ActivitySection title="Postingan saya" count={data.activeProjectPosts.length}>
+          <ActivitySection title="Proyek aktif" count={data.activeProjectPosts.length}>
             {data.activeProjectPosts.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {data.activeProjectPosts.map((project) => (
@@ -76,9 +77,19 @@ function AktivitasContent({ data }: { data: ActivityOverview }) {
                 ))}
               </div>
             ) : (
-              <EmptyState>Kamu belum memiliki postingan aktif.</EmptyState>
+              <EmptyState>Kamu belum memiliki proyek aktif.</EmptyState>
             )}
           </ActivitySection>
+
+          {data.completedProjects.length > 0 && (
+            <ActivitySection title="Riwayat proyek" count={data.completedProjects.length}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {data.completedProjects.map((project) => (
+                  <CompletedProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            </ActivitySection>
+          )}
 
           <ActivitySection title="Lamaran saya" count={data.activeApplications.length}>
             {data.activeApplications.length > 0 ? (

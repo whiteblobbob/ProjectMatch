@@ -57,12 +57,14 @@ const mocks = vi.hoisted(() => ({
   projectMemberFindMany: vi.fn(),
   transaction: vi.fn(),
   peerReviewFindUnique: vi.fn(),
+  peerReviewFindMany: vi.fn(),
   peerReviewCreate: vi.fn(),
   peerReviewAggregate: vi.fn(),
   userUpdate: vi.fn(),
   userUpdateMany: vi.fn(),
   userFindUnique: vi.fn(),
   createNotification: vi.fn(),
+  projectReportCreate: vi.fn(),
 }));
 
 vi.mock("../notification", () => ({
@@ -93,6 +95,7 @@ vi.mock("../prisma", () => {
     },
     peerReview: {
       findUnique: mocks.peerReviewFindUnique,
+      findMany: mocks.peerReviewFindMany,
       create: mocks.peerReviewCreate,
       aggregate: mocks.peerReviewAggregate,
     },
@@ -100,6 +103,9 @@ vi.mock("../prisma", () => {
       findUnique: mocks.userFindUnique,
       update: mocks.userUpdate,
       updateMany: mocks.userUpdateMany,
+    },
+    projectReport: {
+      create: mocks.projectReportCreate,
     },
     $transaction: mocks.transaction,
   };
@@ -114,8 +120,10 @@ import {
   deleteProject,
   fetchProject,
   fetchProjectApplications,
+  fetchProjectPeerReviews,
   queryProjects,
   rejectApplication,
+  reportProject,
   sendApplication,
   updateProject,
 } from "../../actions/project";
@@ -131,7 +139,8 @@ const project = (): CreateProjectForm => ({
   meetDescription: "Weekly sync meeting",
   collaborationTool: "Notion",
   workHoursPerWeek: 10,
-  projectStatusCriteria: ["status-id"],
+  educationLevels: ["SMP", "SMA"],
+  range: "ALL",
   projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
 });
 
@@ -168,11 +177,21 @@ beforeEach(() => {
   mocks.projectMemberCreate.mockResolvedValue({});
   mocks.projectMemberFindMany.mockResolvedValue([]);
   mocks.peerReviewCreate.mockResolvedValue({});
+  mocks.peerReviewFindMany.mockResolvedValue([]);
   mocks.peerReviewAggregate.mockResolvedValue({ _avg: { commitmentScore: 4.5 } });
   mocks.userUpdate.mockResolvedValue({});
   mocks.userUpdateMany.mockResolvedValue({ count: 1 });
-  mocks.userFindUnique.mockResolvedValue({ id: "test-user-id", verified: true });
+  mocks.userFindUnique.mockResolvedValue({
+    id: "test-user-id",
+    verified: true,
+    educationLevel: "SMA",
+    institution: "npsn-user",
+    province: "Bali",
+    city: "Denpasar",
+    userRoles: [{ roleId: "role-id" }],
+  });
   mocks.createNotification.mockResolvedValue(undefined);
+  mocks.projectReportCreate.mockResolvedValue({});
   // Route every model mock through the transaction client so transactional
   // app code resolves against the same fns as non-transactional code.
   mocks.transaction.mockImplementation(async (callback) => callback({
@@ -238,7 +257,7 @@ describe("queryProjects", () => {
       }),
       include: {
         projectRoles: { include: { role: true } },
-        owner: { select: { name: true, instance: true } },
+        owner: { select: { name: true, institution: true, institutionName: true, province: true, city: true } },
         category: { select: { name: true } },
         _count: { select: { projectMembers: true } },
       },
@@ -308,7 +327,6 @@ describe("fetchProject", () => {
       where: { id: "project-id" },
       include: expect.objectContaining({
         owner: expect.any(Object),
-        projectStatusCriteria: { include: { status: true } },
         projectRoles: { include: { role: true } },
         projectMembers: expect.any(Object),
       }),
@@ -354,9 +372,11 @@ describe("createProject", () => {
         meetDescription: "Weekly sync meeting",
         collaborationTool: "Notion",
         workHoursPerWeek: 10,
-        projectStatusCriteria: {
-          create: [{ status: { connect: { id: "status-id" } } }],
-        },
+        educationLevels: ["SMP", "SMA"],
+        range: "ALL",
+        allowedInstitutions: [],
+        extraCriteria: undefined,
+        sourceLink: undefined,
         projectRoles: {
           create: [{ slotsAvailable: 2, role: { connect: { id: "role-id" } } }],
         },
@@ -391,6 +411,21 @@ describe("createProject", () => {
         onlinePlatform: ["Online platform is required for online collaboration"],
         onlineLink: ["Online meeting link is required for online collaboration"],
       },
+    });
+    expect(mocks.projectCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a range of INSTITUTIONS without any allowed institutions", async () => {
+    const result = await createProject({
+      ...project(),
+      range: "INSTITUTIONS",
+      allowedInstitutions: [],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Please check your input",
+      fieldErrors: { allowedInstitutions: ["Pilih minimal satu institusi"] },
     });
     expect(mocks.projectCreate).not.toHaveBeenCalled();
   });
@@ -435,6 +470,81 @@ describe("sendApplication", () => {
         message: 'You have received a new application for project "Test Project".',
       },
     );
+  });
+
+  it("rejects an application when the user's education level does not match", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      title: "Test Project",
+      ownerId: "owner-id",
+      status: "OPEN_RECRUITMENT",
+      educationLevels: ["SMP"],
+      range: "ALL",
+      allowedInstitutions: [],
+      projectMembers: [],
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+    });
+
+    const result = await sendApplication("project-id", application());
+
+    expect(result).toEqual({
+      success: false,
+      error: "You do not meet the education requirements for this project",
+    });
+    expect(mocks.applicationCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an application from outside the project's institution range", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      title: "Test Project",
+      ownerId: "owner-id",
+      status: "OPEN_RECRUITMENT",
+      educationLevels: ["SMA"],
+      range: "INSTITUTIONS",
+      allowedInstitutions: ["npsn-other"],
+      projectMembers: [],
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+    });
+
+    const result = await sendApplication("project-id", application());
+
+    expect(result).toEqual({
+      success: false,
+      error: "This project is limited to a different audience",
+    });
+    expect(mocks.applicationCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an application for a role the user does not have in their profile", async () => {
+    mocks.userFindUnique.mockResolvedValue({
+      id: "test-user-id",
+      verified: true,
+      educationLevel: "SMA",
+      institution: "npsn-user",
+      province: "Bali",
+      city: "Denpasar",
+      userRoles: [],
+    });
+    mocks.projectFindUnique.mockResolvedValue({
+      id: "project-id",
+      title: "Test Project",
+      ownerId: "owner-id",
+      status: "OPEN_RECRUITMENT",
+      educationLevels: ["SMA"],
+      range: "ALL",
+      allowedInstitutions: [],
+      projectMembers: [],
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 1 }],
+    });
+
+    const result = await sendApplication("project-id", application());
+
+    expect(result).toEqual({
+      success: false,
+      error: "You do not have the required role for this position",
+    });
+    expect(mocks.applicationCreate).not.toHaveBeenCalled();
   });
 
   it("rejects sending an application when the user is not verified", async () => {
@@ -928,7 +1038,7 @@ describe("rejectApplication", () => {
 });
 
 describe("updateProject", () => {
-  it("updates an owned project and replaces its nested records", async () => {
+  it("updates an owned project without changing its roles", async () => {
     mocks.projectFindUnique.mockResolvedValue({ ownerId: "test-user-id", status: "OPEN_RECRUITMENT" });
 
     const result = await updateProject("project-id", project());
@@ -948,14 +1058,9 @@ describe("updateProject", () => {
         offlineLink: null,
         meetDescription: "Weekly sync meeting",
         collaborationTool: "Notion",
-        projectStatusCriteria: {
-          deleteMany: {},
-          create: [{ status: { connect: { id: "status-id" } } }],
-        },
-        projectRoles: {
-          deleteMany: {},
-          create: [{ slotsAvailable: 2, role: { connect: { id: "role-id" } } }],
-        },
+        educationLevels: ["SMP", "SMA"],
+        range: "ALL",
+        allowedInstitutions: [],
       },
     });
   });
@@ -1321,14 +1426,15 @@ describe("fetchProjectApplications", () => {
           select: {
             id: true,
             name: true,
-            instance: true,
+            institutionName: true,
             bio: true,
-            location: true,
+            province: true,
+            city: true,
             portfolioLink: true,
             contactInfos: {
               select: { value: true },
             },
-            status: true,
+            educationLevel: true,
             userRoles: {
               include: { role: true },
             },
@@ -1372,5 +1478,119 @@ describe("fetchProjectApplications", () => {
       error: "You are not authorized to view applications for this project",
     });
     expect(mocks.applicationFindMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("fetchProjectPeerReviews", () => {
+  it("returns the caller's reviews for a completed project they participate in", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      status: "COMPLETED",
+      ownerId: "owner-id",
+      projectMembers: [{ userId: "test-user-id" }],
+    });
+    const reviews = [
+      { revieweeId: "participant-1", commitmentScore: 5, feedback: "Great" },
+    ];
+    mocks.peerReviewFindMany.mockResolvedValue(reviews);
+
+    const result = await fetchProjectPeerReviews("project-id");
+
+    expect(result).toEqual({ success: true, data: reviews });
+    expect(mocks.projectFindUnique).toHaveBeenCalledWith({
+      where: { id: "project-id" },
+      select: {
+        status: true,
+        ownerId: true,
+        projectMembers: { select: { userId: true } },
+      },
+    });
+    expect(mocks.peerReviewFindMany).toHaveBeenCalledWith({
+      where: { projectId: "project-id", reviewerId: "test-user-id" },
+      select: {
+        revieweeId: true,
+        commitmentScore: true,
+        feedback: true,
+      },
+    });
+  });
+
+  it("rejects an invalid project ID", async () => {
+    const result = await fetchProjectPeerReviews("");
+
+    expect(result).toEqual({
+      success: false,
+      error: expect.stringContaining("ID is required"),
+    });
+    expect(mocks.projectFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing project", async () => {
+    mocks.projectFindUnique.mockResolvedValue(null);
+
+    const result = await fetchProjectPeerReviews("project-id");
+
+    expect(result).toEqual({ success: false, error: "Project not found" });
+    expect(mocks.peerReviewFindMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects projects that are not completed", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      status: "IN_PROGRESS",
+      ownerId: "test-user-id",
+      projectMembers: [],
+    });
+
+    const result = await fetchProjectPeerReviews("project-id");
+
+    expect(result).toEqual({
+      success: false,
+      error: "Peer reviews are only available for completed projects",
+    });
+    expect(mocks.peerReviewFindMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects callers who are not project participants", async () => {
+    mocks.projectFindUnique.mockResolvedValue({
+      status: "COMPLETED",
+      ownerId: "other-user-id",
+      projectMembers: [{ userId: "other-member-id" }],
+    });
+
+    const result = await fetchProjectPeerReviews("project-id");
+
+    expect(result).toEqual({
+      success: false,
+      error: "You are not authorized to view reviews for this project",
+    });
+    expect(mocks.peerReviewFindMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("reportProject", () => {
+  it("creates a report for an existing project", async () => {
+    mocks.projectFindUnique.mockResolvedValue({ id: "project-id" });
+
+    const result = await reportProject({ projectId: "project-id", reason: "spam", details: "spam links" });
+
+    expect(result).toEqual({ success: true });
+    expect(mocks.projectReportCreate).toHaveBeenCalledWith({
+      data: { projectId: "project-id", reporterId: "test-user-id", reason: "spam", details: "spam links" },
+    });
+  });
+
+  it("rejects an invalid report payload", async () => {
+    const result = await reportProject({ projectId: "project-id", reason: "" });
+
+    expect(result.success).toBe(false);
+    expect(mocks.projectReportCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing project", async () => {
+    mocks.projectFindUnique.mockResolvedValue(null);
+
+    const result = await reportProject({ projectId: "project-id", reason: "spam" });
+
+    expect(result).toEqual({ success: false, error: "Project not found" });
+    expect(mocks.projectReportCreate).not.toHaveBeenCalled();
   });
 });

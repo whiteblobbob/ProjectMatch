@@ -11,7 +11,7 @@ import { createClient } from "@/app/lib/supabase/client";
 const navigation = [
   { href: "/", label: "Jelajah" },
   { href: "/activity", label: "Aktivitas" },
-  { href: "/profil", label: "Profil" },
+  { href: "/profile", label: "Profil" },
 ];
 
 const hasSupabaseConfig = Boolean(

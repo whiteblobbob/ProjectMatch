@@ -4,12 +4,15 @@ import { randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { Resend } from "resend";
 import { User } from "@supabase/supabase-js";
+import { Prisma } from "@/generated/prisma/client";
 
 import actionWrapper from "../lib/actionWrapper";
+import { uploadImage } from "../lib/cloudinary";
 import { verificationEmail } from "../lib/email/verification-email";
 import { ActionError } from "../lib/errors";
 import prisma from "../lib/prisma";
 import { SendVerificationForm, SendVerificationValidator } from "../lib/validator/auth";
+import { VerificationDocumentForm, VerificationDocumentValidator } from "../lib/validator/verification";
 import { parseOrThrow } from "../lib/validator/global";
 
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
@@ -21,6 +24,15 @@ const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
  */
 export const sendVerificationEmail = actionWrapper(async (user: User, formData: SendVerificationForm) => {
   const data = parseOrThrow(SendVerificationValidator, formData);
+
+  const account = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { verified: true },
+  });
+
+  if (account?.verified) {
+    throw new ActionError("Akun sudah terverifikasi.");
+  }
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -57,4 +69,53 @@ export const sendVerificationEmail = actionWrapper(async (user: User, formData: 
   }
 
   return { email: data.email };
+}, { auth: true });
+
+/**
+ * Store a document-verification submission for manual admin review. The
+ * account stays unverified until an admin approves it.
+ */
+export const submitVerificationDocument = actionWrapper(async (user: User, formData: VerificationDocumentForm) => {
+  const data = parseOrThrow(VerificationDocumentValidator, formData);
+
+  const account = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { verified: true },
+  });
+
+  if (account?.verified) {
+    throw new ActionError("Akun sudah terverifikasi.");
+  }
+
+  const pendingDocument = await prisma.verificationDocument.findFirst({
+    where: { userId: user.id },
+    select: { id: true },
+  });
+
+  if (pendingDocument) {
+    throw new ActionError("Dokumen verifikasi sedang ditinjau admin.");
+  }
+
+  const documentCloudId = await uploadImage(data.document, {
+    userId: user.id,
+    kind: "verification-document",
+  });
+
+  try {
+    await prisma.verificationDocument.create({
+      data: {
+        userId: user.id,
+        documentCloudId,
+        documentType: data.documentType,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ActionError("Dokumen verifikasi sedang ditinjau admin.");
+    }
+
+    throw error;
+  }
+
+  return { documentCloudId };
 }, { auth: true });

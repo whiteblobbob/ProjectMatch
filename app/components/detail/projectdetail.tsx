@@ -20,9 +20,23 @@ import {
     type OfflinePlace,
     type OnlinePlatform,
 } from "../ui/collaboration-mode";
+import { checkProjectEligibility } from "@/app/lib/eligibility";
+import { educationLevelOptions } from "@/app/lib/ui/profile";
+import type { EducationLevel } from "@/app/lib/validator/profile";
+import type { ProjectRange } from "@/app/lib/validator/project";
 
 type ProjectDetailProps = {
-    viewer: { authenticated: boolean; verified: boolean };
+    viewer: {
+        id: string | null;
+        authenticated: boolean;
+        verified: boolean;
+        isOwner: boolean;
+        educationLevel: EducationLevel | null;
+        roleIds: string[];
+        institution: string | null;
+        city: string | null;
+        province: string | null;
+    };
     project: {
         id: string;
         title: string;
@@ -38,8 +52,19 @@ type ProjectDetailProps = {
         workHoursPerWeek: number;
         status: "OPEN_RECRUITMENT" | "IN_PROGRESS" | "COMPLETED";
         category: { name: string };
-        owner: { name: string | null; instance: string | null };
-        projectStatusCriteria: Array<{ status: { id: string; name: string } }>;
+        owner: {
+            id: string;
+            name: string | null;
+            institutionName: string | null;
+            institution: string | null;
+            province: string | null;
+            city: string | null;
+        };
+        educationLevels: EducationLevel[];
+        range: ProjectRange;
+        allowedInstitutions: string[];
+        extraCriteria: string | null;
+        sourceLink: string | null;
         projectRoles: Array<{ slotsAvailable: number; role: { id: string; name: string } }>;
         projectMembers: Array<{ user: { id: string; name: string | null } }>;
     };
@@ -73,11 +98,37 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
     const memberCount = project.projectMembers.length;
     const status = statusStyles[project.status];
     const canApply = project.status === "OPEN_RECRUITMENT" && openSlots > 0;
-    const requirements = project.projectStatusCriteria.map((criterion) => ({
-        id: criterion.status.id,
-        label: criterion.status.name,
-        status: "review" as const,
+    const requirements = project.educationLevels.map((level) => ({
+        id: level,
+        label: educationLevelOptions.find((option) => option.value === level)?.label ?? level,
+        status: viewer.educationLevel == null
+            ? ("review" as const)
+            : viewer.educationLevel === level
+                ? ("met" as const)
+                : ("unmet" as const),
     }));
+    const eligibility = checkProjectEligibility(
+        {
+            educationLevel: viewer.educationLevel,
+            institution: viewer.institution,
+            province: viewer.province,
+            city: viewer.city,
+            roleIds: viewer.roleIds,
+        },
+        project,
+    );
+    const ownedOpenRoles = openRoles.filter((role) => viewer.roleIds.includes(role.role.id));
+    const isEligible = eligibility.eligible && ownedOpenRoles.length > 0;
+    const audienceLabel =
+        project.range === "INTERNAL"
+            ? "Terbuka hanya untuk institusi yang sama dengan pembuat proyek."
+            : project.range === "CITY"
+                ? "Terbuka untuk institusi di kota/kabupaten pembuat proyek."
+                : project.range === "PROVINCE"
+                    ? "Terbuka untuk institusi di provinsi pembuat proyek."
+                    : project.range === "INSTITUTIONS"
+                        ? "Terbuka untuk institusi tertentu saja."
+                        : null;
 
     return (
         <main className="min-h-screen w-full min-w-0 bg-background pb-8">
@@ -126,12 +177,12 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
                         </span>
 
                         <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-medium text-text-heading">
+                            <Link href={`/profile/${project.owner.id}`} className="text-[13px] font-medium text-text-heading hover:text-brand-primary hover:underline">
                                 {project.owner.name ?? "Pengguna ProjectMatch"}
-                            </p>
+                            </Link>
 
                             <p className="text-xs leading-5 text-text-subheading">
-                                {project.owner.instance ?? "Institusi belum diisi"} · Pembuat proyek
+                                {project.owner.institutionName ?? "Institusi belum diisi"} · Pembuat proyek
                             </p>
                         </div>
                     </div>
@@ -276,37 +327,80 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-amber-200 bg-amber-50 p-4" aria-labelledby="safety-heading">
-                    <div className="flex items-start gap-3">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700"><WarningIcon className="size-5" /></span>
-                        <div>
-                            <h2 id="safety-heading" className="text-base font-semibold text-amber-950">Cek keamanan sebelum bergabung</h2>
-                            <ul className="mt-2 space-y-1.5 text-[13px] leading-5 text-amber-900">
-                                <li>• Cocokkan identitas pembuat dan institusinya sebelum bergabung.</li>
-                                <li>• Untuk pertemuan luring, pilih tempat publik yang jelas dan mudah diverifikasi.</li>
-                                <li>• Jangan membayar biaya atau membagikan data pribadi sensitif.</li>
-                            </ul>
-                            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                                <ReportProjectButton />
+                {!viewer.isOwner ? (
+                    <section className="rounded-xl border border-amber-200 bg-amber-50 p-4" aria-labelledby="safety-heading">
+                        <div className="flex items-start gap-3">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700"><WarningIcon className="size-5" /></span>
+                            <div>
+                                <h2 id="safety-heading" className="text-base font-semibold text-amber-950">Cek keamanan sebelum bergabung</h2>
+                                <ul className="mt-2 space-y-1.5 text-[13px] leading-5 text-amber-900">
+                                    <li>• Cocokkan identitas pembuat dan institusinya sebelum bergabung.</li>
+                                    <li>• Untuk pertemuan luring, pilih tempat publik yang jelas dan mudah diverifikasi.</li>
+                                    <li>• Jangan membayar biaya atau membagikan data pribadi sensitif.</li>
+                                </ul>
+                                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                                    <ReportProjectButton projectId={project.id} />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                ) : null}
+
+                {audienceLabel ? (
+                    <p className="rounded-xl border border-border-default bg-white p-3 text-[13px] leading-5 text-text-subheading">
+                        {audienceLabel}
+                    </p>
+                ) : null}
 
                 {/* Eligibility check */}
-                <CekPersyaratan requirements={requirements} />
+                <CekPersyaratan
+                    requirements={requirements}
+                    extraCriteria={project.extraCriteria}
+                    sourceUrl={project.sourceLink ?? undefined}
+                />
 
                 {/* Application action */}
                 <div className="sticky bottom-0 -mx-4 border-t border-border-default bg-background/95 px-4 py-3 backdrop-blur-sm">
-                    {canApply ? (
+                    {viewer.isOwner ? (
+                        <Link
+                            href={`/activity/project/${project.id}`}
+                            className="flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brand-secondary"
+                        >
+                            Kelola proyek
+                        </Link>
+                    ) : canApply ? (
                         viewer.authenticated && !viewer.verified ? (
                             <Link
-                                href="/profil"
+                                href="/profile"
                                 className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-bold text-amber-900 transition-colors hover:bg-amber-100"
                             >
                                 <WarningIcon className="size-4" />
                                 Verifikasi untuk melamar
                             </Link>
+                        ) : viewer.authenticated && !isEligible ? (
+                            <button
+                                type="button"
+                                disabled
+                                className="flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-lg bg-border-default px-4 py-3 text-center text-sm font-bold text-text-subheading"
+                            >
+                                Kamu belum memenuhi persyaratan
+                            </button>
+                        ) : (viewer.id && project.projectMembers.map(data => data.user.id).includes(viewer.id)) ? (
+                            <button
+                                type="button"   
+                                disabled
+                                className="flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-lg bg-border-default px-4 py-3 text-center text-sm font-bold text-text-subheading"
+                            >
+                                Kamu sudah menjadi anggota tim
+                            </button>
+                        ) : viewer.authenticated && !isEligible ? (
+                            <button
+                                type="button"
+                                disabled
+                                className="flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-lg bg-border-default px-4 py-3 text-center text-sm font-bold text-text-subheading"
+                            >
+                                Kamu belum memenuhi persyaratan
+                            </button>
                         ) : (
                             <Link
                                 href={`/project/${project.id}/apply`}

@@ -1,4 +1,5 @@
 import z from "zod";
+import { EducationLevelValidator } from "./profile";
 
 const CredentialsValidator = z.object({
   email: z.email(),
@@ -7,6 +8,15 @@ const CredentialsValidator = z.object({
 
 export const SignupValidator = CredentialsValidator.extend({
   name: z.string().min(1, "Name is required"),
+  educationLevel: EducationLevelValidator,
+  institution: z.string({ error: "Institution is required" }).min(1, "Institution is required"),
+  province: z.string({ error: "Province is required" }).min(1, "Province is required"),
+  city: z.string({ error: "City is required" }).min(1, "City is required"),
+  studyProgram: z.string().optional(),
+  schoolGrade: z.string().optional(),
+  entryYear: z.number().int().optional(),
+  graduationYear: z.number().int().optional(),
+  dateOfBirth: z.string().optional(),
 });
 export type SignupForm = z.infer<typeof SignupValidator>;
 

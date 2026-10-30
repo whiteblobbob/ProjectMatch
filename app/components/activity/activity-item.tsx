@@ -28,7 +28,7 @@ export default function ActivityItem({ application }: { application: IncomingApp
             </div>
             <p className="mt-1 text-sm text-slate-600">
               Posisi {application.roleName}
-              {application.applicantInstance ? ` · ${application.applicantInstance}` : ""}
+              {application.applicantInstitution ? ` · ${application.applicantInstitution}` : ""}
             </p>
             <div className="mt-2">
               <StatusBadge tone="attention">Kamu pemilik proyek</StatusBadge>
@@ -36,7 +36,7 @@ export default function ActivityItem({ application }: { application: IncomingApp
           </div>
         </div>
         <Link
-          href={`/activity/project/${application.projectId}/tinjaupelamar`}
+          href={`/activity/project/${application.projectId}/applicants`}
           className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           Tinjau pelamar

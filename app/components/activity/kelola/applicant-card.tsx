@@ -33,7 +33,7 @@ export default function ApplicantCard({ application, projectId }: ApplicantCardP
               </span>
             </div>
             <p className="mt-1 text-sm text-slate-500">
-              {application.applicant.instance || "Institusi belum diisi"} · {application.role.name}
+              {application.applicant.institutionName || "Institusi belum diisi"} · {application.role.name}
             </p>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-slate-500">
               <span>{application.applicant.avgCommitmentScore.toFixed(1)}/5 komitmen</span>
@@ -43,7 +43,7 @@ export default function ApplicantCard({ application, projectId }: ApplicantCardP
         </div>
 
         <Link
-          href={`/activity/project/${projectId}/tinjaupelamar`}
+          href={`/activity/project/${projectId}/applicants`}
           className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           Tinjau pengajuan

@@ -81,7 +81,7 @@ const peerReviewSeed: Array<{
 const deterministicPick = <T>(values: readonly T[], index: number) =>
   values[(index * 7 + 3) % values.length];
 
-const educationLevelValues = ["SMP", "SMA", "KULIAH"] as const;
+const educationLevelValues = ["SMP", "SMA", "MAHASISWA"] as const;
 const educationLevelFor = (index: number) => deterministicPick(educationLevelValues, index);
 
 async function main() {
@@ -132,7 +132,8 @@ async function main() {
           data: {
             id: randomUUID(),
             name: "Alice Chen",
-            instance: "State University",
+            institution: "20100158",
+            institutionName: "SMKN 14 JAKARTA",
             educationLevel: educationLevelFor(0),
             bio: "Computer science senior who loves shipping small web tools.",
             province: "Jawa Barat",
@@ -156,7 +157,8 @@ async function main() {
           data: {
             id: randomUUID(),
             name: "Marcus Webb",
-            instance: "Nexa Software",
+            institution: "20100152",
+            institutionName: "SMKS PGRI 34 JAKARTA",
             educationLevel: educationLevelFor(1),
             bio: "Product minded engineer tinker. React, PostgreSQL and clean DX.",
             province: "DKI Jakarta",
@@ -177,7 +179,8 @@ async function main() {
           data: {
             id: randomUUID(),
             name: "Priya Raman",
-            instance: "Coders Guild",
+            institution: "93145",
+            institutionName: "Sekolah Tinggi Ilmu Kesehatan Mega Rezky",
             educationLevel: educationLevelFor(2),
             bio: "Mentoring juniors through their first production deploys for a decade.",
             province: "DI Yogyakarta",
@@ -198,7 +201,8 @@ async function main() {
           data: {
             id: randomUUID(),
             name: "Diego Ferrer",
-            instance: "TechWorks Bootcamp",
+            institution: "20100152",
+            institutionName: "SMKS PGRI 34 JAKARTA",
             educationLevel: educationLevelFor(3),
             bio: "Bootcamp grad looking for teammates to practice with.",
             province: "Jawa Timur",
@@ -214,7 +218,8 @@ async function main() {
           data: {
             id: randomUUID(),
             name: "Hana Suzuki",
-            instance: "Weekend Builders",
+            institution: "20100158",
+            institutionName: "SMKN 14 JAKARTA",
             educationLevel: educationLevelFor(4),
             bio: "Ship tiny games on weekends. Pragmatic APIs on the side.",
             province: "Bali",
@@ -230,7 +235,8 @@ async function main() {
           data: {
             id: randomUUID(),
             name: "Omar Badr",
-            instance: "Metro College",
+            institution: "101005",
+            institutionName: "Universitas Tamansiswa",
             educationLevel: educationLevelFor(5),
             bio: "Design student sketching interfaces before writing any code.",
             province: "Jawa Barat",
@@ -246,7 +252,8 @@ async function main() {
           data: {
             id: seededUserIds.nora,
             name: "Nora Patel",
-            instance: "Northside Academy",
+            institution: "20100158",
+            institutionName: "SMKN 14 JAKARTA",
             educationLevel: educationLevelFor(6),
             bio: "Student organizer building tools for local study groups.",
             province: "Jawa Barat",
@@ -262,7 +269,8 @@ async function main() {
           data: {
             id: seededUserIds.liam,
             name: "Liam Okafor",
-            instance: "Open Source Lab",
+            institution: "20100152",
+            institutionName: "SMKS PGRI 34 JAKARTA",
             educationLevel: educationLevelFor(7),
             bio: "Backend learner focused on reliable APIs and useful documentation.",
             province: "Jawa Tengah",
@@ -278,7 +286,8 @@ async function main() {
           data: {
             id: seededUserIds.sofia,
             name: "Sofia Alvarez",
-            instance: "Creative Coding Club",
+            institution: "93145",
+            institutionName: "Sekolah Tinggi Ilmu Kesehatan Mega Rezky",
             educationLevel: educationLevelFor(8),
             bio: "Visual storyteller translating community ideas into friendly interfaces.",
             province: "Sulawesi Selatan",
@@ -294,7 +303,8 @@ async function main() {
           data: {
             id: seededUserIds.kenji,
             name: "Kenji Tan",
-            instance: "Harbor Polytechnic",
+            institution: "20100152",
+            institutionName: "SMKS PGRI 34 JAKARTA",
             educationLevel: educationLevelFor(9),
             bio: "Full-stack builder interested in civic technology and data tools.",
             province: "Sumatera Utara",
@@ -310,7 +320,8 @@ async function main() {
           data: {
             id: seededUserIds.maya,
             name: "Maya Singh",
-            instance: "Riverside School",
+            institution: "20100158",
+            institutionName: "SMKN 14 JAKARTA",
             educationLevel: educationLevelFor(10),
             bio: "Product-minded collaborator who enjoys turning rough ideas into plans.",
             province: "Sumatera Selatan",
@@ -326,7 +337,8 @@ async function main() {
           data: {
             id: seededUserIds.noah,
             name: "Noah Williams",
-            instance: "Maker House",
+            institution: "101005",
+            institutionName: "Universitas Tamansiswa",
             educationLevel: educationLevelFor(11),
             bio: "Weekend maker experimenting with accessible education projects.",
             province: "Jawa Timur",

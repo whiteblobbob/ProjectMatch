@@ -5,11 +5,13 @@ import { ShieldCheckIcon } from "../ui/icons";
 type VerificationGateProps = {
   title?: string;
   message?: string;
+  actionLabel?: string;
 };
 
 export default function VerificationGate({
   title = "Verifikasi dulu untuk melanjutkan",
   message = "Hanya pelajar atau mahasiswa terverifikasi yang dapat membuat proyek dan melamar. Verifikasi email sekolah atau kampusmu terlebih dahulu.",
+  actionLabel = "Verifikasi sekarang",
 }: VerificationGateProps) {
   return (
     <main className="min-h-[calc(100dvh-4rem)] bg-slate-50 px-4 py-12 sm:px-6">
@@ -26,10 +28,10 @@ export default function VerificationGate({
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">{message}</p>
         <Link
-          href="/profil"
+          href="/profile"
           className="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
-          Verifikasi sekarang
+          {actionLabel}
         </Link>
       </section>
     </main>

@@ -35,3 +35,28 @@ export async function loadOwnedProject(id: string) {
 
   return { user, project: result.data };
 }
+
+/**
+ * Load a project for the activity screens, open to its owner and confirmed
+ * members. Unauthenticated visitors go to login; everyone else is sent to the
+ * public project page.
+ */
+export async function loadActivityProject(id: string) {
+  const user = await requireSessionUser();
+
+  const result = await fetchProject(id);
+
+  if (!result.success || !("data" in result)) {
+    notFound();
+  }
+
+  const project = result.data;
+  const isOwner = project.ownerId === user.id;
+  const isMember = project.projectMembers.some((member) => member.userId === user.id);
+
+  if (!isOwner && !isMember) {
+    redirect(`/project/${id}`);
+  }
+
+  return { user, project, isOwner, isMember };
+}

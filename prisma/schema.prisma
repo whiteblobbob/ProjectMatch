@@ -54,15 +54,26 @@ enum OfflinePlace {
 enum EducationLevel {
   SMP
   SMA
-  KULIAH
+  MAHASISWA
 
   @@map("education_level")
+}
+
+enum ProjectRange {
+  ALL
+  INTERNAL
+  PROVINCE
+  CITY
+  INSTITUTIONS
+
+  @@map("project_range")
 }
 
 model User {
   id                         String          @id
   name                       String
-  instance                   String?
+  institution                String?
+  institutionName            String?         @map("institution_name")
   educationLevel             EducationLevel? @map("education_level")
   studyProgram               String?         @map("study_program")
   schoolGrade                String?         @map("school_grade")
@@ -147,6 +158,10 @@ model Project {
   collaborationTool     String?                 @map("collaboration_tool")
   workHoursPerWeek      Int                     @map("work_hours_per_week")
   educationLevels       EducationLevel[]        @map("education_levels")
+  range                 ProjectRange            @default(ALL) @map("audience_range")
+  allowedInstitutions   String[]                @default([]) @map("allowed_institutions")
+  extraCriteria         String?                 @map("extra_criteria")
+  sourceLink            String?                 @map("source_link")
   status                ProjectStatus           @default(OPEN_RECRUITMENT)
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")

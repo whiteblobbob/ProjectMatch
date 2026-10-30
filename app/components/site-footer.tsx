@@ -4,7 +4,7 @@ import ProjectMatchLogo from "@/app/components/brand/projectmatch-logo";
 const platformLinks = [
   { href: "/", label: "Jelajah proyek" },
   { href: "/activity", label: "Aktivitas" },
-  { href: "/profil", label: "Profil" },
+  { href: "/profile", label: "Profil" },
 ];
 
 const accountLinks = [

@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
+import z from "zod";
 import { LoginValidator, SignupValidator } from "../validator/auth";
 import { IdValidator } from "../validator/global";
 import { NotificationValidator } from "../validator/notification";
 import { ProfileValidator } from "../validator/profile";
+import { VerificationDocumentValidator } from "../validator/verification";
 import {
   ApplicationValidator,
   CreateProjectValidator,
   PeerReviewValidator,
   QueryProjectsValidator,
+  UpdateProjectValidator,
   validateMeetingRequirements,
 } from "../validator/project";
 import { ActionError } from "../errors";
@@ -33,11 +36,23 @@ describe("Validators", () => {
       onlineLink: "https://meet.google.com/abc-defg-hij",
       meetDescription: "Weekly sync meeting",
       workHoursPerWeek: 15,
-      projectStatusCriteria: ["status-id"],
+      educationLevels: ["SMP", "SMA"],
       projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("does not retain project roles in project updates", () => {
+    const result = UpdateProjectValidator.safeParse({
+      title: "Updated Project",
+      projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("projectRoles");
+    }
   });
 
   it("validates peer review payload with score and feedback", () => {
@@ -54,13 +69,52 @@ describe("Validators", () => {
   it("validates user profile payload with roles", () => {
     const result = ProfileValidator.safeParse({
       name: "Jane Doe",
-      instance: "University",
+      institution: "93145",
       bio: "Software developer",
-      statusId: "status-id",
+      educationLevel: "MAHASISWA",
       userRoles: [{ roleId: "role-id" }],
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("validates a verification document payload with a file and type", () => {
+    const document = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "card.png", {
+      type: "image/png",
+    });
+
+    const result = VerificationDocumentValidator.safeParse({
+      documentType: "enrollment-letter",
+      document,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("requires a file for verification documents", () => {
+    const result = VerificationDocumentValidator.safeParse({
+      documentType: "student-card",
+      document: null,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const { fieldErrors } = z.flattenError(result.error);
+      expect(fieldErrors.document).toEqual(["Dokumen wajib dipilih"]);
+    }
+  });
+
+  it("rejects an unknown verification document type", () => {
+    const document = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "card.png", {
+      type: "image/png",
+    });
+
+    const result = VerificationDocumentValidator.safeParse({
+      documentType: "passport",
+      document,
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it("validates notification payload with message", () => {
@@ -78,9 +132,46 @@ describe("Validators", () => {
       name: "Jane Doe",
       email: "user@example.com",
       password: "password123",
+      educationLevel: "MAHASISWA",
+      institution: "93145",
+      province: "Jawa Barat",
+      city: "Kota Bandung",
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("requires an institution for signup", () => {
+    const result = SignupValidator.safeParse({
+      name: "Jane Doe",
+      email: "user@example.com",
+      password: "password123",
+      educationLevel: "MAHASISWA",
+      province: "Jawa Barat",
+      city: "Kota Bandung",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const { fieldErrors } = z.flattenError(result.error);
+      expect(fieldErrors.institution).toEqual(["Institution is required"]);
+    }
+  });
+
+  it("requires a province and city for signup", () => {
+    const result = SignupValidator.safeParse({
+      name: "Jane Doe",
+      email: "user@example.com",
+      password: "password123",
+      educationLevel: "MAHASISWA",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const { fieldErrors } = z.flattenError(result.error);
+      expect(fieldErrors.province).toEqual(["Province is required"]);
+      expect(fieldErrors.city).toEqual(["City is required"]);
+    }
   });
 
   it("requires a name for signup", () => {

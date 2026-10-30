@@ -38,6 +38,15 @@ const mocks = vi.hoisted(() => ({
   userFindUnique: vi.fn(),
   userUpdate: vi.fn(),
   peerReviewFindMany: vi.fn(),
+  schoolInstitutionFindUnique: vi.fn(),
+  universityInstitutionFindUnique: vi.fn(),
+  uploadImage: vi.fn(),
+  destroyImage: vi.fn(),
+}));
+
+vi.mock("../cloudinary", () => ({
+  uploadImage: mocks.uploadImage,
+  destroyImage: mocks.destroyImage,
 }));
 
 vi.mock("../prisma", () => {
@@ -49,6 +58,12 @@ vi.mock("../prisma", () => {
     peerReview: {
       findMany: mocks.peerReviewFindMany,
     },
+    schoolInstitution: {
+      findUnique: mocks.schoolInstitutionFindUnique,
+    },
+    universityInstitution: {
+      findUnique: mocks.universityInstitutionFindUnique,
+    },
   };
   return { default: prisma, prisma };
 });
@@ -57,16 +72,31 @@ import { fetchProfile, fetchReviews, updateProfile } from "../../actions/profile
 
 const profile: Partial<ProfileForm> = {
   name: "Test User",
-  instance: "Test University",
+  institution: "93145",
   bio: "A test profile",
-  statusId: "status-id",
+  educationLevel: "MAHASISWA",
   userRoles: [{ roleId: "role-id" }],
 };
+
+function avatarFile() {
+  return new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], "avatar.png", {
+    type: "image/png",
+  });
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.userFindUnique.mockResolvedValue({ id: "test-user-id", name: "Test User" });
   mocks.userUpdate.mockResolvedValue({});
+  mocks.schoolInstitutionFindUnique.mockResolvedValue({
+    npsn: "20100158",
+    name: "SMKN 14 JAKARTA",
+  });
+  mocks.universityInstitutionFindUnique.mockResolvedValue({
+    npsn: "93145",
+    name: "Sekolah Tinggi Ilmu Kesehatan Mega Rezky",
+  });
+  mocks.uploadImage.mockResolvedValue("projectmatch/avatars/test-user-id/avatar");
 });
 
 describe("fetchProfile", () => {
@@ -80,7 +110,6 @@ describe("fetchProfile", () => {
     expect(mocks.userFindUnique).toHaveBeenCalledWith({
       where: { id: "test-user-id" },
       include: {
-        status: true,
         userRoles: {
           include: { role: true },
         },
@@ -112,7 +141,7 @@ describe("fetchReviews", () => {
         reviewer: {
           select: {
             name: true,
-            instance: true,
+            institutionName: true,
           },
         },
         project: {
@@ -134,11 +163,13 @@ describe("updateProfile", () => {
       where: { id: "test-user-id" },
       data: {
         name: "Test User",
-        instance: "Test University",
+        institution: "93145",
+        institutionName: "Sekolah Tinggi Ilmu Kesehatan Mega Rezky",
         bio: "A test profile",
-        location: undefined,
+        province: undefined,
+        city: undefined,
         portfolioLink: undefined,
-        statusId: "status-id",
+        educationLevel: "MAHASISWA",
         userRoles: {
           deleteMany: {},
           create: [{ role: { connect: { id: "role-id" } } }],
@@ -146,5 +177,103 @@ describe("updateProfile", () => {
         contactInfos: undefined,
       },
     });
+  });
+
+  it("writes a valid province and city pair", async () => {
+    const result = await updateProfile({ ...profile, province: "Bali", city: "Kota Denpasar" });
+
+    expect(result).toEqual({ success: true });
+    expect(mocks.userUpdate).toHaveBeenCalledWith({
+      where: { id: "test-user-id" },
+      data: expect.objectContaining({
+        province: "Bali",
+        city: "Kota Denpasar",
+      }),
+    });
+  });
+
+  it("rejects a city that does not belong to the selected province", async () => {
+    const result = await updateProfile({ ...profile, province: "Bali", city: "Kota Bandung" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe("Please check your input");
+      expect(result.fieldErrors?.city).toEqual(["City does not belong to the selected province"]);
+    }
+    expect(mocks.userUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an institution that is not in the database", async () => {
+    mocks.universityInstitutionFindUnique.mockResolvedValue(null);
+
+    const result = await updateProfile({ ...profile, institution: "00000000" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe("Please check your input");
+      expect(result.fieldErrors?.institution).toEqual(["Pilih institusi dari daftar"]);
+    }
+    expect(mocks.userUpdate).not.toHaveBeenCalled();
+  });
+
+  it("uploads an avatar and stores its Cloudinary id", async () => {
+    const file = avatarFile();
+
+    const result = await updateProfile(profile, { avatar: file });
+
+    expect(result).toEqual({
+      success: true,
+      data: { profileCloudId: "projectmatch/avatars/test-user-id/avatar" },
+    });
+    expect(mocks.uploadImage).toHaveBeenCalledWith(file, { userId: "test-user-id", kind: "avatar" });
+    expect(mocks.userUpdate).toHaveBeenCalledWith({
+      where: { id: "test-user-id" },
+      data: expect.objectContaining({ profileCloudId: "projectmatch/avatars/test-user-id/avatar" }),
+    });
+    expect(mocks.destroyImage).not.toHaveBeenCalled();
+  });
+
+  it("removes the avatar and destroys the previous asset", async () => {
+    mocks.userFindUnique.mockResolvedValue({
+      id: "test-user-id",
+      profileCloudId: "projectmatch/avatars/test-user-id/old",
+    });
+
+    const result = await updateProfile(profile, { removeAvatar: true });
+
+    expect(result).toEqual({ success: true, data: { profileCloudId: null } });
+    expect(mocks.userUpdate).toHaveBeenCalledWith({
+      where: { id: "test-user-id" },
+      data: expect.objectContaining({ profileCloudId: null }),
+    });
+    expect(mocks.destroyImage).toHaveBeenCalledWith("projectmatch/avatars/test-user-id/old");
+  });
+
+  it("destroys the previous asset when the avatar is replaced", async () => {
+    mocks.userFindUnique.mockResolvedValue({
+      id: "test-user-id",
+      profileCloudId: "projectmatch/avatars/test-user-id/old",
+    });
+
+    await updateProfile(profile, { avatar: avatarFile() });
+
+    expect(mocks.destroyImage).toHaveBeenCalledWith("projectmatch/avatars/test-user-id/old");
+  });
+
+  it("leaves the avatar untouched when no media is provided", async () => {
+    await updateProfile(profile);
+
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+    expect(mocks.uploadImage).not.toHaveBeenCalled();
+    expect(mocks.userUpdate.mock.calls[0][0].data).not.toHaveProperty("profileCloudId");
+  });
+
+  it("surfaces an invalid avatar without updating the profile", async () => {
+    mocks.uploadImage.mockRejectedValue(new ActionError("Format foto harus JPG atau PNG."));
+
+    const result = await updateProfile(profile, { avatar: avatarFile() });
+
+    expect(result).toEqual({ success: false, error: "Format foto harus JPG atau PNG." });
+    expect(mocks.userUpdate).not.toHaveBeenCalled();
   });
 });

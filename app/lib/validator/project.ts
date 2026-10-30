@@ -1,5 +1,6 @@
 import z from "zod";
 import { ActionError } from "../errors";
+import { EducationLevelValidator } from "./profile";
 
 // Project Validators
 export const CollaborationModeValidator = z.enum(["ONLINE", "OFFLINE", "HYBRID"]);
@@ -21,6 +22,15 @@ export const OfflinePlaceValidator = z.enum([
 ]);
 export type OfflinePlace = z.infer<typeof OfflinePlaceValidator>;
 
+export const ProjectRangeValidator = z.enum([
+  "ALL",
+  "INTERNAL",
+  "PROVINCE",
+  "CITY",
+  "INSTITUTIONS",
+]);
+export type ProjectRange = z.infer<typeof ProjectRangeValidator>;
+
 export const ProjectLinkValidator = z
   .url("Link must be a valid URL")
   .refine(
@@ -39,17 +49,40 @@ export const CreateProjectValidator = z.object({
   offlinePlace: OfflinePlaceValidator.optional(),
   offlineLink: ProjectLinkValidator.optional(),
   meetDescription: z.string().min(1, "Meeting description is required"),
+  meetAt: z.date().optional(),
+  meetEndAt: z.date().optional(),
   collaborationTool: z.string().optional(),
   workHoursPerWeek: z.number().int().positive("Work hours per week must be a positive integer"),
-  projectStatusCriteria: z.array(
-    z.string().min(1, "Status ID is required"),
-  ).min(1, "At least one project status criteria is required"),
+  educationLevels: z
+    .array(EducationLevelValidator)
+    .min(1, "At least one education level is required"),
   projectRoles: z.array(z.object({
     roleId: z.string().min(1, "Role ID is required"),
     slotsAvailable: z.number().int().positive("Slots left must be a positive integer"),
   })).min(1, "At least one project role is required"),
+  range: ProjectRangeValidator.optional(),
+  allowedInstitutions: z.array(z.string().min(1)).optional(),
+  extraCriteria: z.string().optional(),
+  sourceLink: ProjectLinkValidator.optional(),
 });
 export type CreateProjectForm = z.infer<typeof CreateProjectValidator>;
+
+type RangeRequirements = {
+  range?: ProjectRange;
+  allowedInstitutions?: string[];
+};
+
+/**
+ * A range limited to specific institutions is meaningless without the list of
+ * allowed institutions, so enforce the pairing that the flat schema cannot.
+ */
+export function validateRangeRequirements(data: RangeRequirements) {
+  if (data.range === "INSTITUTIONS" && (data.allowedInstitutions?.length ?? 0) === 0) {
+    throw new ActionError("Please check your input", {
+      allowedInstitutions: ["Pilih minimal satu institusi"],
+    });
+  }
+}
 
 type MeetingRequirements = {
   collaborationMode: CollaborationMode;
@@ -85,17 +118,26 @@ export function validateMeetingRequirements(data: MeetingRequirements) {
 export const UpdateProjectValidator = CreateProjectValidator
   .omit({
     categoryId: true,
+    projectRoles: true,
   })
   .partial();
 export type UpdateProjectForm = z.infer<typeof UpdateProjectValidator>;
 
 export const QueryProjectsValidator = CreateProjectValidator.pick({
-  projectStatusCriteria: true,
+  educationLevels: true,
   collaborationMode: true,
 }).extend({
   projectRoles: z.array(z.string().min(1, "Role ID is required"),).min(1),
   ownerId: z.string().min(1, "Owner ID is required"),
   status: z.enum(["OPEN_RECRUITMENT", "IN_PROGRESS", "COMPLETED"]),
+  search: z.string(),
+  categoryId: z.string().min(1, "Category ID is required"),
+  collaborationTool: z.string(),
+  minWorkHours: z.number().int().min(0, "Minimum work hours cannot be negative"),
+  maxWorkHours: z.number().int().min(0, "Maximum work hours cannot be negative"),
+  ownerInstitution: z.string().min(1),
+  ownerCity: z.string().min(1),
+  ownerProvince: z.string().min(1),
 }).partial().extend({
   page: z.number().int().min(1, "Page must be at least 1").default(1),
   pageSize: z
@@ -122,3 +164,10 @@ export const PeerReviewValidator = z.object({
   feedback: z.string().optional(),
 });
 export type PeerReviewForm = z.infer<typeof PeerReviewValidator>;
+
+export const ReportProjectValidator = z.object({
+  projectId: z.string().min(1, "Project ID is required"),
+  reason: z.string().min(1, "Reason is required"),
+  details: z.string().optional(),
+});
+export type ReportProjectForm = z.infer<typeof ReportProjectValidator>;

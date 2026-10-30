@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { createProject } from "@/app/actions/project";
-import { profileEducationOptions } from "@/app/lib/ui/profile";
+import type { InstitutionOption } from "@/app/lib/institution";
+import { educationLevelOptions } from "@/app/lib/ui/profile";
+import type { EducationLevel } from "@/app/lib/validator/profile";
+import type { ProjectRange } from "@/app/lib/validator/project";
 import {
   collaborationModes,
   getCollaborationModeLabel,
@@ -31,20 +34,20 @@ type Position = {
   slotsAvailable: number;
 };
 
-const educationLevels = [
-  { value: "JUNIOR_SECONDARY", label: "SMP/sederajat" },
-  { value: "SENIOR_SECONDARY", label: "SMA/SMK/sederajat" },
-  { value: "HIGHER_EDUCATION", label: "Mahasiswa" },
-] as const;
+const rangeForScope: Record<AudienceScope, ProjectRange> = {
+  all: "ALL",
+  institution: "INTERNAL",
+  city: "CITY",
+  province: "PROVINCE",
+  selected: "INSTITUTIONS",
+};
 
 export default function CreateProjectForm({
   categories,
   roles,
-  statuses,
 }: {
   categories: CatalogOption[];
   roles: CatalogOption[];
-  statuses: CatalogOption[];
 }) {
   const router = useRouter();
   const [positions, setPositions] = useState<Position[]>([]);
@@ -55,7 +58,7 @@ export default function CreateProjectForm({
   const [editingPositionIndex, setEditingPositionIndex] = useState<number | null>(null);
   const [hasCustomRequirements, setHasCustomRequirements] = useState(false);
   const [audienceScope, setAudienceScope] = useState<AudienceScope>("all");
-  const [selectedInstitutions, setSelectedInstitutions] = useState<string[]>([]);
+  const [selectedInstitutions, setSelectedInstitutions] = useState<InstitutionOption[]>([]);
 
   function openAddPositionDialog() {
     setEditingPositionIndex(null);
@@ -81,7 +84,7 @@ export default function CreateProjectForm({
     setError("");
 
     const formData = new FormData(event.currentTarget);
-    const selectedEducationLevels = formData.getAll("educationLevels").map(String) as Array<(typeof educationLevels)[number]["value"]>;
+    const selectedEducationLevels = formData.getAll("educationLevels").map(String) as EducationLevel[];
     const selectedPositions = positions.filter((position) => position.roleId);
 
     if (selectedEducationLevels.length === 0) {
@@ -104,21 +107,18 @@ export default function CreateProjectForm({
       return;
     }
 
-    const statusIds = selectedEducationLevels
-      .map((level) => profileEducationOptions.find((option) => option.value === level)?.statusName)
-      .map((statusName) => statuses.find((status) => status.name === statusName)?.id)
-      .filter((statusId): statusId is string => Boolean(statusId));
-
-    if (statusIds.length === 0) {
-      setError("Jenjang pelajar yang dipilih belum tersedia.");
-      return;
-    }
-
     setIsPending(true);
     const deadlineValue = String(formData.get("deadline") ?? "");
     const hasOnline = collaborationMode === "ONLINE" || collaborationMode === "HYBRID";
     const hasOffline = collaborationMode === "OFFLINE" || collaborationMode === "HYBRID";
     const collaborationTool = String(formData.get("collaborationTools") ?? "").trim();
+    const extraCriteria = String(formData.get("customRequirements") ?? "").trim();
+    const sourceLink = String(formData.get("requirementsSourceUrl") ?? "").trim();
+    const meetingDate = String(formData.get("meetingDate") ?? "");
+    const meetingStart = String(formData.get("meetingStartTime") ?? "");
+    const meetingEnd = String(formData.get("meetingEndTime") ?? "");
+    const meetAt = meetingDate && meetingStart ? new Date(`${meetingDate}T${meetingStart}`) : undefined;
+    const meetEndAt = meetingDate && meetingEnd ? new Date(`${meetingDate}T${meetingEnd}`) : undefined;
     const result = await createProject({
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? ""),
@@ -130,9 +130,15 @@ export default function CreateProjectForm({
       offlinePlace: hasOffline ? (String(formData.get("meetingPlaceCategory") ?? "") as OfflinePlace) : undefined,
       offlineLink: hasOffline ? String(formData.get("meetingMapsUrl") ?? "") : undefined,
       meetDescription: String(formData.get("meetingDescription") ?? ""),
+      meetAt,
+      meetEndAt,
       collaborationTool: collaborationTool || undefined,
       workHoursPerWeek: Number(formData.get("workHoursPerWeek")),
-      projectStatusCriteria: statusIds,
+      educationLevels: selectedEducationLevels,
+      range: rangeForScope[audienceScope],
+      allowedInstitutions: selectedInstitutions.map((institution) => institution.npsn),
+      extraCriteria: extraCriteria || undefined,
+      sourceLink: sourceLink || undefined,
       projectRoles: selectedPositions.map((position) => ({
         roleId: position.roleId,
         slotsAvailable: position.slotsAvailable,
@@ -237,6 +243,21 @@ export default function CreateProjectForm({
           </div>
         ) : null}
 
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Tanggal pertemuan</span>
+            <input name="meetingDate" type="date" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Mulai</span>
+            <input name="meetingStartTime" type="time" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Selesai</span>
+            <input name="meetingEndTime" type="time" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          </label>
+        </div>
+
         <label className="mt-5 block">
           <span className="text-sm font-semibold text-slate-900">Deskripsi dan petunjuk pertemuan</span>
           <span className="mt-1 block text-xs leading-5 text-slate-500">Jelaskan agenda, patokan tempat, atau hal yang perlu disiapkan. Jangan mencantumkan alamat rumah atau data pribadi.</span>
@@ -299,7 +320,7 @@ export default function CreateProjectForm({
         <h2 id="criteria-heading" className="text-lg font-bold text-slate-950">Jenjang pelajar</h2>
         <p className="mt-1 text-sm text-slate-600">ProjectMatch khusus pelajar. Pilih jenjang yang dapat mendaftar ke proyek ini.</p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          {educationLevels.map((level) => (
+          {educationLevelOptions.map((level) => (
             <label key={level.value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-slate-200 px-3 text-sm text-slate-700 hover:bg-slate-50 has-checked:border-brand-primary has-checked:bg-brand-soft">
               <input type="checkbox" name="educationLevels" value={level.value} disabled={isPending} className="size-4 rounded accent-blue-600" />
               {level.label}

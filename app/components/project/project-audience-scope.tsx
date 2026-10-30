@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { InstitutionPicker } from "@/app/components/ui/institution-picker";
+import type { InstitutionOption } from "@/app/lib/institution";
 import { CheckIcon, MapPinIcon, UsersIcon, XIcon } from "@/app/components/ui/icons";
 
 export type AudienceScope = "all" | "institution" | "city" | "province" | "selected";
 
 type ProjectAudienceScopeProps = {
   scope: AudienceScope;
-  selectedInstitutions: string[];
+  selectedInstitutions: InstitutionOption[];
   onScopeChange: (scope: AudienceScope) => void;
-  onSelectedInstitutionsChange: (institutions: string[]) => void;
+  onSelectedInstitutionsChange: (institutions: InstitutionOption[]) => void;
   disabled?: boolean;
 };
+
+const MAX_INSTITUTIONS = 6;
 
 const scopeOptions: Array<{
   value: AudienceScope;
@@ -22,7 +25,7 @@ const scopeOptions: Array<{
   { value: "institution", title: "Hanya institusi saya", description: "Hanya pengguna dari sekolah atau kampus yang sama dengan profilmu." },
   { value: "city", title: "Institusi di kota/kabupaten saya", description: "Terbuka untuk sekolah dan kampus yang berada di kota atau kabupaten yang sama." },
   { value: "province", title: "Institusi di provinsi saya", description: "Terbuka untuk sekolah dan kampus dalam provinsi yang sama." },
-  { value: "selected", title: "Institusi tertentu", description: "Tulis sendiri sekolah atau kampus yang diizinkan mendaftar." },
+  { value: "selected", title: "Institusi tertentu", description: "Pilih sekolah atau kampus yang diizinkan mendaftar." },
 ];
 
 export default function ProjectAudienceScope({
@@ -32,22 +35,13 @@ export default function ProjectAudienceScope({
   onSelectedInstitutionsChange,
   disabled,
 }: ProjectAudienceScopeProps) {
-  const [query, setQuery] = useState("");
+  const isFull = selectedInstitutions.length >= MAX_INSTITUTIONS;
 
-  const addInstitution = () => {
-    const name = query.trim();
-    if (!name || selectedInstitutions.length >= 6) return;
-    const exists = selectedInstitutions.some((item) => item.toLocaleLowerCase("id-ID") === name.toLocaleLowerCase("id-ID"));
-    if (!exists) onSelectedInstitutionsChange([...selectedInstitutions, name]);
-    setQuery("");
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" || event.key === ",") {
-      event.preventDefault();
-      addInstitution();
-    }
-  };
+  function addInstitution(option: InstitutionOption | null) {
+    if (!option || isFull) return;
+    if (selectedInstitutions.some((item) => item.npsn === option.npsn)) return;
+    onSelectedInstitutionsChange([...selectedInstitutions, option]);
+  }
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="audience-scope-heading">
@@ -107,20 +101,21 @@ export default function ProjectAudienceScope({
 
       {scope === "selected" ? (
         <div className="mt-5 border-t border-slate-100 pt-5">
-          <label htmlFor="allowed-institution-input" className="text-sm font-semibold text-slate-900">Sekolah atau kampus yang diizinkan</label>
-          <p className="mt-1 text-xs leading-5 text-slate-500">Tulis nama sekolah atau kampus, lalu tekan Enter. Maksimal 6 institusi.</p>
-
           {selectedInstitutions.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2" aria-label="Institusi terpilih">
+            <div className="mb-3 flex flex-wrap gap-2" aria-label="Institusi terpilih">
               {selectedInstitutions.map((institution) => (
-                <span key={institution} className="inline-flex min-h-9 max-w-full items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-800">
-                  <span className="truncate">{institution}</span>
+                <span key={institution.npsn} className="inline-flex min-h-9 max-w-full items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-800">
+                  <span className="truncate">{institution.name}</span>
                   <button
                     type="button"
                     disabled={disabled}
-                    onClick={() => onSelectedInstitutionsChange(selectedInstitutions.filter((item) => item !== institution))}
+                    onClick={() =>
+                      onSelectedInstitutionsChange(
+                        selectedInstitutions.filter((item) => item.npsn !== institution.npsn),
+                      )
+                    }
                     className="grid size-6 shrink-0 place-items-center rounded-md hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-                    aria-label={`Hapus ${institution}`}
+                    aria-label={`Hapus ${institution.name}`}
                   >
                     <XIcon className="size-4" />
                   </button>
@@ -129,18 +124,16 @@ export default function ProjectAudienceScope({
             </div>
           ) : null}
 
-          <input
+          <InstitutionPicker
+            key={`allowed-institution-${selectedInstitutions.length}`}
             id="allowed-institution-input"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={disabled || selectedInstitutions.length >= 6}
-            placeholder={selectedInstitutions.length >= 6 ? "Maksimal 6 institusi" : "Ketik nama sekolah atau kampus, tekan Enter"}
-            autoComplete="off"
-            className="mt-3 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+            label="Sekolah atau kampus yang diizinkan"
+            kind="all"
+            value={null}
+            onChange={addInstitution}
+            hint={`Cari dan pilih institusi dari daftar resmi. Maksimal ${MAX_INSTITUTIONS} institusi.`}
+            disabled={disabled || isFull}
           />
-
-          <input type="hidden" name="allowedInstitutions" value={selectedInstitutions.join(", ")} />
         </div>
       ) : null}
     </section>

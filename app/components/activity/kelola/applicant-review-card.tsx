@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { acceptApplication, rejectApplication } from "@/app/actions/project";
+import { formatRegion } from "@/app/lib/regions";
+import { educationLevelLabel } from "@/app/lib/ui/profile";
 import type { ProjectApplication } from "@/app/lib/ui/kelola-project";
 import DestructiveConfirmationDialog from "../../ui/destructive-confirmation-dialog";
 import { CheckIcon, WarningIcon } from "../../ui/icons";
@@ -72,19 +75,17 @@ export default function ApplicantReviewCard({ application }: { application: Proj
                     Pelamar baru
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-slate-500">{application.applicant.instance || "Institusi belum diisi"}</p>
+                <p className="mt-1 text-sm text-slate-500">{application.applicant.institutionName || "Institusi belum diisi"}</p>
                 <p className="mt-1 text-sm font-medium text-slate-700">Melamar sebagai {application.role.name}</p>
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled
-              title="Halaman profil publik belum tersedia"
-              className="inline-flex min-h-11 shrink-0 cursor-not-allowed items-center justify-center rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-400"
+            <Link
+              href={`/profile/${application.applicant.id}`}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary"
             >
               Lihat profil
-            </button>
+            </Link>
           </div>
 
           <div className="grid gap-6 py-6 md:grid-cols-2">
@@ -101,7 +102,7 @@ export default function ApplicantReviewCard({ application }: { application: Proj
             <section aria-labelledby={`about-${application.id}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Tentang pelamar</p>
               <h3 id={`about-${application.id}`} className="mt-2 text-base font-bold text-slate-950">
-                {application.applicant.location || "Lokasi belum diisi"}
+                {formatRegion(application.applicant.city, application.applicant.province) || "Lokasi belum diisi"}
               </h3>
               <p className="mt-2 text-sm leading-7 text-slate-600">
                 {application.applicant.bio?.trim() || "Pelamar belum menuliskan bio."}
@@ -140,7 +141,7 @@ export default function ApplicantReviewCard({ application }: { application: Proj
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Prasyarat</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{application.applicant.status?.name || "Perlu diperiksa"}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{educationLevelLabel(application.applicant.educationLevel) ?? "Perlu diperiksa"}</p>
                 </div>
               </div>
             </div>
@@ -156,7 +157,7 @@ export default function ApplicantReviewCard({ application }: { application: Proj
         <div className="border-t border-slate-200 bg-slate-50 px-5 py-5 sm:px-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-md text-xs leading-5 text-slate-500">
-              Menerima pengajuan ini akan langsung menambahkan {name} ke tim. Detail pertemuan terbuka setelah konfirmasi.
+              Menerima pengajuan ini akan langsung menambahkan {name} ke tim.
             </p>
             <div className="flex gap-2 sm:shrink-0">
               <button

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Navbar from "../../components/navigation-bar/guestnavbar";
 import CreateProjectForm from "../../components/project/create-project-form";
 import VerificationGate from "../../components/project/verification-gate";
-import { fetchCategories, fetchRoles, fetchStatuses, type CatalogOption } from "../../actions/catalog";
+import { fetchCategories, fetchRoles, type CatalogOption } from "../../actions/catalog";
 import { fetchProfile } from "../../actions/profile";
 import { requireSessionUser } from "../../lib/ui/session";
 
@@ -20,17 +20,16 @@ export default function CreateProjectPage() {
 async function CreateProjectAccess() {
   await requireSessionUser();
 
-  const [categories, roles, statuses, profile] = await Promise.all([
+  const [categories, roles, profile] = await Promise.all([
     fetchCategories(),
     fetchRoles(),
-    fetchStatuses(),
     fetchProfile(),
   ]);
 
   const isOk = (result: { success: boolean }): result is { success: true; data: CatalogOption[] } =>
     result.success && "data" in result;
 
-  if (!isOk(categories) || !isOk(roles) || !isOk(statuses) || !profile.success || !("data" in profile)) {
+  if (!isOk(categories) || !isOk(roles) || !profile.success || !("data" in profile)) {
     console.error("Failed to load project form options");
     return (
       <main className="min-h-[calc(100dvh-4rem)] bg-slate-50 px-4 py-10 sm:px-6">
@@ -56,7 +55,7 @@ async function CreateProjectAccess() {
             Ceritakan proyekmu dan tentukan posisi yang dibutuhkan agar kandidat yang tepat dapat menemukannya.
           </p>
         </header>
-        <CreateProjectForm categories={categories.data} roles={roles.data} statuses={statuses.data} />
+        <CreateProjectForm categories={categories.data} roles={roles.data} />
       </div>
     </main>
   );

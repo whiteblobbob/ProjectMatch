@@ -9,12 +9,12 @@ type ProjectMatchLogoProps = {
 
 const logoAssets = {
   horizontal: {
-    src: "/brand/Layout=Horizontal, Theme=Light.svg",
+    src: "/brand/horizontal.svg",
     width: 267,
     height: 96,
   },
   stacked: {
-    src: "/brand/Layout=Stacked, Theme=Light.svg",
+    src: "/brand/vertical.svg",
     width: 202,
     height: 130,
   },

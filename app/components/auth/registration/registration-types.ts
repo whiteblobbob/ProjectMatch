@@ -14,9 +14,13 @@ export type RegistrationData = {
   studyProgram: string;
   schoolGrade: string;
   educationLevel: string;
+  institution: string;
+  institutionName: string;
   entryYear: string;
   graduationYear: string;
   dateOfBirth: string;
+  province: string;
+  city: string;
   acceptedTerms: boolean;
   acceptedPrivacy: boolean;
   confirmedAccuracy: boolean;
@@ -34,9 +38,13 @@ export const initialRegistrationData: RegistrationData = {
   studyProgram: "",
   schoolGrade: "",
   educationLevel: "",
+  institution: "",
+  institutionName: "",
   entryYear: "",
   graduationYear: "",
   dateOfBirth: "",
+  province: "",
+  city: "",
   acceptedTerms: false,
   acceptedPrivacy: false,
   confirmedAccuracy: false,

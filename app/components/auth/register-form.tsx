@@ -42,6 +42,7 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
   const age = calculateAge(data.dateOfBirth, new Date());
 
   if (!data.educationLevel) errors.educationLevel = data.educationStatus === "student" ? "Pilih jenjang sekolah." : "Pilih jenjang pendidikan.";
+  if (!data.institution) errors.institution = "Pilih institusi dari daftar.";
 
   if (data.educationStatus === "student") {
     if (!data.schoolGrade) errors.schoolGrade = "Pilih kelas saat ini.";
@@ -52,6 +53,8 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
     if (!/^\d{4}$/.test(data.graduationYear) || graduationYear < entryYear || graduationYear > currentYear + 12) errors.graduationYear = "Tahun lulus harus setelah tahun masuk dan masuk akal.";
   }
   if (age === null || age < 10 || age > 100) errors.dateOfBirth = "Masukkan tanggal lahir yang valid.";
+  if (!data.province) errors.province = "Pilih provinsi domisili.";
+  if (!data.city) errors.city = "Pilih kota atau kabupaten domisili.";
   return errors;
 }
 
@@ -135,9 +138,28 @@ export default function RegisterForm() {
     setSubmitError("");
     setIsPending(true);
 
-    // Name, email, and password create the account. Education fields remain
-    // client-only until a backend integration exists.
-    const result = await signup({ name: data.fullName.trim(), email: data.email.trim(), password: data.password });
+    const educationLevel = (
+      data.educationLevel === "SMP/sederajat"
+        ? "SMP"
+        : data.educationLevel === "SMA/SMK/sederajat"
+          ? "SMA"
+          : "MAHASISWA"
+    ) as "SMP" | "SMA" | "MAHASISWA";
+
+    const result = await signup({
+      name: data.fullName.trim(),
+      email: data.email.trim(),
+      password: data.password,
+      educationLevel,
+      institution: data.institution,
+      studyProgram: data.studyProgram || undefined,
+      schoolGrade: data.schoolGrade || undefined,
+      entryYear: data.entryYear ? Number(data.entryYear) : undefined,
+      graduationYear: data.graduationYear ? Number(data.graduationYear) : undefined,
+      dateOfBirth: data.dateOfBirth || undefined,
+      province: data.province,
+      city: data.city,
+    });
 
     if (!result.success) {
       setSubmitError(result.error);

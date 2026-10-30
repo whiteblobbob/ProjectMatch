@@ -25,7 +25,7 @@ export default function RegisterPage() {
               ))}
             </ul>
             <div className="mt-8 rounded-xl border border-white/20 bg-white/10 p-4 text-xs leading-5 text-blue-50">
-              Nama, email, dan kata sandi akan membuat akunmu. Data pendidikan belum dikirim atau disimpan.
+              Nama, email, kata sandi, dan data pendidikan akan membuat akunmu. Pilih sekolah atau kampus dari daftar resmi agar profilmu tepercaya.
             </div>
           </aside>
 

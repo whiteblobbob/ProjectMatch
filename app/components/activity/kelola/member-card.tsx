@@ -6,6 +6,7 @@ import { ArrowRightIcon, UsersIcon } from "../../ui/icons";
 type MemberCardProps = {
   project: ProjectDetail;
   projectId: string;
+  canManage?: boolean;
 };
 
 const avatarTones = ["bg-slate-900", "bg-indigo-500", "bg-emerald-500", "bg-amber-500"];
@@ -21,8 +22,13 @@ function initialsOf(name: string | null | undefined) {
   return initials || "PM";
 }
 
-export default function MemberCard({ project, projectId }: MemberCardProps) {
-  const members = project.projectMembers;
+export default function MemberCard({ project, projectId, canManage = true }: MemberCardProps) {
+  const members = [
+    { userId: project.owner.id, name: project.owner.name },
+    ...project.projectMembers
+      .filter((member) => member.userId !== project.ownerId)
+      .map((member) => ({ userId: member.userId, name: member.user.name })),
+  ];
   const memberCount = members.length;
   const openSlots = project.projectRoles.reduce((total, projectRole) => total + projectRole.slotsAvailable, 0);
   const capacity = memberCount + openSlots;
@@ -47,7 +53,7 @@ export default function MemberCard({ project, projectId }: MemberCardProps) {
             key={member.userId}
             className={`flex size-9 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white ${avatarTones[index % avatarTones.length]}`}
           >
-            {initialsOf(member.user.name)}
+            {initialsOf(member.name)}
           </span>
         ))}
         {openSlots > 0 ? (
@@ -57,13 +63,15 @@ export default function MemberCard({ project, projectId }: MemberCardProps) {
         ) : null}
       </div>
 
-      <Link
-        href={`/activity/project/${projectId}/anggota`}
-        className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-primary hover:text-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-      >
-        Lihat anggota
-        <ArrowRightIcon className="size-4" />
-      </Link>
+      {canManage ? (
+        <Link
+          href={`/activity/project/${projectId}/members`}
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-primary hover:text-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+        >
+          Lihat anggota
+          <ArrowRightIcon className="size-4" />
+        </Link>
+      ) : null}
     </article>
   );
 }

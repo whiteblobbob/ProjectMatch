@@ -6,6 +6,7 @@ import { fetchProject } from "../../../actions/project";
 import Navbar from "../../../components/navigation-bar/guestnavbar";
 import ApplicationForm from "../../../components/project/application-form";
 import VerificationGate from "../../../components/project/verification-gate";
+import { checkProjectEligibility } from "../../../lib/eligibility";
 import { toProfileView } from "../../../lib/ui/profile";
 import { requireSessionUser } from "../../../lib/ui/session";
 
@@ -56,12 +57,53 @@ async function ProjectApplicationAccess({ params }: ProjectApplicationPageProps)
     );
   }
 
+  const ownedRoleIds = profile.data.userRoles.map((userRole) => userRole.roleId);
+  const eligibility = checkProjectEligibility(
+    {
+      educationLevel: profile.data.educationLevel,
+      institution: profile.data.institution,
+      province: profile.data.province,
+      city: profile.data.city,
+      roleIds: ownedRoleIds,
+    },
+    project.data,
+  );
+  const ownedOpenRoles = project.data.projectRoles.filter(
+    (projectRole) =>
+      projectRole.slotsAvailable > 0 && ownedRoleIds.includes(projectRole.role.id),
+  );
+  const ineligibilityReasons = [
+    eligibility.education
+      ? null
+      : "Jenjang pendidikanmu tidak termasuk yang diminta proyek ini.",
+    eligibility.audience
+      ? null
+      : "Institusi atau wilayahmu berada di luar jangkauan proyek ini.",
+    ownedOpenRoles.length > 0
+      ? null
+      : "Belum ada posisi terbuka yang cocok dengan peran di profilmu.",
+  ].filter((reason): reason is string => reason !== null);
+
+  if (ineligibilityReasons.length > 0) {
+    return (
+      <>
+        <Navbar />
+        <VerificationGate
+          title="Kamu belum memenuhi persyaratan"
+          message={`${ineligibilityReasons.join(" ")} Perbarui profilmu untuk melamar proyek ini.`}
+          actionLabel="Perbarui profil"
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
       <ApplicationForm
         project={project.data}
         profile={toProfileView(profile.data, user.email ?? "")}
+        ownedRoleIds={ownedRoleIds}
       />
     </>
   );

@@ -1,29 +1,18 @@
 import Link from "next/link";
 
 import type { ProjectDetail } from "@/app/lib/ui/kelola-project";
+import MemberList from "../member-list";
 import Breadcrumbs from "../../ui/breadcrumbs";
-import { ArrowLeftIcon, CheckIcon, ClockIcon, UsersIcon } from "../../ui/icons";
-
-const avatarTones = ["bg-slate-900", "bg-indigo-500", "bg-emerald-500", "bg-amber-500"];
-
-function initialsOf(name: string | null | undefined) {
-  const initials = (name ?? "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-  return initials || "PM";
-}
+import { ArrowLeftIcon, UsersIcon } from "../../ui/icons";
 
 export default function KelolaAnggotaView({ project }: { project: ProjectDetail }) {
   const members = project.projectMembers;
-  const memberCount = members.length;
+  const memberCount = members.length + 1;
   const openRoles = project.projectRoles.filter((projectRole) => projectRole.slotsAvailable > 0);
   const openSlots = openRoles.reduce((total, projectRole) => total + projectRole.slotsAvailable, 0);
   const capacity = memberCount + openSlots;
   const progress = capacity > 0 ? Math.round((memberCount / capacity) * 100) : 0;
+  const canManage = project.status === "OPEN_RECRUITMENT";
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-slate-50">
@@ -32,7 +21,7 @@ export default function KelolaAnggotaView({ project }: { project: ProjectDetail 
           <Breadcrumbs
             items={[
               { label: "Aktivitas", href: "/activity" },
-              { label: "Kelola postingan", href: `/activity/project/${project.id}` },
+              { label: "Proyek", href: `/activity/project/${project.id}` },
               { label: "Anggota" },
             ]}
           />
@@ -78,12 +67,14 @@ export default function KelolaAnggotaView({ project }: { project: ProjectDetail 
                 {openSlots > 0 ? `Masih ada ${openSlots} tempat untuk ${openRoles.map((role) => role.role.name).join(", ")}.` : "Semua tempat sudah terisi."}
               </p>
             </div>
-            <Link
-              href={`/activity/project/${project.id}/tinjaupelamar`}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-            >
-              Tinjau pelamar
-            </Link>
+            {canManage ? (
+              <Link
+                href={`/activity/project/${project.id}/applicants`}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+              >
+                Tinjau pelamar
+              </Link>
+            ) : null}
           </div>
         </section>
 
@@ -96,55 +87,10 @@ export default function KelolaAnggotaView({ project }: { project: ProjectDetail 
             <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{memberCount} anggota</span>
           </div>
 
-          {members.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {members.map((member, index) => (
-                <article key={member.userId} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                  <div className="flex items-start gap-4">
-                    <span className={`flex size-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${avatarTones[index % avatarTones.length]}`}>
-                      {initialsOf(member.user.name)}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-lg font-bold text-slate-950">{member.user.name}</h3>
-                        {member.userId === project.ownerId ? (
-                          <span className="rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-semibold text-brand-primary">Pembuat proyek</span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-sm text-slate-500">{member.user.instance || "Institusi belum diisi"}</p>
-                    </div>
-                  </div>
-
-                  <dl className="mt-5 space-y-3 border-t border-slate-100 pt-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="text-sm text-slate-500">Peran</dt>
-                      <dd className="text-right text-sm font-semibold text-slate-900">{member.role.name}</dd>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="text-sm text-slate-500">Kontribusi</dt>
-                      <dd className="max-w-[65%] text-right text-sm font-semibold text-slate-900">{member.user.bio || "Belum diisi"}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <dt className="flex items-center gap-1.5 text-sm text-slate-500"><ClockIcon className="size-4" /> Skor komitmen</dt>
-                      <dd className="text-sm font-semibold text-slate-900">{member.user.avgCommitmentScore.toFixed(1)}/5</dd>
-                    </div>
-                  </dl>
-
-                  <div className="mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-700">
-                    <CheckIcon className="size-4" />
-                    Siap berkolaborasi
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-600">
-              Belum ada anggota terkonfirmasi.
-            </p>
-          )}
+          <MemberList project={project} />
         </section>
 
-        {openRoles.length > 0 ? (
+        {canManage && openRoles.length > 0 ? (
           <section className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white p-5 sm:p-6" aria-labelledby="open-member-heading">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -157,7 +103,7 @@ export default function KelolaAnggotaView({ project }: { project: ProjectDetail 
                 </p>
               </div>
               <Link
-                href={`/activity/project/${project.id}/posisi`}
+                href={`/activity/project/${project.id}/edit`}
                 className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-brand-primary px-4 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
               >
                 Ubah kebutuhan posisi

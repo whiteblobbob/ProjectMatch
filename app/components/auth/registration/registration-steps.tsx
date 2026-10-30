@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { CheckIcon } from "@/app/components/ui/icons";
+import { InstitutionPicker } from "@/app/components/ui/institution-picker";
+import { LocationPicker } from "@/app/components/ui/location-picker";
 import { SelectControl } from "@/app/components/ui/select-control";
+import { formatRegion } from "@/app/lib/regions";
 import { useState, type ReactNode } from "react";
 import {
   type RegistrationData,
@@ -183,7 +186,7 @@ export function AccountStep({ data, errors, onChange, disabled }: StepProps) {
   );
 }
 
-const schoolLevels = ["SMP/sederajat", "SMA/sederajat", "SMK/sederajat"];
+const schoolLevels = ["SMP/sederajat", "SMA/SMK/sederajat"];
 const juniorSecondaryGrades = ["Kelas 7", "Kelas 8", "Kelas 9"];
 const seniorSecondaryGrades = ["Kelas 10", "Kelas 11", "Kelas 12"];
 const universityLevels = ["Diploma", "Sarjana", "Magister"];
@@ -214,6 +217,8 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
                 onChange={() => {
                   onChange("educationStatus", status);
                   onChange("educationLevel", "");
+                  onChange("institution", "");
+                  onChange("institutionName", "");
                   onChange("studyProgram", "");
                   onChange("schoolGrade", "");
                   onChange("entryYear", "");
@@ -260,8 +265,42 @@ export function EducationStep({ data, errors, onChange, disabled }: StepProps) {
         )}
         <TextInput field="graduationYear" label="Perkiraan tahun lulus" value={data.graduationYear} error={errors.graduationYear} onChange={(value) => onChange("graduationYear", value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" placeholder="2027" disabled={disabled} />
         <div className="sm:col-span-2">
+          <InstitutionPicker
+            key={data.educationStatus}
+            id="registration-institution"
+            label={data.educationStatus === "university" ? "Kampus" : "Sekolah"}
+            kind={data.educationStatus === "university" ? "university" : "school"}
+            value={data.institution ? { npsn: data.institution, name: data.institutionName } : null}
+            onChange={(option) => {
+              onChange("institution", option?.npsn ?? "");
+              onChange("institutionName", option?.name ?? "");
+            }}
+            error={errors.institution}
+            hint="Cari dan pilih institusi dari daftar resmi."
+            disabled={disabled}
+          />
+        </div>
+        <div className="sm:col-span-2">
           <TextInput field="dateOfBirth" label="Tanggal lahir" value={data.dateOfBirth} error={errors.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} type="date" autoComplete="bday" hint="Tanggal lahir digunakan untuk menyesuaikan pengalaman yang relevan." disabled={disabled} />
         </div>
+      </div>
+      <div className="mt-6 border-t border-slate-200 pt-5">
+        <h3 className="text-sm font-semibold text-slate-900">Domisili</h3>
+        <p className="mt-1 text-xs leading-5 text-slate-500">Pilih provinsi dan kota/kabupaten tempat tinggalmu.</p>
+        <LocationPicker
+          idPrefix="registration-location"
+          className="mt-3"
+          province={data.province}
+          city={data.city}
+          onProvinceChange={(value) => {
+            onChange("province", value);
+            onChange("city", "");
+          }}
+          onCityChange={(value) => onChange("city", value)}
+          provinceError={errors.province}
+          cityError={errors.city}
+          disabled={disabled}
+        />
       </div>
     </section>
   );
@@ -316,8 +355,10 @@ export function RegistrationReviewStep({ data, errors, onChange, onEdit }: StepP
             <SummaryItem term="Program studi" detail={data.studyProgram} />
           )}
           <SummaryItem term="Jenjang" detail={data.educationLevel} />
+          <SummaryItem term="Institusi" detail={data.institutionName} />
           <SummaryItem term={data.educationStatus === "student" ? "Perkiraan lulus" : "Periode kuliah"} detail={data.educationStatus === "student" ? data.graduationYear : `${data.entryYear}–${data.graduationYear}`} />
           <SummaryItem term="Tanggal lahir" detail={data.dateOfBirth} />
+          <SummaryItem term="Domisili" detail={formatRegion(data.city, data.province)} />
         </SummaryCard>
       </div>
       <fieldset className="mt-5 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">

@@ -1,11 +1,14 @@
+import type { CatalogOption } from "@/app/actions/catalog";
+import type { InstitutionOption } from "@/app/lib/institution";
+import { InstitutionPicker } from "@/app/components/ui/institution-picker";
 import { XIcon } from "@/app/components/ui/icons";
 import { SelectControl } from "@/app/components/ui/select-control";
 
 export type ExploreFilters = {
   search: string;
-  category: string;
-  topic: string;
-  role: string;
+  categoryId: string;
+  roleId: string;
+  collaborationTool: string;
   mode: string;
   commitment: string;
   proximity: string;
@@ -20,11 +23,13 @@ export type ExploreViewerContext = {
 
 type ProjectFiltersProps = {
   idPrefix: string;
-  categories: string[];
-  roles: string[];
+  categories: CatalogOption[];
+  roles: CatalogOption[];
   viewerContext: ExploreViewerContext | null;
   filters: ExploreFilters;
+  institutionOption: InstitutionOption | null;
   onChange: (key: keyof ExploreFilters, value: string) => void;
+  onInstitutionChange: (value: InstitutionOption | null) => void;
 };
 
 const inputClass = "mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition hover:border-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100";
@@ -35,7 +40,9 @@ export function ProjectFilters({
   roles,
   viewerContext,
   filters,
+  institutionOption,
   onChange,
+  onInstitutionChange,
 }: ProjectFiltersProps) {
   return (
     <div className="space-y-5">
@@ -50,29 +57,33 @@ export function ProjectFilters({
         {!viewerContext ? <p className="mt-1.5 text-xs leading-5 text-slate-500">Masuk dan lengkapi profil untuk memakai filter terdekat.</p> : null}
       </div>
 
-      <div>
-        <label htmlFor={`${idPrefix}-institution`} className="text-sm font-semibold text-slate-900">Sekolah atau kampus</label>
-        <input id={`${idPrefix}-institution`} type="search" value={filters.institution} onChange={(event) => onChange("institution", event.target.value)} placeholder="Contoh: SMA Negeri 1 Denpasar" className={`${inputClass} placeholder:text-slate-400`} />
-      </div>
+      <InstitutionPicker
+        id={`${idPrefix}-institution`}
+        label="Sekolah atau kampus"
+        kind="all"
+        value={institutionOption}
+        onChange={onInstitutionChange}
+        hint="Cari dan pilih institusi dari daftar resmi."
+      />
 
       <div>
         <label htmlFor={`${idPrefix}-category`} className="text-sm font-semibold text-slate-900">Jenis proyek</label>
-        <SelectControl id={`${idPrefix}-category`} value={filters.category} onChange={(event) => onChange("category", event.target.value)} containerClassName="mt-2">
+        <SelectControl id={`${idPrefix}-category`} value={filters.categoryId} onChange={(event) => onChange("categoryId", event.target.value)} containerClassName="mt-2">
           <option value="">Semua jenis</option>
-          {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+          {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
         </SelectControl>
       </div>
 
       <div>
-        <label htmlFor={`${idPrefix}-topic`} className="text-sm font-semibold text-slate-900">Topik atau bidang</label>
-        <input id={`${idPrefix}-topic`} type="search" value={filters.topic} onChange={(event) => onChange("topic", event.target.value)} placeholder="Contoh: lingkungan" className={`${inputClass} placeholder:text-slate-400`} />
+        <label htmlFor={`${idPrefix}-tool`} className="text-sm font-semibold text-slate-900">Alat kolaborasi</label>
+        <input id={`${idPrefix}-tool`} type="search" value={filters.collaborationTool} onChange={(event) => onChange("collaborationTool", event.target.value)} placeholder="Contoh: Figma, Notion" className={`${inputClass} placeholder:text-slate-400`} />
       </div>
 
       <div>
         <label htmlFor={`${idPrefix}-role`} className="text-sm font-semibold text-slate-900">Peran</label>
-        <SelectControl id={`${idPrefix}-role`} value={filters.role} onChange={(event) => onChange("role", event.target.value)} containerClassName="mt-2">
+        <SelectControl id={`${idPrefix}-role`} value={filters.roleId} onChange={(event) => onChange("roleId", event.target.value)} containerClassName="mt-2">
           <option value="">Semua peran</option>
-          {roles.map((item) => <option key={item} value={item}>{item}</option>)}
+          {roles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
         </SelectControl>
       </div>
 
@@ -108,16 +119,29 @@ export function ProjectFilters({
 
 type ActiveFilterChipsProps = {
   filters: ExploreFilters;
+  categories: CatalogOption[];
+  roles: CatalogOption[];
+  institutionOption: InstitutionOption | null;
   onRemove: (key: keyof ExploreFilters) => void;
   onClear: () => void;
 };
 
-export function ActiveFilterChips({ filters, onRemove, onClear }: ActiveFilterChipsProps) {
+export function ActiveFilterChips({
+  filters,
+  categories,
+  roles,
+  institutionOption,
+  onRemove,
+  onClear,
+}: ActiveFilterChipsProps) {
+  const categoryName = categories.find((item) => item.id === filters.categoryId)?.name;
+  const roleName = roles.find((item) => item.id === filters.roleId)?.name;
+
   const chips: Array<{ key: keyof ExploreFilters; label: string }> = [
     filters.search ? { key: "search", label: `Kata kunci: ${filters.search}` } : null,
-    filters.category ? { key: "category", label: `Jenis: ${filters.category}` } : null,
-    filters.topic ? { key: "topic", label: `Topik: ${filters.topic}` } : null,
-    filters.role ? { key: "role", label: `Peran: ${filters.role}` } : null,
+    categoryName ? { key: "categoryId", label: `Jenis: ${categoryName}` } : null,
+    filters.collaborationTool ? { key: "collaborationTool", label: `Alat kolaborasi: ${filters.collaborationTool}` } : null,
+    roleName ? { key: "roleId", label: `Peran: ${roleName}` } : null,
     filters.mode ? { key: "mode", label: filters.mode === "OFFLINE" ? "Luring" : filters.mode === "HYBRID" ? "Hybrid" : "Daring" } : null,
     filters.commitment ? {
       key: "commitment",
@@ -127,7 +151,7 @@ export function ActiveFilterChips({ filters, onRemove, onClear }: ActiveFilterCh
       key: "proximity",
       label: filters.proximity === "institution" ? "Institusi saya" : filters.proximity === "city" ? "Kota/kabupaten saya" : "Provinsi saya",
     } : null,
-    filters.institution ? { key: "institution", label: `Institusi: ${filters.institution}` } : null,
+    institutionOption ? { key: "institution", label: `Institusi: ${institutionOption.name}` } : null,
   ].filter((chip): chip is { key: keyof ExploreFilters; label: string } => chip !== null);
 
   if (chips.length === 0) return null;

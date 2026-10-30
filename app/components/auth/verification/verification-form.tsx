@@ -2,9 +2,10 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 
-import { sendVerificationEmail } from "@/app/actions/verification";
+import { sendVerificationEmail, submitVerificationDocument } from "@/app/actions/verification";
 import { CheckIcon } from "@/app/components/ui/icons";
 import { isAcademicEmail } from "@/app/lib/validator/auth";
+import type { VerificationDocumentType } from "@/app/lib/validator/verification";
 import { Field, TextInput, inputClass } from "../registration/registration-steps";
 
 export type VerificationMethod = "institutional-email" | "document";
@@ -47,9 +48,9 @@ export function VerificationDocumentField({ file, error, onFileChange, onValidat
 
   const validateAndSelect = (candidate?: File) => {
     if (!candidate) return;
-    const acceptedTypes = ["image/jpeg", "image/png", "application/pdf"];
+    const acceptedTypes = ["image/jpeg", "image/png"];
     if (!acceptedTypes.includes(candidate.type)) {
-      onValidationError("Format dokumen harus JPG, PNG, atau PDF.");
+      onValidationError("Format dokumen harus JPG atau PNG.");
       return;
     }
     if (candidate.size > 5 * 1024 * 1024) {
@@ -70,7 +71,7 @@ export function VerificationDocumentField({ file, error, onFileChange, onValidat
       <input
         ref={inputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
         onChange={(event: ChangeEvent<HTMLInputElement>) => validateAndSelect(event.target.files?.[0])}
         disabled={disabled}
         className="sr-only"
@@ -85,7 +86,7 @@ export function VerificationDocumentField({ file, error, onFileChange, onValidat
           <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <p className="mt-2 text-sm font-semibold text-slate-900">Tarik dokumen ke sini atau pilih dari perangkat</p>
-        <p id="verification-document-hint" className="mt-1 text-xs text-slate-500">JPG, PNG, atau PDF · Maksimal 5 MB</p>
+        <p id="verification-document-hint" className="mt-1 text-xs text-slate-500">JPG atau PNG · Maksimal 5 MB</p>
         <button type="button" onClick={() => inputRef.current?.click()} disabled={disabled} className="mt-4 min-h-11 rounded-xl bg-white px-4 text-sm font-semibold text-brand-primary ring-1 ring-inset ring-slate-300 hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-60">
           {file ? "Ganti dokumen" : "Pilih dokumen"}
         </button>
@@ -109,11 +110,12 @@ export function VerificationDocumentField({ file, error, onFileChange, onValidat
 export default function VerificationForm() {
   const [method, setMethod] = useState<VerificationMethod>("institutional-email");
   const [institutionalEmail, setInstitutionalEmail] = useState("");
-  const [documentType, setDocumentType] = useState("student-card");
+  const [documentType, setDocumentType] = useState<VerificationDocumentType>("student-card");
   const [file, setFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<VerificationErrors>({});
   const [isPending, setIsPending] = useState(false);
   const [sentTo, setSentTo] = useState("");
+  const [documentSubmitted, setDocumentSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
   const methods: Array<{ value: VerificationMethod; title: string; description: string }> = [
@@ -152,10 +154,38 @@ export default function VerificationForm() {
     setSentTo("data" in result ? result.data.email : email);
   }
 
+  async function handleDocumentSubmit() {
+    setSubmitError("");
+
+    if (!file) {
+      setErrors((current) => ({ ...current, document: "Pilih dokumen yang akan diunggah." }));
+      return;
+    }
+
+    setIsPending(true);
+    const result = await submitVerificationDocument({ documentType, document: file });
+    setIsPending(false);
+
+    if (!result.success) {
+      const documentFieldError = result.fieldErrors?.document?.[0];
+      if (documentFieldError) {
+        setErrors((current) => ({ ...current, document: documentFieldError }));
+      } else {
+        setSubmitError(result.error);
+      }
+      return;
+    }
+
+    setDocumentSubmitted(true);
+  }
+
   function handleSubmit() {
-    // Document verification is intentionally not wired up yet.
-    if (method !== "institutional-email") return;
-    void handleEmailSubmit();
+    if (method === "institutional-email") {
+      void handleEmailSubmit();
+      return;
+    }
+
+    void handleDocumentSubmit();
   }
 
   return (
@@ -165,7 +195,7 @@ export default function VerificationForm() {
       <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">ProjectMatch hanya ditujukan untuk pelajar dan mahasiswa aktif. Pilih salah satu cara verifikasi di bawah ini.</p>
 
       <div className="mt-5 mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-        <strong>Verifikasi email akademik</strong> sudah tersedia. Verifikasi melalui dokumen masih dalam pengembangan.
+        <strong>Verifikasi email akademik</strong> diproses otomatis. Verifikasi melalui dokumen akan ditinjau manual oleh admin.
       </div>
 
       <fieldset>
@@ -184,6 +214,7 @@ export default function VerificationForm() {
                     setErrors({});
                     setSubmitError("");
                     setSentTo("");
+                    setDocumentSubmitted(false);
                   }}
                   className="mt-1 size-4 accent-blue-700"
                 />
@@ -227,10 +258,24 @@ export default function VerificationForm() {
               disabled={isPending}
             />
           )
+        ) : documentSubmitted ? (
+          <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-white" aria-hidden="true">
+                <CheckIcon className="size-4" />
+              </span>
+              <div>
+                <p className="text-sm font-bold">Dokumen terkirim</p>
+                <p className="mt-1 text-sm leading-6">
+                  Dokumenmu sedang menunggu peninjauan admin. Status verifikasi akan diperbarui setelah dokumen disetujui.
+                </p>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
             <Field id="verification-documentType" label="Jenis dokumen" error={errors.documentType}>
-              <select id="verification-documentType" value={documentType} onChange={(event) => setDocumentType(event.target.value)} className={inputClass}>
+              <select id="verification-documentType" value={documentType} onChange={(event) => setDocumentType(event.target.value as VerificationDocumentType)} className={inputClass} disabled={isPending}>
                 <option value="student-card">Kartu pelajar/mahasiswa</option>
                 <option value="enrollment-letter">Surat keterangan aktif</option>
               </select>
@@ -243,6 +288,7 @@ export default function VerificationForm() {
               error={errors.document}
               onFileChange={setFile}
               onValidationError={(message) => setErrors((current) => ({ ...current, document: message || undefined }))}
+              disabled={isPending}
             />
           </div>
         )}
@@ -254,16 +300,18 @@ export default function VerificationForm() {
         </div>
       ) : null}
 
-      <div className="mt-6 flex justify-end">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isPending || (method === "institutional-email" && Boolean(sentTo))}
-          className="min-h-12 rounded-xl bg-brand-primary px-6 text-sm font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? "Mengirim…" : "Kirim verifikasi"}
-        </button>
-      </div>
+      {!(method === "document" && documentSubmitted) && (
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending || (method === "institutional-email" && Boolean(sentTo)) || (method === "document" && !file)}
+            className="min-h-12 rounded-xl bg-brand-primary px-6 text-sm font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isPending ? "Mengirim…" : "Kirim verifikasi"}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

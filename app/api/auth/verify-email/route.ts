@@ -9,7 +9,7 @@ import prisma from "@/app/lib/prisma";
  */
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
-  const redirectUrl = new URL("/profil", request.url);
+  const redirectUrl = new URL("/profile", request.url);
 
   if (!token) {
     redirectUrl.searchParams.set("verification", "invalid");

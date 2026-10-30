@@ -1,15 +1,17 @@
 import Link from "next/link";
 
 import type { ProjectDetail } from "@/app/lib/ui/kelola-project";
+import { formatMeetingDate, formatMeetingTime } from "@/app/lib/ui/meeting";
 import { getOfflinePlaceLabel, getOnlinePlatformLabel } from "../../ui/collaboration-mode";
 import { CalendarIcon, ClockIcon, MapPinIcon, VideoIcon } from "../../ui/icons";
 
 type MeetingCardProps = {
   project: ProjectDetail;
   projectId: string;
+  canManage?: boolean;
 };
 
-export default function MeetingCard({ project, projectId }: MeetingCardProps) {
+export default function MeetingCard({ project, projectId, canManage = true }: MeetingCardProps) {
   const hasOnline = project.collaborationMode !== "OFFLINE";
   const hasOffline = project.collaborationMode !== "ONLINE";
   const PlaceIcon = project.collaborationMode === "OFFLINE" ? MapPinIcon : VideoIcon;
@@ -30,9 +32,8 @@ export default function MeetingCard({ project, projectId }: MeetingCardProps) {
       </div>
 
       <div className="mt-4 space-y-3 border-t border-slate-100 pt-4 text-sm text-slate-600">
-        {/* Placeholder: the backend has no meeting date/time field yet. */}
-        <p className="flex items-center gap-2"><CalendarIcon className="size-4 text-slate-400" />28 Okt 2026</p>
-        <p className="flex items-center gap-2"><ClockIcon className="size-4 text-slate-400" />19.00–20.00 WITA</p>
+        <p className="flex items-center gap-2"><CalendarIcon className="size-4 text-slate-400" />{formatMeetingDate(project.meetAt)}</p>
+        <p className="flex items-center gap-2"><ClockIcon className="size-4 text-slate-400" />{formatMeetingTime(project.meetAt, project.meetEndAt)}</p>
         {hasOnline && project.onlinePlatform ? (
           <p className="flex items-center gap-2">
             <VideoIcon className="size-4 text-slate-400" />
@@ -49,12 +50,14 @@ export default function MeetingCard({ project, projectId }: MeetingCardProps) {
 
       <p className="mt-3 text-sm leading-6 text-slate-500">{project.meetDescription}</p>
 
-      <Link
-        href={`/activity/project/${projectId}/posisi`}
-        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary"
-      >
-        Ubah detail pertemuan
-      </Link>
+      {canManage ? (
+        <Link
+          href={`/activity/project/${projectId}/edit`}
+          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary"
+        >
+          Ubah detail pertemuan
+        </Link>
+      ) : null}
     </article>
   );
 }

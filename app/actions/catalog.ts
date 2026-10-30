@@ -21,10 +21,3 @@ export const fetchRoles = actionWrapper(async () =>
     orderBy: { name: "asc" },
   }),
 );
-
-export const fetchStatuses = actionWrapper(async () =>
-  prisma.status.findMany({
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  }),
-);

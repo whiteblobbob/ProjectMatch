@@ -12,8 +12,12 @@ import {
   UpdateProjectValidator,
   QueryProjectsForm,
   QueryProjectsValidator,
+  ReportProjectForm,
+  ReportProjectValidator,
   validateMeetingRequirements,
+  validateRangeRequirements,
 } from "../lib/validator/project";
+import { checkProjectEligibility, ownsRole } from "../lib/eligibility";
 import actionWrapper from "../lib/actionWrapper";
 import { IdValidator, parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
@@ -28,6 +32,11 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
   // Deterministic ordering keeps paginated pages stable between requests
   // (the id tiebreaks rows created in the same second).
   // One extra row is fetched purely to detect whether a next page exists.
+  const search = data.search?.trim();
+  const collaborationTool = data.collaborationTool?.trim();
+  const hasWorkHoursRange = data.minWorkHours !== undefined || data.maxWorkHours !== undefined;
+  const hasOwnerFilter = Boolean(data.ownerInstitution || data.ownerCity || data.ownerProvince);
+
   const rows = await prisma.project.findMany({
     where: {
       ownerId: data.ownerId,
@@ -40,13 +49,27 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
           }
         }
       } : undefined,
-      projectStatusCriteria: data.projectStatusCriteria ? {
-        some: {
-          statusId: {
-            in: data.projectStatusCriteria
-          }
-        }
+      educationLevels: data.educationLevels ? {
+        hasSome: data.educationLevels
       } : undefined,
+      category: data.categoryId ? { id: data.categoryId } : undefined,
+      collaborationTool: collaborationTool ? {
+        contains: collaborationTool,
+        mode: "insensitive",
+      } : undefined,
+      workHoursPerWeek: hasWorkHoursRange ? {
+        gte: data.minWorkHours,
+        lte: data.maxWorkHours,
+      } : undefined,
+      owner: hasOwnerFilter ? {
+        institution: data.ownerInstitution ? { equals: data.ownerInstitution } : undefined,
+        city: data.ownerCity ? { equals: data.ownerCity, mode: "insensitive" } : undefined,
+        province: data.ownerProvince ? { equals: data.ownerProvince, mode: "insensitive" } : undefined,
+      } : undefined,
+      OR: search ? [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ] : undefined,
     },
     include: {
       projectRoles: {
@@ -55,7 +78,10 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
       owner: {
         select: {
           name: true,
-          instance: true,
+          institution: true,
+          institutionName: true,
+          province: true,
+          city: true,
         }
       },
       category: {
@@ -100,10 +126,14 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
     include: {
       owner: {
         select: {
+          id: true,
           name: true,
-          instance: true,
+          institution: true,
+          institutionName: true,
+          province: true,
+          city: true,
           bio: true,
-          status: true,
+          educationLevel: true,
           userRoles: {
             include: { role: true },
           },
@@ -116,9 +146,6 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
           name: true,
         },
       },
-      projectStatusCriteria: {
-        include: { status: true },
-      },
       projectRoles: {
         include: { role: true },
       },
@@ -128,9 +155,9 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
             select: {
               id: true,
               name: true,
-              instance: true,
+              institutionName: true,
               bio: true,
-              status: true,
+              educationLevel: true,
               userRoles: {
                 include: { role: true },
               },
@@ -159,7 +186,9 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
   }
 
   const data = parseOrThrow(CreateProjectValidator, formData);
+  const projectRange = data.range ?? "ALL";
   validateMeetingRequirements(data);
+  validateRangeRequirements({ range: projectRange, allowedInstitutions: data.allowedInstitutions });
 
   const project = await prisma.project.create({
     data: {
@@ -174,15 +203,15 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
       offlinePlace: data.offlinePlace,
       offlineLink: data.offlineLink,
       meetDescription: data.meetDescription,
+      meetAt: data.meetAt,
+      meetEndAt: data.meetEndAt,
       collaborationTool: data.collaborationTool,
       workHoursPerWeek: data.workHoursPerWeek,
-      projectStatusCriteria: {
-        create: data.projectStatusCriteria.map(statusId => ({
-          status: {
-            connect: { id: statusId }
-          }
-        }))
-      },
+      educationLevels: data.educationLevels,
+      range: projectRange,
+      allowedInstitutions: projectRange === "INSTITUTIONS" ? (data.allowedInstitutions ?? []) : [],
+      extraCriteria: data.extraCriteria,
+      sourceLink: data.sourceLink,
       projectRoles: {
         create: data.projectRoles.map(role => ({
           slotsAvailable: role.slotsAvailable,
@@ -206,11 +235,29 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
 
   const validatedProjectId = parseOrThrow(IdValidator, projectId);
   const data = parseOrThrow(ApplicationValidator, formData);
+  const applicant = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      educationLevel: true,
+      institution: true,
+      province: true,
+      city: true,
+      userRoles: { select: { roleId: true } },
+    },
+  });
+
+  if (!applicant) {
+    throw new ActionError("Profile not found");
+  }
+
   const project = await prisma.project.findUnique({
     where: { id: validatedProjectId },
     include: {
       projectRoles: true,
       projectMembers: true,
+      owner: {
+        select: { institution: true, province: true, city: true },
+      },
     }
   });
 
@@ -245,6 +292,24 @@ export const sendApplication = actionWrapper(async (user: User, projectId: strin
 
   if (project.projectMembers.some(member => member.userId === user.id)) {
     throw new ActionError("You are already a member of this project");
+  }
+
+  const roleIds = (applicant.userRoles ?? []).map((userRole) => userRole.roleId);
+  const eligibility = checkProjectEligibility(
+    { ...applicant, roleIds },
+    project,
+  );
+
+  if (!eligibility.education) {
+    throw new ActionError("You do not meet the education requirements for this project");
+  }
+
+  if (!eligibility.audience) {
+    throw new ActionError("This project is limited to a different audience");
+  }
+
+  if (!ownsRole({ ...applicant, roleIds }, data.roleId)) {
+    throw new ActionError("You do not have the required role for this position");
   }
 
   let isAvailable = false;
@@ -437,6 +502,10 @@ export const updateProject = actionWrapper(async (user: User, projectId: string,
     });
   }
 
+  if (data.range === "INSTITUTIONS") {
+    validateRangeRequirements(data);
+  }
+
   const record = await prisma.project.findUnique({
     where: { id: idResult }
   });
@@ -460,6 +529,8 @@ export const updateProject = actionWrapper(async (user: User, projectId: string,
       description: data.description,
       deadline: data.deadline,
       workHoursPerWeek: data.workHoursPerWeek,
+      meetAt: data.meetAt,
+      meetEndAt: data.meetEndAt,
       collaborationMode: data.collaborationMode,
       ...(data.collaborationMode ? {
         onlinePlatform: data.collaborationMode === "OFFLINE" ? null : data.onlinePlatform,
@@ -469,23 +540,13 @@ export const updateProject = actionWrapper(async (user: User, projectId: string,
         meetDescription: data.meetDescription,
         collaborationTool: data.collaborationTool,
       } : {}),
-      projectStatusCriteria: (data.projectStatusCriteria) ? {
-        deleteMany: {},
-        create: data.projectStatusCriteria.map(statusId => ({
-          status: {
-            connect: { id: statusId }
-          }
-        })),
-      } : undefined,
-      projectRoles: (data.projectRoles) ? {
-        deleteMany: {},
-        create: data.projectRoles.map(role => ({
-          slotsAvailable: role.slotsAvailable,
-          role: {
-            connect: { id: role.roleId }
-          }
-        })),
-      } : undefined,
+      educationLevels: data.educationLevels,
+      range: data.range,
+      allowedInstitutions: data.range
+        ? (data.range === "INSTITUTIONS" ? (data.allowedInstitutions ?? []) : [])
+        : data.allowedInstitutions,
+      extraCriteria: data.extraCriteria,
+      sourceLink: data.sourceLink,
     }
   });
 }, { auth: true });
@@ -666,14 +727,15 @@ export const fetchProjectApplications = actionWrapper(async (user: User, project
         select: {
           id: true,
           name: true,
-          instance: true,
+          institutionName: true,
           bio: true,
-          location: true,
+          province: true,
+          city: true,
           portfolioLink: true,
           contactInfos: {
             select: { value: true },
           },
-          status: true,
+          educationLevel: true,
           userRoles: {
             include: { role: true },
           },
@@ -686,4 +748,62 @@ export const fetchProjectApplications = actionWrapper(async (user: User, project
   });
 
   return applications;
+}, { auth: true });
+export const fetchProjectPeerReviews = actionWrapper(async (user: User, projectId: string) => {
+  const result = parseOrThrow(IdValidator, projectId);
+
+  const project = await prisma.project.findUnique({
+    where: { id: result },
+    select: {
+      status: true,
+      ownerId: true,
+      projectMembers: { select: { userId: true } },
+    },
+  });
+
+  if (!project) {
+    throw new ActionError("Project not found");
+  }
+
+  if (project.status !== "COMPLETED") {
+    throw new ActionError("Peer reviews are only available for completed projects");
+  }
+
+  const isParticipant =
+    project.ownerId === user.id ||
+    project.projectMembers.some((member) => member.userId === user.id);
+
+  if (!isParticipant) {
+    throw new ActionError("You are not authorized to view reviews for this project");
+  }
+
+  return prisma.peerReview.findMany({
+    where: { projectId: result, reviewerId: user.id },
+    select: {
+      revieweeId: true,
+      commitmentScore: true,
+      feedback: true,
+    },
+  });
+}, { auth: true });
+export const reportProject = actionWrapper(async (user: User, formData: ReportProjectForm) => {
+  const data = parseOrThrow(ReportProjectValidator, formData);
+
+  const project = await prisma.project.findUnique({
+    where: { id: data.projectId },
+    select: { id: true },
+  });
+
+  if (!project) {
+    throw new ActionError("Project not found");
+  }
+
+  await prisma.projectReport.create({
+    data: {
+      projectId: data.projectId,
+      reporterId: user.id,
+      reason: data.reason,
+      details: data.details,
+    },
+  });
 }, { auth: true });

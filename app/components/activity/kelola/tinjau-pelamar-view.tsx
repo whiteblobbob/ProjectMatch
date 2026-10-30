@@ -1,7 +1,7 @@
 import type { ProjectApplication, ProjectDetail } from "@/app/lib/ui/kelola-project";
 import { getCollaborationModeLabel } from "../../ui/collaboration-mode";
 import Breadcrumbs from "../../ui/breadcrumbs";
-import { CalendarIcon, ClockIcon, UsersIcon, VideoIcon } from "../../ui/icons";
+import { ClockIcon, UsersIcon } from "../../ui/icons";
 import ApplicantReviewCard from "./applicant-review-card";
 
 type TinjauPelamarViewProps = {
@@ -49,7 +49,7 @@ export default function TinjauPelamarView({ project, applications }: TinjauPelam
           )}
         </section>
 
-        <aside className="space-y-4 lg:col-span-4" aria-label="Konteks proyek dan pertemuan">
+        <aside className="space-y-4 lg:col-span-4" aria-label="Konteks proyek">
           <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -74,25 +74,6 @@ export default function TinjauPelamarView({ project, applications }: TinjauPelam
                 <p className="mt-0.5 text-sm font-bold text-slate-900">±{project.workHoursPerWeek} jam/minggu</p>
               </div>
             </div>
-          </article>
-
-          <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
-                <VideoIcon className="size-5" />
-              </span>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Jika bergabung</p>
-                <h2 className="mt-0.5 text-sm font-bold text-slate-950">Pertemuan pertama</h2>
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-2.5 text-sm text-slate-600">
-              {/* Placeholder: the backend has no meeting date/time field yet. */}
-              <p className="flex items-center gap-2"><CalendarIcon className="size-4 text-slate-400" />28 Okt 2026</p>
-              <p className="flex items-center gap-2"><ClockIcon className="size-4 text-slate-400" />19.00–20.00 WITA</p>
-            </div>
-            <p className="mt-4 rounded-xl bg-brand-soft p-3 text-xs leading-5 text-brand-secondary">{project.meetDescription}</p>
           </article>
         </aside>
       </div>

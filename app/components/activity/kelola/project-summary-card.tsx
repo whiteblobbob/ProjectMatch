@@ -1,4 +1,5 @@
 import type { ProjectDetail } from "@/app/lib/ui/kelola-project";
+import ProjectStatusBadge from "../project-status-badge";
 import { getCollaborationModeLabel } from "../../ui/collaboration-mode";
 import { CalendarIcon, ClockIcon, LaptopIcon, UsersIcon } from "../../ui/icons";
 
@@ -8,18 +9,11 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
 });
 
-const statusMeta = {
-  OPEN_RECRUITMENT: { label: "Sedang mencari anggota", className: "bg-emerald-50 text-emerald-700" },
-  IN_PROGRESS: { label: "Sedang berjalan", className: "bg-blue-50 text-blue-700" },
-  COMPLETED: { label: "Selesai", className: "bg-slate-100 text-slate-600" },
-} as const;
-
 export default function ProjectSummaryCard({ project }: { project: ProjectDetail }) {
-  const memberCount = project.projectMembers.length;
+  const memberCount = project.projectMembers.length + 1;
   const openSlots = project.projectRoles.reduce((total, projectRole) => total + projectRole.slotsAvailable, 0);
   const capacity = memberCount + openSlots;
   const roleNames = project.projectRoles.map((projectRole) => projectRole.role.name).join(", ");
-  const status = statusMeta[project.status];
 
   const facts = [
     { label: "Mode kolaborasi", value: getCollaborationModeLabel(project.collaborationMode), icon: LaptopIcon },
@@ -41,9 +35,7 @@ export default function ProjectSummaryCard({ project }: { project: ProjectDetail
               <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-primary">
                 {project.category.name}
               </span>
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}>
-                {status.label}
-              </span>
+              <ProjectStatusBadge status={project.status} />
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{project.title}</h2>
             <p className="mt-1 text-sm text-slate-500">

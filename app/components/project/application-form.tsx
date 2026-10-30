@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { sendApplication } from "@/app/actions/project";
+import { formatRegion } from "@/app/lib/regions";
 import type { ProfileView } from "@/app/lib/ui/profile";
 import Breadcrumbs from "../ui/breadcrumbs";
 import { ExternalLinkIcon, MapPinIcon } from "../ui/icons";
@@ -23,9 +24,10 @@ type ApplicationProject = {
 type ApplicationFormProps = {
     project: ApplicationProject;
     profile: ProfileView;
+    ownedRoleIds: string[];
 };
 
-export default function ApplicationForm({ project, profile }: ApplicationFormProps) {
+export default function ApplicationForm({ project, profile, ownedRoleIds }: ApplicationFormProps) {
     const router = useRouter();
     const [roleId, setRoleId] = useState("");
     const [message, setMessage] = useState("");
@@ -33,8 +35,9 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
     const [error, setError] = useState("");
     const [submitted, setSubmitted] = useState(false);
 
-    const publicInfo = { location: profile.location, portfolioUrl: profile.portfolioLink };
+    const publicInfo = { location: formatRegion(profile.city, profile.province), portfolioUrl: profile.portfolioLink };
     const openRoles = project.projectRoles.filter((projectRole) => projectRole.slotsAvailable > 0);
+    const ownedOpenRoles = openRoles.filter((projectRole) => ownedRoleIds.includes(projectRole.role.id));
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -42,6 +45,11 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
 
         if (!roleId) {
             setError("Pilih posisi yang ingin dilamar.");
+            return;
+        }
+
+        if (!ownedRoleIds.includes(roleId)) {
+            setError("Posisi ini belum ada di peran profilmu. Tambahkan peran tersebut di profil terlebih dahulu.");
             return;
         }
 
@@ -104,7 +112,7 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
                                 <div className="min-w-0">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-text-subheading">Data dari profil</p>
                                     <h2 className="mt-1 text-base font-bold text-text-heading">{profile.name || "Profil belum lengkap"}</h2>
-                                    <p className="mt-1 text-[13px] leading-5 text-text-subheading">{profile.instance || "Sekolah atau kampus belum diisi"}</p>
+                                    <p className="mt-1 text-[13px] leading-5 text-text-subheading">{profile.institutionName || "Sekolah atau kampus belum diisi"}</p>
                                     <p className="mt-2 flex items-center gap-1.5 text-xs text-text-subheading">
                                         <MapPinIcon className="size-3.5" />
                                         {publicInfo.location || "Lokasi belum diisi"}
@@ -112,7 +120,7 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
                                 </div>
 
                                 <Link
-                                    href="/profil"
+                                    href="/profile"
                                     className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-brand-primary transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
                                 >
                                     Ubah profil
@@ -138,11 +146,20 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
                                         className="border-border-input text-text-heading focus:ring-2 focus:ring-brand-soft"
                                     >
                                         <option value="" disabled>Pilih posisi yang kamu inginkan</option>
-                                        {openRoles.map((projectRole) => (
-                                            <option key={projectRole.role.id} value={projectRole.role.id}>
-                                                {projectRole.role.name} ({projectRole.slotsAvailable} slot)
-                                            </option>
-                                        ))}
+                                        {openRoles.map((projectRole) => {
+                                            const isOwned = ownedRoleIds.includes(projectRole.role.id);
+
+                                            return (
+                                                <option
+                                                    key={projectRole.role.id}
+                                                    value={projectRole.role.id}
+                                                    disabled={!isOwned}
+                                                >
+                                                    {projectRole.role.name} ({projectRole.slotsAvailable} slot)
+                                                    {isOwned ? "" : " · belum ada di profil"}
+                                                </option>
+                                            );
+                                        })}
                                     </SelectControl>
                                 </div>
                             ) : (
@@ -150,6 +167,12 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
                                     Proyek ini tidak memiliki posisi terbuka saat ini.
                                 </p>
                             )}
+
+                            {openRoles.length > 0 && ownedOpenRoles.length === 0 ? (
+                                <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                                    Belum ada posisi terbuka yang cocok dengan peran di profilmu. Tambahkan peran yang sesuai di profil terlebih dahulu.
+                                </p>
+                            ) : null}
 
                             {/* Contribution */}
                             <div className="flex min-w-0 flex-col gap-2">
@@ -183,7 +206,7 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
                                         )}
                                         <p className="mt-2 text-xs leading-5 text-text-subheading">Tautan ini otomatis disertakan bersama pengajuanmu.</p>
                                     </div>
-                                    <Link href="/profil" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-brand-primary hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
+                                    <Link href="/profile" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-brand-primary hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
                                         {publicInfo.portfolioUrl ? "Ganti portofolio" : "Tambah portofolio"}
                                     </Link>
                                 </div>
@@ -200,7 +223,7 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
                         <div className="sticky bottom-0 -mx-4 border-t border-border-default bg-background/95 px-4 pb-4 pt-3 backdrop-blur-sm">
                             <button
                                 type="submit"
-                                disabled={isPending || openRoles.length === 0}
+                                disabled={isPending || ownedOpenRoles.length === 0}
                                 className="flex min-h-12 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
                             >
                                 {isPending ? "Mengirim pengajuan…" : "Kirim pengajuan"}
