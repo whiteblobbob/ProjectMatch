@@ -2,11 +2,11 @@ import "server-only";
 
 import { notFound, redirect } from "next/navigation";
 
-import { fetchProject, fetchProjectApplications } from "@/app/actions/project";
+import { fetchActivityProject, fetchProjectApplications } from "@/app/actions/project";
 import { requireSessionUser } from "./session";
 
 export type ProjectDetail = Extract<
-  Awaited<ReturnType<typeof fetchProject>>,
+  Awaited<ReturnType<typeof fetchActivityProject>>,
   { success: true; data: unknown }
 >["data"];
 
@@ -23,7 +23,7 @@ export type ProjectApplication = Extract<
 export async function loadOwnedProject(id: string) {
   const user = await requireSessionUser();
 
-  const result = await fetchProject(id);
+  const result = await fetchActivityProject(id);
 
   if (!result.success || !("data" in result)) {
     notFound();
@@ -44,7 +44,7 @@ export async function loadOwnedProject(id: string) {
 export async function loadActivityProject(id: string) {
   const user = await requireSessionUser();
 
-  const result = await fetchProject(id);
+  const result = await fetchActivityProject(id);
 
   if (!result.success || !("data" in result)) {
     notFound();
