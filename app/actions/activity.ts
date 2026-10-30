@@ -10,6 +10,7 @@ export type IncomingApplication = {
   id: string;
   projectId: string;
   applicantName: string | null;
+  applicantProfileCloudId: string | null;
   applicantInstitution: string | null;
   projectTitle: string;
   roleName: string;
@@ -75,7 +76,7 @@ export const getActivityOverview = actionWrapper(
         select: {
           id: true,
           applicant: {
-            select: { name: true, institutionName: true },
+            select: { name: true, institutionName: true, profileCloudId: true },
           },
           project: {
             select: { id: true, title: true },
@@ -195,6 +196,7 @@ export const getActivityOverview = actionWrapper(
         id: application.id,
         projectId: application.project.id,
         applicantName: application.applicant.name,
+        applicantProfileCloudId: application.applicant.profileCloudId,
         applicantInstitution: application.applicant.institutionName,
         projectTitle: application.project.title,
         roleName: application.role.name,

@@ -1,3 +1,4 @@
+import UserAvatar from "@/app/components/ui/user-avatar";
 import Link from "next/link";
 
 import type { ProjectApplication } from "@/app/lib/ui/kelola-project";
@@ -10,21 +11,12 @@ type ApplicantCardProps = {
 
 export default function ApplicantCard({ application, projectId }: ApplicantCardProps) {
   const name = application.applicant.name?.trim() || "Kandidat";
-  const initials =
-    name
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "PM";
 
   return (
     <article className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md sm:p-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-4">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-indigo-500 text-sm font-bold text-white shadow-sm">
-            {initials}
-          </div>
+          <UserAvatar  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-indigo-500 text-sm font-bold text-white shadow-sm" name={name} profileCloudId={application.applicant.profileCloudId} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base font-bold text-slate-950">{name}</h3>

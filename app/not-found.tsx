@@ -14,7 +14,7 @@ export default function NotFound() {
         </div>
 
         <p className="mt-7 text-sm font-bold uppercase tracking-[0.25em] text-brand-primary">Error 404</p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">Halaman ini belum bergabung ke tim</h1>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">Halaman tidak dapat ditemukan</h1>
         <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-slate-500 sm:text-base">
           Tautan yang kamu buka mungkin sudah berubah atau belum tersedia. Yuk, kembali menjelajah kesempatan kolaborasi bersama pelajar dan mahasiswa lainnya.
         </p>

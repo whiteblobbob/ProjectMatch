@@ -38,6 +38,7 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
   const hasOwnerFilter = Boolean(data.ownerInstitution || data.ownerCity || data.ownerProvince);
 
   const rows = await prisma.project.findMany({
+    omit: { onlinePlatform: true, onlineLink: true, offlinePlace: true, offlineLink: true, meetDescription: true, meetAt: true, meetEndAt: true },
     where: {
       ownerId: data.ownerId,
       collaborationMode: data.collaborationMode,
@@ -78,6 +79,7 @@ export const queryProjects = actionWrapper(async (formData: QueryProjectsForm) =
       owner: {
         select: {
           name: true,
+          profileCloudId: true,
           institution: true,
           institutionName: true,
           province: true,
@@ -123,11 +125,13 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
 
   const project = await prisma.project.findUnique({
     where: { id: idResult },
+    omit: { onlinePlatform: true, onlineLink: true, offlinePlace: true, offlineLink: true, meetDescription: true, meetAt: true, meetEndAt: true },
     include: {
       owner: {
         select: {
           id: true,
           name: true,
+          profileCloudId: true,
           institution: true,
           institutionName: true,
           province: true,
@@ -155,6 +159,7 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
             select: {
               id: true,
               name: true,
+          profileCloudId: true,
               institutionName: true,
               bio: true,
               educationLevel: true,
@@ -177,6 +182,71 @@ export const fetchProject = actionWrapper(async (projectId: string) => {
 
   return project;
 }, { auth: false });
+
+export const fetchActivityProject = actionWrapper(async (user: User, projectId: string) => {
+  const idResult = parseOrThrow(IdValidator, projectId);
+
+  const project = await prisma.project.findUnique({
+    where: { id: idResult },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          profileCloudId: true,
+          institution: true,
+          institutionName: true,
+          province: true,
+          city: true,
+          bio: true,
+          educationLevel: true,
+          userRoles: {
+            include: { role: true },
+          },
+          avgCommitmentScore: true,
+          totalProjectsCompleted: true,
+        },
+      },
+      category: {
+        select: {
+          name: true,
+        },
+      },
+      projectRoles: {
+        include: { role: true },
+      },
+      projectMembers: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+          profileCloudId: true,
+              institutionName: true,
+              bio: true,
+              educationLevel: true,
+              userRoles: {
+                include: { role: true },
+              },
+              avgCommitmentScore: true,
+              totalProjectsCompleted: true,
+            },
+          },
+          role: true,
+        },
+      },
+    },
+  });
+
+  if (!project) {
+    throw new ActionError("Project not found");
+  }
+
+  if (project.ownerId !== user.id && !project.projectMembers.some(member => member.userId === user.id)) {
+    throw new ActionError("You are not authorized to view this project");
+  }
+  return project;
+}, { auth: true });
 
 export const createProject = actionWrapper(async (user: User, formData: CreateProjectForm) => {
   const userData = await getUser(user);
@@ -727,6 +797,7 @@ export const fetchProjectApplications = actionWrapper(async (user: User, project
         select: {
           id: true,
           name: true,
+          profileCloudId: true,
           institutionName: true,
           bio: true,
           province: true,

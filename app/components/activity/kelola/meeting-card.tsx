@@ -48,6 +48,9 @@ export default function MeetingCard({ project, projectId, canManage = true }: Me
         ) : null}
       </div>
 
+      {hasOnline && project.onlineLink ? <a className="mt-3 block break-all text-sm text-brand-primary underline" href={project.onlineLink} target="_blank" rel="noopener noreferrer">Tautan pertemuan: {project.onlineLink}</a> : null}
+      {hasOffline && project.offlineLink ? <a className="mt-3 block break-all text-sm text-brand-primary underline" href={project.offlineLink} target="_blank" rel="noopener noreferrer">Tautan lokasi: {project.offlineLink}</a> : null}
+
       <p className="mt-3 text-sm leading-6 text-slate-500">{project.meetDescription}</p>
 
       {canManage ? (

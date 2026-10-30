@@ -1,3 +1,5 @@
+import { getCloudinaryCloudName } from "@/app/lib/cloudinary";
+import UserAvatar from "@/app/components/ui/user-avatar";
 import Link from "next/link";
 
 import CekPersyaratan from "../card/cekpersyaratan";
@@ -5,20 +7,14 @@ import ReportProjectButton from "../project/report-project-button";
 import {
     CalendarIcon,
     ClockIcon,
-    ExternalLinkIcon,
     LaptopIcon,
     MapPinIcon,
     UsersIcon,
-    VideoIcon,
     WarningIcon,
 } from "../ui/icons";
 import {
     getCollaborationModeLabel,
-    getOfflinePlaceLabel,
-    getOnlinePlatformLabel,
     type CollaborationMode,
-    type OfflinePlace,
-    type OnlinePlatform,
 } from "../ui/collaboration-mode";
 import { checkProjectEligibility } from "@/app/lib/eligibility";
 import { educationLevelOptions } from "@/app/lib/ui/profile";
@@ -43,16 +39,12 @@ type ProjectDetailProps = {
         description: string;
         deadline: Date | null;
         collaborationMode: CollaborationMode;
-        onlinePlatform: OnlinePlatform | null;
-        onlineLink: string | null;
-        offlinePlace: OfflinePlace | null;
-        offlineLink: string | null;
-        meetDescription: string;
         collaborationTool: string | null;
         workHoursPerWeek: number;
         status: "OPEN_RECRUITMENT" | "IN_PROGRESS" | "COMPLETED";
         category: { name: string };
         owner: {
+            profileCloudId?: string | null;
             id: string;
             name: string | null;
             institutionName: string | null;
@@ -82,15 +74,7 @@ const deadlineFormatter = new Intl.DateTimeFormat("id-ID", {
     year: "numeric",
 });
 
-function initials(name: string | null) {
-    const value = name?.trim() || "PM";
-    return value
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join("")
-        .toLocaleUpperCase("id-ID");
-}
+
 
 export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
     const openRoles = project.projectRoles.filter((role) => role.slotsAvailable > 0);
@@ -169,12 +153,10 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
                     </p>
 
                     <div className="flex min-w-0 items-center gap-2.5">
-                        <span
-                            aria-hidden="true"
+                        <UserAvatar 
+                            
                             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white"
-                        >
-                            {initials(project.owner.name)}
-                        </span>
+                         cloudName={getCloudinaryCloudName()} name={project.owner.name} profileCloudId={project.owner.profileCloudId} />
 
                         <div className="min-w-0 flex-1">
                             <Link href={`/profile/${project.owner.id}`} className="text-[13px] font-medium text-text-heading hover:text-brand-primary hover:underline">
@@ -269,62 +251,6 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
                             Tidak ada posisi terbuka saat ini.
                         </p>
                     )}
-                </section>
-
-                {/* Meeting plan */}
-                <section className="flex min-w-0 flex-col gap-3 rounded-xl border border-border-default bg-white p-4">
-                    <div className="flex items-start gap-3">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-primary">
-                            {project.collaborationMode === "OFFLINE" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
-                        </span>
-                        <div>
-                            <h2 className="text-base font-semibold text-text-heading">Rencana pertemuan</h2>
-                            <p className="mt-0.5 text-[13px] text-text-subheading">{getCollaborationModeLabel(project.collaborationMode)}</p>
-                        </div>
-                    </div>
-
-                    <p className="whitespace-pre-line text-[13px] leading-5 text-text-subheading">
-                        {project.meetDescription}
-                    </p>
-
-                    <div className="flex flex-col gap-2">
-                        {(project.collaborationMode === "ONLINE" || project.collaborationMode === "HYBRID") ? (
-                            <div className="flex min-w-0 flex-col gap-1 rounded-lg border border-border-default p-3">
-                                <span className="text-xs text-text-subheading">Pertemuan daring</span>
-                                <span className="text-[13px] font-medium text-text-heading">
-                                    {project.onlinePlatform ? getOnlinePlatformLabel(project.onlinePlatform) : "Platform belum diisi"}
-                                </span>
-                                {project.onlineLink ? (
-                                    <a href={project.onlineLink} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1.5 text-[13px] font-semibold text-brand-primary hover:text-brand-secondary">
-                                        <span className="truncate">{project.onlineLink}</span>
-                                        <ExternalLinkIcon className="size-3.5 shrink-0" />
-                                    </a>
-                                ) : null}
-                            </div>
-                        ) : null}
-
-                        {(project.collaborationMode === "OFFLINE" || project.collaborationMode === "HYBRID") ? (
-                            <div className="flex min-w-0 flex-col gap-1 rounded-lg border border-border-default p-3">
-                                <span className="text-xs text-text-subheading">Pertemuan luring</span>
-                                <span className="text-[13px] font-medium text-text-heading">
-                                    {project.offlinePlace ? getOfflinePlaceLabel(project.offlinePlace) : "Tempat belum diisi"}
-                                </span>
-                                {project.offlineLink ? (
-                                    <a href={project.offlineLink} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1.5 text-[13px] font-semibold text-brand-primary hover:text-brand-secondary">
-                                        <span className="truncate">{project.offlineLink}</span>
-                                        <ExternalLinkIcon className="size-3.5 shrink-0" />
-                                    </a>
-                                ) : null}
-                            </div>
-                        ) : null}
-
-                        {project.collaborationTool ? (
-                            <div className="flex min-w-0 flex-col gap-1 rounded-lg border border-border-default p-3">
-                                <span className="text-xs text-text-subheading">Alat kolaborasi</span>
-                                <span className="text-[13px] font-medium text-text-heading">{project.collaborationTool}</span>
-                            </div>
-                        ) : null}
-                    </div>
                 </section>
 
                 {!viewer.isOwner ? (

@@ -1,4 +1,5 @@
 "use client";
+import UserAvatar from "@/app/components/ui/user-avatar";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,13 +19,6 @@ export default function ApplicantReviewCard({ application }: { application: Proj
   const [error, setError] = useState("");
 
   const name = application.applicant.name?.trim() || "Kandidat";
-  const initials =
-    name
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "PM";
 
   async function handleAccept() {
     setIsPending(true);
@@ -65,9 +59,7 @@ export default function ApplicantReviewCard({ application }: { application: Proj
         <div className="p-5 sm:p-7">
           <div className="flex flex-col gap-5 border-b border-slate-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-indigo-500 text-base font-bold text-white shadow-sm">
-                {initials}
-              </div>
+              <UserAvatar  className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-indigo-500 text-base font-bold text-white shadow-sm" name={name} profileCloudId={application.applicant.profileCloudId} />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-bold text-slate-950">{name}</h2>

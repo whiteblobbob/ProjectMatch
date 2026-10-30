@@ -1,3 +1,4 @@
+import UserAvatar from "@/app/components/ui/user-avatar";
 import Link from "next/link";
 
 import type { ProjectDetail } from "@/app/lib/ui/kelola-project";
@@ -5,18 +6,10 @@ import { CheckIcon, ClockIcon } from "../ui/icons";
 
 const avatarTones = ["bg-slate-900", "bg-indigo-500", "bg-emerald-500", "bg-amber-500"];
 
-function initialsOf(name: string | null | undefined) {
-  const initials = (name ?? "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-  return initials || "PM";
-}
+
 
 type MemberEntry = {
+  profileCloudId: string | null;
   userId: string;
   name: string | null;
   roleName: string;
@@ -34,7 +27,7 @@ export default function MemberList({ project }: MemberListProps) {
   const entries: MemberEntry[] = [
     {
       userId: project.owner.id,
-      name: project.owner.name,
+      name: project.owner.name, profileCloudId: project.owner.profileCloudId,
       roleName: "Pembuat proyek",
       institutionName: project.owner.institutionName,
       bio: project.owner.bio,
@@ -45,7 +38,7 @@ export default function MemberList({ project }: MemberListProps) {
       .filter((member) => member.userId !== project.ownerId)
       .map((member) => ({
         userId: member.userId,
-        name: member.user.name,
+        name: member.user.name, profileCloudId: member.user.profileCloudId,
         roleName: member.role.name,
         institutionName: member.user.institutionName,
         bio: member.user.bio,
@@ -59,9 +52,7 @@ export default function MemberList({ project }: MemberListProps) {
       {entries.map((member, index) => (
         <article key={member.userId} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-start gap-4">
-            <span className={`flex size-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${avatarTones[index % avatarTones.length]}`}>
-              {initialsOf(member.name)}
-            </span>
+            <UserAvatar  className={`flex size-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${avatarTones[index % avatarTones.length]}`} name={member.name} profileCloudId={member.profileCloudId} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Link href={`/profile/${member.userId}`} className="text-lg font-bold text-slate-950 hover:text-brand-primary hover:underline">{member.name}</Link>
