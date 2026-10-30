@@ -3,8 +3,8 @@ import ProjectMatchLogo from "@/app/components/brand/projectmatch-logo";
 
 const platformLinks = [
   { href: "/", label: "Jelajah proyek" },
-  { href: "/aktivitas", label: "Aktivitas" },
-  { href: "/profil", label: "Profil" },
+  { href: "/activity", label: "Aktivitas" },
+  { href: "/profile", label: "Profil" },
 ];
 
 const accountLinks = [
@@ -27,7 +27,7 @@ export default function SiteFooter() {
             <p className="mt-2 text-sm leading-6 text-slate-600">Buka posisi untuk pelajar atau mahasiswa dengan keahlian yang proyekmu perlukan.</p>
           </div>
           <Link
-            href="/proyek/baru"
+            href="/project/create"
             className="mt-5 inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-brand-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 sm:mt-0"
           >
             Cari anggota tim

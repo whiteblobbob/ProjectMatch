@@ -1,8 +1,8 @@
 "use client";
 
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveProfileView } from "@/app/lib/ui/actions";
+import { updateProfile } from "@/app/actions/profile";
 import {
   ArrowRightIcon,
   BehanceIcon,
@@ -25,50 +25,56 @@ import {
   XSocialIcon,
   YoutubeIcon,
 } from "@/app/components/ui/icons";
+import { InstitutionPicker } from "@/app/components/ui/institution-picker";
+import { LocationPicker } from "@/app/components/ui/location-picker";
 import { SelectControl } from "@/app/components/ui/select-control";
+import { formatRegion } from "@/app/lib/regions";
+import { cloudinaryAvatarUrl } from "@/app/lib/ui/cloudinary";
 import {
   MAX_PROFILE_CONTACTS,
-  ProfilePublicInfo,
-  decodeProfilePublicInfo,
   detectContactPlatform,
-  encodeProfilePublicInfo,
   isValidPublicUrl,
   normalizePublicUrl,
 } from "@/app/lib/ui/profile-public-info";
 import {
   ProfileForm,
   ProfileView,
-  profileEducationOptions,
+  educationLevelOptions,
 } from "@/app/lib/ui/profile";
+import VerificationForm from "../auth/verification/verification-form";
+
+type CatalogOption = {
+  id: string;
+  name: string;
+};
 
 type ProfilProps = {
   initialProfile: ProfileView;
+  roles: CatalogOption[];
+  cloudName: string;
 };
 
 type AvatarPreview = {
   dataUrl: string;
   fileName: string;
+  file: File;
 };
 
-const acceptedAvatarTypes = ["image/jpeg", "image/png", "image/webp"];
+const acceptedAvatarTypes = ["image/jpeg", "image/png"];
 const maxAvatarSize = 5 * 1024 * 1024;
 
 function editableProfile(profile: ProfileView): ProfileForm {
   return {
     name: profile.name,
-    instance: profile.instance,
-    educationLevel: profile.educationLevel ?? "HIGHER_EDUCATION",
+    institution: profile.institution,
+    institutionName: profile.institutionName,
+    educationLevel: profile.educationLevel ?? "MAHASISWA",
     bio: profile.bio,
-    contactInfo: profile.contactInfo ?? "",
+    province: profile.province,
+    city: profile.city,
+    portfolioLink: profile.portfolioLink,
+    contacts: profile.contacts.length > 0 ? [...profile.contacts] : [""],
     skills: profile.skills,
-  };
-}
-
-function editablePublicInfo(profile: ProfileView): ProfilePublicInfo {
-  const info = decodeProfilePublicInfo(profile.contactInfo);
-  return {
-    ...info,
-    contacts: info.contacts.length > 0 ? [...info.contacts] : [""],
   };
 }
 
@@ -77,34 +83,36 @@ function getInitials(name: string) {
   return initials.toLocaleUpperCase("id-ID") || "PM";
 }
 
-export default function Profil({ initialProfile }: ProfilProps) {
+export default function Profil({ initialProfile, roles, cloudName }: ProfilProps) {
   const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
   const [draft, setDraft] = useState<ProfileForm>(() => editableProfile(initialProfile));
-  const [draftPublicInfo, setDraftPublicInfo] = useState<ProfilePublicInfo>(() => editablePublicInfo(initialProfile));
   const [isEditing, setIsEditing] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [avatarPreview, setAvatarPreview] = useState<AvatarPreview | null>(null);
   const [draftAvatar, setDraftAvatar] = useState<AvatarPreview | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
-  const skillInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const verifyCloseButtonRef = useRef<HTMLButtonElement>(null);
 
-  const educationLabel = profileEducationOptions.find(
+  const educationLabel = educationLevelOptions.find(
     (option) => option.value === profile.educationLevel,
   )?.label ?? "Jenjang belum diisi";
 
-  const publicInfo = useMemo(() => decodeProfilePublicInfo(profile.contactInfo), [profile.contactInfo]);
+  const publicInfo = useMemo(
+    () => ({ location: formatRegion(profile.city, profile.province), portfolioUrl: profile.portfolioLink, contacts: profile.contacts }),
+    [profile.city, profile.province, profile.portfolioLink, profile.contacts],
+  );
 
   const completeness = useMemo(() => {
     const completed = [
       profile.name,
-      profile.instance,
+      profile.institution,
       profile.bio,
       profile.educationLevel,
       profile.skills.length > 0,
@@ -115,14 +123,14 @@ export default function Profil({ initialProfile }: ProfilProps) {
     return Math.round((completed / 8) * 100);
   }, [profile, publicInfo]);
 
-  const availableEducationOptions = useMemo(() => {
-    const currentIndex = profileEducationOptions.findIndex(
-      (option) => option.value === profile.educationLevel,
-    );
+  const availableEducationOptions = educationLevelOptions;
 
-    if (currentIndex < 0) return profileEducationOptions;
-    return profileEducationOptions.slice(currentIndex);
-  }, [profile.educationLevel]);
+  const availableSkillOptions = useMemo(
+    () => roles.filter(
+      (role) => !draft.skills.some((skill) => skill.toLocaleLowerCase("id-ID") === role.name.toLocaleLowerCase("id-ID")),
+    ),
+    [draft.skills, roles],
+  );
 
   useEffect(() => {
     if (!isEditing) return;
@@ -148,16 +156,33 @@ export default function Profil({ initialProfile }: ProfilProps) {
     };
   }, [isEditing, isPending]);
 
+  useEffect(() => {
+    if (!isVerifying) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    verifyCloseButtonRef.current?.focus();
+
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setIsVerifying(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isVerifying]);
+
   function openEditor(focusTarget?: "skills" | "photo") {
     setDraft(editableProfile(profile));
-    setDraftPublicInfo(editablePublicInfo(profile));
     setSkillInput("");
     setError("");
     setNotice("");
     setDraftAvatar(null);
     setRemoveAvatar(false);
     setIsEditing(true);
-    if (focusTarget === "skills") requestAnimationFrame(() => skillInputRef.current?.focus());
+    if (focusTarget === "skills") requestAnimationFrame(() => document.getElementById("profile-skill-select")?.focus());
     if (focusTarget === "photo") requestAnimationFrame(() => avatarButtonRef.current?.focus());
   }
 
@@ -177,7 +202,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
     if (!file) return;
 
     if (!acceptedAvatarTypes.includes(file.type)) {
-      setError("Gunakan foto berformat JPG, PNG, atau WebP.");
+      setError("Gunakan foto berformat JPG atau PNG.");
       return;
     }
     if (file.size > maxAvatarSize) {
@@ -191,7 +216,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
         setError("Foto belum dapat dibaca. Silakan pilih file lain.");
         return;
       }
-      setDraftAvatar({ dataUrl: reader.result, fileName: file.name });
+      setDraftAvatar({ dataUrl: reader.result, fileName: file.name, file });
       setRemoveAvatar(false);
       setError("");
     };
@@ -201,12 +226,8 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
   function addSkill() {
     const skill = skillInput.trim();
-    if (skill.length < 2) {
-      setError("Nama keahlian minimal 2 karakter.");
-      return;
-    }
-    if (skill.length > 50) {
-      setError("Nama keahlian maksimal 50 karakter.");
+    if (!skill) {
+      setError("Pilih keahlian terlebih dahulu.");
       return;
     }
     if (draft.skills.length >= 12) {
@@ -221,32 +242,25 @@ export default function Profil({ initialProfile }: ProfilProps) {
     setDraft((current) => ({ ...current, skills: [...current.skills, skill] }));
     setSkillInput("");
     setError("");
-    requestAnimationFrame(() => skillInputRef.current?.focus());
-  }
-
-  function handleSkillKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      addSkill();
-    }
+    requestAnimationFrame(() => document.getElementById("profile-skill-select")?.focus());
   }
 
   function addContact() {
-    setDraftPublicInfo((current) => {
+    setDraft((current) => {
       if (current.contacts.length >= MAX_PROFILE_CONTACTS) return current;
       return { ...current, contacts: [...current.contacts, ""] };
     });
   }
 
   function updateContact(index: number, value: string) {
-    setDraftPublicInfo((current) => ({
+    setDraft((current) => ({
       ...current,
       contacts: current.contacts.map((contact, contactIndex) => contactIndex === index ? value : contact),
     }));
   }
 
   function removeContact(index: number) {
-    setDraftPublicInfo((current) => {
+    setDraft((current) => {
       const contacts = current.contacts.filter((_, contactIndex) => contactIndex !== index);
       return { ...current, contacts: contacts.length > 0 ? contacts : [""] };
     });
@@ -256,22 +270,62 @@ export default function Profil({ initialProfile }: ProfilProps) {
     event.preventDefault();
     setError("");
 
-    const invalidContact = draftPublicInfo.contacts.find((contact) => contact.trim() && !isValidPublicUrl(contact));
+    if (Boolean(draft.province) !== Boolean(draft.city)) {
+      setError("Pilih provinsi dan kota/kabupaten domisili.");
+      return;
+    }
+
+    if (!draft.institution) {
+      setError("Pilih sekolah atau kampus dari daftar.");
+      return;
+    }
+
+    const invalidContact = draft.contacts.find((contact) => contact.trim() && !isValidPublicUrl(contact));
     if (invalidContact) {
       setError("Pastikan setiap kontak berupa tautan yang valid.");
       return;
     }
-    if (draftPublicInfo.portfolioUrl.trim() && !isValidPublicUrl(draftPublicInfo.portfolioUrl)) {
+    if (draft.portfolioLink.trim() && !isValidPublicUrl(draft.portfolioLink)) {
       setError("Link portofolio belum valid.");
+      return;
+    }
+
+    const resolvedRoles = draft.skills
+      .map((skill) => roles.find((role) => role.name.toLocaleLowerCase("id-ID") === skill.toLocaleLowerCase("id-ID"))?.id)
+      .filter((roleId): roleId is string => Boolean(roleId));
+
+    if (resolvedRoles.length !== draft.skills.length) {
+      const unmatched = draft.skills.filter(
+        (skill) => !roles.some((role) => role.name.toLocaleLowerCase("id-ID") === skill.toLocaleLowerCase("id-ID")),
+      );
+      setError(`Keahlian berikut belum tersedia: ${unmatched.join(", ")}. Pilih dari daftar keahlian.`);
       return;
     }
 
     setIsPending(true);
 
-    const result = await saveProfileView({
-      ...draft,
-      contactInfo: encodeProfilePublicInfo(draftPublicInfo),
-    });
+    const province = draft.province.trim();
+    const city = draft.city.trim();
+    const portfolioLink = draft.portfolioLink.trim() ? normalizePublicUrl(draft.portfolioLink) : "";
+    const contacts = draft.contacts.map(normalizePublicUrl).filter(Boolean);
+
+    const avatarWasChanged = Boolean(draftAvatar) || removeAvatar;
+
+    const result = await updateProfile(
+      {
+        name: draft.name,
+        institution: draft.institution,
+        bio: draft.bio,
+        province,
+        city,
+        portfolioLink,
+        contacts,
+        educationLevel: draft.educationLevel,
+        userRoles: resolvedRoles.map((roleId) => ({ roleId })),
+      },
+      { avatar: draftAvatar?.file, removeAvatar },
+    );
+
     if (!result.success) {
       const details = result.fieldErrors
         ? Object.values(result.fieldErrors).flat().join(" ")
@@ -281,22 +335,25 @@ export default function Profil({ initialProfile }: ProfilProps) {
       return;
     }
 
-    if (!("data" in result)) {
-      setError("Profil belum dapat diperbarui. Silakan coba lagi.");
-      setIsPending(false);
-      return;
-    }
+    const nextCloudId = "data" in result ? result.data?.profileCloudId : undefined;
 
-    const avatarWasChanged = Boolean(draftAvatar) || removeAvatar;
-    if (removeAvatar) {
-      setAvatarPreview(null);
-    } else if (draftAvatar) {
-      setAvatarPreview(draftAvatar);
-    }
+    const nextProfile: ProfileView = {
+      ...profile,
+      name: draft.name,
+      institution: draft.institution,
+      institutionName: draft.institutionName,
+      bio: draft.bio,
+      province,
+      city,
+      portfolioLink,
+      contacts,
+      educationLevel: draft.educationLevel,
+      skills: draft.skills,
+      profileCloudId: nextCloudId === undefined ? profile.profileCloudId : nextCloudId,
+    };
 
-    setProfile(result.data);
-    setDraft(editableProfile(result.data));
-    setDraftPublicInfo(editablePublicInfo(result.data));
+    setProfile(nextProfile);
+    setDraft(editableProfile(nextProfile));
     setDraftAvatar(null);
     setRemoveAvatar(false);
     setIsPending(false);
@@ -326,7 +383,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
               <div className="relative shrink-0">
                 <ProfileAvatar
                   name={profile.name}
-                  imageUrl={avatarPreview?.dataUrl ?? null}
+                  imageUrl={profile.profileCloudId ? cloudinaryAvatarUrl(profile.profileCloudId, cloudName) : null}
                   className="size-24 rounded-3xl border border-white/15 text-3xl shadow-lg shadow-blue-950/30"
                 />
                 <button
@@ -346,7 +403,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                 <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
                   {profile.name || "Lengkapi profilmu"}
                 </h1>
-                <p className="mt-2 text-sm text-slate-300">{profile.instance || "Sekolah atau kampus belum diisi"}</p>
+                <p className="mt-2 text-sm text-slate-300">{profile.institutionName || "Sekolah atau kampus belum diisi"}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
                   <MapPinIcon className="size-3.5" />
                   {publicInfo.location || "Lokasi belum diisi"}
@@ -468,6 +525,23 @@ export default function Profil({ initialProfile }: ProfilProps) {
               {completeness < 100 && <button type="button" onClick={() => openEditor()} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-primary hover:underline">Lengkapi sekarang <ArrowRightIcon className="size-4" /></button>}
             </section>
 
+            <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="verification-heading">
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="verification-heading" className="font-bold text-slate-950">Verifikasi pendidikan</h2>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${profile.verified ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                  {profile.verified ? "Terverifikasi" : "Belum terverifikasi"}
+                </span>
+              </div>
+              {profile.verified ? (
+                <p className="mt-3 text-sm leading-6 text-slate-600">Akunmu sudah terverifikasi sebagai pelajar atau mahasiswa.</p>
+              ) : (
+                <>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">Verifikasi status pelajar atau mahasiswamu agar profilmu lebih dipercaya calon rekan tim.</p>
+                  <button type="button" onClick={() => setIsVerifying(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-primary px-4 text-sm font-semibold text-white transition hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Verifikasi</button>
+                </>
+              )}
+            </section>
+
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="contact-heading">
               <h2 id="contact-heading" className="font-bold text-slate-950">Kontak publik</h2>
               {publicInfo.contacts.length > 0 ? (
@@ -515,22 +589,27 @@ export default function Profil({ initialProfile }: ProfilProps) {
                   <div className="mt-3 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center">
                     <ProfileAvatar
                       name={draft.name || profile.name}
-                      imageUrl={removeAvatar ? null : draftAvatar?.dataUrl ?? avatarPreview?.dataUrl ?? null}
+                      imageUrl={
+                        removeAvatar
+                          ? null
+                          : draftAvatar?.dataUrl ??
+                            (profile.profileCloudId ? cloudinaryAvatarUrl(profile.profileCloudId, cloudName) : null)
+                      }
                       className="size-20 shrink-0 rounded-2xl border border-slate-200 text-2xl shadow-sm"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-slate-900">
                         {removeAvatar
                           ? "Foto akan dihapus"
-                          : draftAvatar?.fileName ?? avatarPreview?.fileName ?? "Gunakan foto yang mudah dikenali"}
+                          : draftAvatar?.fileName ?? (profile.profileCloudId ? "Foto profil saat ini" : "Gunakan foto yang mudah dikenali")}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">Gunakan JPG, PNG, atau WebP hingga 5 MB dengan wajah terlihat jelas.</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">Gunakan JPG atau PNG hingga 5 MB dengan wajah terlihat jelas.</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <input
                           ref={avatarInputRef}
                           id="profile-avatar"
                           type="file"
-                          accept="image/jpeg,image/png,image/webp"
+                          accept="image/jpeg,image/png"
                           onChange={handleAvatarChange}
                           disabled={isPending}
                           className="sr-only"
@@ -543,7 +622,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                           className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-900 px-3.5 text-xs font-semibold text-white hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:opacity-50"
                         >
                           <CameraIcon />
-                          {draftAvatar || avatarPreview ? "Ganti foto" : "Pilih foto"}
+                          {draftAvatar || profile.profileCloudId ? "Ganti foto" : "Pilih foto"}
                         </button>
                         {draftAvatar && !removeAvatar && (
                           <button
@@ -555,7 +634,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                             Batalkan pilihan
                           </button>
                         )}
-                        {avatarPreview && !draftAvatar && !removeAvatar && (
+                        {profile.profileCloudId && !draftAvatar && !removeAvatar && (
                           <button
                             type="button"
                             onClick={() => setRemoveAvatar(true)}
@@ -585,7 +664,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     <input id="profile-name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} required minLength={2} maxLength={80} disabled={isPending} autoComplete="name" placeholder="Nama lengkapmu" className={inputClass} />
                   </Field>
                   <Field label="Status pendidikan" htmlFor="profile-education">
-                    <SelectControl id="profile-education" value={draft.educationLevel} onChange={(event) => setDraft((current) => ({ ...current, educationLevel: event.target.value as ProfileForm["educationLevel"] }))} disabled={isPending || availableEducationOptions.length === 1} className="rounded-xl">
+                    <SelectControl id="profile-education" value={draft.educationLevel} onChange={(event) => setDraft((current) => ({ ...current, educationLevel: event.target.value as ProfileForm["educationLevel"], institution: "", institutionName: "" }))} disabled={isPending} className="rounded-xl">
                       {availableEducationOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </SelectControl>
                     <p className="mt-2 text-xs leading-5 text-slate-500">
@@ -594,25 +673,34 @@ export default function Profil({ initialProfile }: ProfilProps) {
                   </Field>
                 </div>
 
-                <Field label="Sekolah atau kampus" htmlFor="profile-instance" hint="Tuliskan nama institusi saat ini.">
-                  <input id="profile-instance" value={draft.instance} onChange={(event) => setDraft((current) => ({ ...current, instance: event.target.value }))} required minLength={2} maxLength={120} disabled={isPending} placeholder="Contoh: SMA Negeri 1 Denpasar" className={inputClass} />
-                </Field>
+                <InstitutionPicker
+                  key={draft.educationLevel}
+                  id="profile-institution"
+                  label="Sekolah atau kampus"
+                  kind={draft.educationLevel === "MAHASISWA" ? "university" : "school"}
+                  value={draft.institution ? { npsn: draft.institution, name: draft.institutionName } : null}
+                  onChange={(option) => setDraft((current) => ({
+                    ...current,
+                    institution: option?.npsn ?? "",
+                    institutionName: option?.name ?? "",
+                  }))}
+                  hint="Cari dan pilih institusi dari daftar resmi."
+                  disabled={isPending}
+                />
 
-                <Field label="Lokasi" htmlFor="profile-location" hint="Cukup kota atau kabupaten, tanpa alamat lengkap.">
-                  <div className="relative">
-                    <MapPinIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      id="profile-location"
-                      value={draftPublicInfo.location}
-                      onChange={(event) => setDraftPublicInfo((current) => ({ ...current, location: event.target.value }))}
-                      maxLength={100}
-                      disabled={isPending}
-                      autoComplete="address-level2"
-                      placeholder="Contoh: Denpasar, Bali"
-                      className={`${inputClass} pl-10`}
-                    />
-                  </div>
-                </Field>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Domisili</h3>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Pilih provinsi dan kota/kabupaten, tanpa alamat lengkap.</p>
+                  <LocationPicker
+                    idPrefix="profile-location"
+                    className="mt-2"
+                    province={draft.province}
+                    city={draft.city}
+                    onProvinceChange={(value) => setDraft((current) => ({ ...current, province: value, city: "" }))}
+                    onCityChange={(value) => setDraft((current) => ({ ...current, city: value }))}
+                    disabled={isPending}
+                  />
+                </div>
 
                 <Field label="Tentang dirimu" htmlFor="profile-bio" hint={`${draft.bio.length}/500 karakter`}>
                   <textarea id="profile-bio" value={draft.bio} onChange={(event) => setDraft((current) => ({ ...current, bio: event.target.value }))} maxLength={500} rows={4} disabled={isPending} placeholder="Ceritakan minat, pengalaman, dan kontribusi yang kamu tawarkan..." className={`${inputClass} resize-y py-3`} />
@@ -624,9 +712,9 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     <input
                       id="profile-portfolio"
                       type="url"
-                      value={draftPublicInfo.portfolioUrl}
-                      onChange={(event) => setDraftPublicInfo((current) => ({ ...current, portfolioUrl: event.target.value }))}
-                      onBlur={(event) => setDraftPublicInfo((current) => ({ ...current, portfolioUrl: normalizePublicUrl(event.target.value) }))}
+                      value={draft.portfolioLink}
+                      onChange={(event) => setDraft((current) => ({ ...current, portfolioLink: event.target.value }))}
+                      onBlur={(event) => setDraft((current) => ({ ...current, portfolioLink: normalizePublicUrl(event.target.value) }))}
                       maxLength={300}
                       disabled={isPending}
                       placeholder="https://figma.com/... atau https://behance.net/..."
@@ -637,9 +725,12 @@ export default function Profil({ initialProfile }: ProfilProps) {
 
                 <fieldset>
                   <legend className="text-sm font-semibold text-slate-900">Keahlian</legend>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">Ketik keahlian custom dari bidang apa pun, lalu tekan Enter atau Tambah.</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Pilih keahlian dari daftar, lalu tekan Tambah.</p>
                   <div className="mt-2 flex gap-2">
-                    <input ref={skillInputRef} value={skillInput} onChange={(event) => setSkillInput(event.target.value)} onKeyDown={handleSkillKeyDown} maxLength={50} disabled={isPending || draft.skills.length >= 12} placeholder="Contoh: Menulis, Akuntansi, Ilustrasi" className={inputClass} aria-label="Nama keahlian baru" />
+                    <SelectControl id="profile-skill-select" value={skillInput} onChange={(event) => setSkillInput(event.target.value)} disabled={isPending || draft.skills.length >= 12 || availableSkillOptions.length === 0} containerClassName="flex-1" className="rounded-xl" aria-label="Pilih keahlian">
+                      <option value="" disabled>Pilih keahlian</option>
+                      {availableSkillOptions.map((role) => <option key={role.id} value={role.name}>{role.name}</option>)}
+                    </SelectControl>
                     <button type="button" onClick={addSkill} disabled={isPending || draft.skills.length >= 12} className="min-h-12 shrink-0 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50">Tambah</button>
                   </div>
                   <div className="mt-3 flex min-h-10 flex-wrap gap-2">
@@ -660,11 +751,11 @@ export default function Profil({ initialProfile }: ProfilProps) {
                       <legend className="text-sm font-semibold text-slate-900">Kontak dan media sosial</legend>
                       <p className="mt-1 text-xs leading-5 text-slate-500">Tempel tautan profil; jenis platform akan dikenali otomatis.</p>
                     </div>
-                    <span className="text-xs font-medium text-slate-500">{draftPublicInfo.contacts.filter((contact) => contact.trim()).length}/{MAX_PROFILE_CONTACTS} kontak</span>
+                    <span className="text-xs font-medium text-slate-500">{draft.contacts.filter((contact) => contact.trim()).length}/{MAX_PROFILE_CONTACTS} kontak</span>
                   </div>
 
                   <div className="mt-3 space-y-3">
-                    {draftPublicInfo.contacts.map((contact, index) => {
+                    {draft.contacts.map((contact, index) => {
                       const platform = detectContactPlatform(contact);
                       return (
                         <div key={index} className="flex items-center gap-2">
@@ -698,7 +789,7 @@ export default function Profil({ initialProfile }: ProfilProps) {
                     })}
                   </div>
 
-                  {draftPublicInfo.contacts.length < MAX_PROFILE_CONTACTS && (
+                  {draft.contacts.length < MAX_PROFILE_CONTACTS && (
                     <button
                       type="button"
                       onClick={addContact}
@@ -719,6 +810,20 @@ export default function Profil({ initialProfile }: ProfilProps) {
                 <button type="submit" disabled={isPending} className="min-h-11 rounded-xl bg-brand-primary px-5 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70">{isPending ? "Menyimpan…" : "Simpan perubahan"}</button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {isVerifying && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="verification-form-title">
+          <button type="button" aria-label="Tutup verifikasi" className="absolute inset-0 bg-slate-950/55 backdrop-blur-[2px]" onClick={() => setIsVerifying(false)} />
+          <section className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+            <div className="flex items-center justify-end border-b border-slate-200 px-5 py-4 sm:px-7">
+              <button ref={verifyCloseButtonRef} type="button" onClick={() => setIsVerifying(false)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label="Tutup">×</button>
+            </div>
+            <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-7">
+              <VerificationForm />
+            </div>
           </section>
         </div>
       )}

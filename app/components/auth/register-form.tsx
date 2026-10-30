@@ -1,15 +1,13 @@
 "use client";
 
-import { type FormEvent, useMemo, useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { signup } from "@/app/actions/auth";
 import RegistrationStepper, { type RegistrationStep } from "./registration/registration-stepper";
 import {
   AccountStep,
   EducationStep,
-  GuardianStep,
   RegistrationReviewStep,
   RegistrationStatusCard,
-  VerificationStep,
 } from "./registration/registration-steps";
 import {
   calculateAge,
@@ -22,7 +20,6 @@ import {
 const baseSteps: RegistrationStep[] = [
   { id: "account", label: "Akun" },
   { id: "education", label: "Pendidikan" },
-  { id: "verification", label: "Verifikasi" },
   { id: "review", label: "Tinjau" },
 ];
 
@@ -42,14 +39,10 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
   const currentYear = new Date().getFullYear();
   const entryYear = Number(data.entryYear);
   const graduationYear = Number(data.graduationYear);
-  const age = calculateAge(data.dateOfBirth);
+  const age = calculateAge(data.dateOfBirth, new Date());
 
-  if (!data.institutionId) {
-    errors.institutionName = data.educationStatus === "student"
-      ? "Ketik nama sekolah, lalu pilih sekolah dari hasil pencarian."
-      : "Ketik nama kampus, lalu pilih kampus dari hasil pencarian.";
-  }
   if (!data.educationLevel) errors.educationLevel = data.educationStatus === "student" ? "Pilih jenjang sekolah." : "Pilih jenjang pendidikan.";
+  if (!data.institution) errors.institution = "Pilih institusi dari daftar.";
 
   if (data.educationStatus === "student") {
     if (!data.schoolGrade) errors.schoolGrade = "Pilih kelas saat ini.";
@@ -60,27 +53,8 @@ function validateEducation(data: RegistrationData): RegistrationErrors {
     if (!/^\d{4}$/.test(data.graduationYear) || graduationYear < entryYear || graduationYear > currentYear + 12) errors.graduationYear = "Tahun lulus harus setelah tahun masuk dan masuk akal.";
   }
   if (age === null || age < 10 || age > 100) errors.dateOfBirth = "Masukkan tanggal lahir yang valid.";
-  return errors;
-}
-
-function validateVerification(data: RegistrationData, file: File | null): RegistrationErrors {
-  const errors: RegistrationErrors = {};
-  if (data.verificationMethod === "institutional-email" && !emailPattern.test(data.institutionalEmail.trim())) {
-    errors.institutionalEmail = "Masukkan email sekolah atau kampus yang valid.";
-  }
-  if (data.verificationMethod === "document") {
-    if (!data.documentType) errors.documentType = "Pilih jenis dokumen.";
-    if (!file) errors.document = "Pilih dokumen identitas pelajar.";
-  }
-  return errors;
-}
-
-function validateGuardian(data: RegistrationData): RegistrationErrors {
-  const errors: RegistrationErrors = {};
-  if (data.guardianName.trim().length < 2) errors.guardianName = "Masukkan nama orang tua atau wali.";
-  if (data.guardianRelationship.trim().length < 2) errors.guardianRelationship = "Masukkan hubungan dengan pengguna.";
-  if (!emailPattern.test(data.guardianEmail.trim())) errors.guardianEmail = "Masukkan email wali yang valid.";
-  if (!data.guardianConfirmed) errors.guardianConfirmed = "Konfirmasi informasi wali untuk melanjutkan.";
+  if (!data.province) errors.province = "Pilih provinsi domisili.";
+  if (!data.city) errors.city = "Pilih kota atau kabupaten domisili.";
   return errors;
 }
 
@@ -96,23 +70,13 @@ export default function RegisterForm() {
   const [data, setData] = useState(initialRegistrationData);
   const [currentStep, setCurrentStep] = useState<RegistrationStepId>("account");
   const [errors, setErrors] = useState<RegistrationErrors>({});
-  const [file, setFile] = useState<File | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [announcement, setAnnouncement] = useState("Langkah Akun dibuka.");
   const formRef = useRef<HTMLFormElement>(null);
 
-  const age = data.dateOfBirth ? calculateAge(data.dateOfBirth) : null;
-  const needsGuardian = age !== null && age < 18;
-  const steps = useMemo<RegistrationStep[]>(() => needsGuardian
-    ? [
-        ...baseSteps.slice(0, 3),
-        { id: "guardian", label: "Wali" },
-        baseSteps[3],
-      ]
-    : baseSteps,
-  [needsGuardian]);
+  const steps = baseSteps;
 
   const currentIndex = steps.findIndex((step) => step.id === currentStep);
 
@@ -125,17 +89,14 @@ export default function RegisterForm() {
   const getStepErrors = (step: RegistrationStepId) => {
     if (step === "account") return validateAccount(data);
     if (step === "education") return validateEducation(data);
-    if (step === "verification") return validateVerification(data, file);
-    if (step === "guardian") return validateGuardian(data);
     return validateReview(data);
   };
 
   const openStep = (step: RegistrationStepId) => {
-    const targetStep = step === "guardian" && !needsGuardian ? "review" : step;
-    setCurrentStep(targetStep);
+    setCurrentStep(step);
     setErrors({});
     setSubmitError("");
-    const label = steps.find((item) => item.id === targetStep)?.label ?? "Pendaftaran";
+    const label = steps.find((item) => item.id === step)?.label ?? "Pendaftaran";
     setAnnouncement(`Langkah ${label} dibuka.`);
     requestAnimationFrame(() => {
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -177,9 +138,28 @@ export default function RegisterForm() {
     setSubmitError("");
     setIsPending(true);
 
-    // Keep the existing production contract intact. Every other field in this
-    // flow is intentionally client-only until a backend integration exists.
-    const result = await signup({ email: data.email.trim(), password: data.password });
+    const educationLevel = (
+      data.educationLevel === "SMP/sederajat"
+        ? "SMP"
+        : data.educationLevel === "SMA/SMK/sederajat"
+          ? "SMA"
+          : "MAHASISWA"
+    ) as "SMP" | "SMA" | "MAHASISWA";
+
+    const result = await signup({
+      name: data.fullName.trim(),
+      email: data.email.trim(),
+      password: data.password,
+      educationLevel,
+      institution: data.institution,
+      studyProgram: data.studyProgram || undefined,
+      schoolGrade: data.schoolGrade || undefined,
+      entryYear: data.entryYear ? Number(data.entryYear) : undefined,
+      graduationYear: data.graduationYear ? Number(data.graduationYear) : undefined,
+      dateOfBirth: data.dateOfBirth || undefined,
+      province: data.province,
+      city: data.city,
+    });
 
     if (!result.success) {
       setSubmitError(result.error);
@@ -188,7 +168,6 @@ export default function RegisterForm() {
       return;
     }
 
-    setFile(null);
     setIsComplete(true);
     setIsPending(false);
   }
@@ -203,22 +182,7 @@ export default function RegisterForm() {
       <div className="mt-7 border-t border-slate-200 pt-7">
         {currentStep === "account" && <AccountStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
         {currentStep === "education" && <EducationStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
-        {currentStep === "verification" && (
-          <VerificationStep
-            data={data}
-            errors={errors}
-            onChange={updateField}
-            file={file}
-            onFileChange={(nextFile) => {
-              setFile(nextFile);
-              setErrors((current) => ({ ...current, document: undefined }));
-            }}
-            onFileError={(message) => setErrors((current) => ({ ...current, document: message || undefined }))}
-            disabled={isPending}
-          />
-        )}
-        {currentStep === "guardian" && <GuardianStep data={data} errors={errors} onChange={updateField} disabled={isPending} />}
-        {currentStep === "review" && <RegistrationReviewStep data={data} errors={errors} onChange={updateField} file={file} needsGuardian={needsGuardian} onEdit={openStep} disabled={isPending} />}
+        {currentStep === "review" && <RegistrationReviewStep data={data} errors={errors} onChange={updateField} onEdit={openStep} disabled={isPending} />}
       </div>
 
       {submitError && <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</div>}

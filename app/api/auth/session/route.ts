@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
 import { getSessionUser } from "@/app/lib/ui/session";
@@ -17,7 +16,7 @@ export async function POST() {
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
-    const supabase = createClient(await cookies());
+    const supabase = await createClient();
     await supabase.auth.signOut();
   }
 

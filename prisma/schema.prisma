@@ -10,6 +10,13 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AccountRole {
+  USER
+  ADMIN
+
+  @@map("account_role")
+}
+
 enum ProjectStatus {
   OPEN_RECRUITMENT
   IN_PROGRESS
@@ -18,38 +25,87 @@ enum ProjectStatus {
   @@map("project_status")
 }
 
-model User {
-  id                     String          @id
-  name                   String?
-  instance               String?
-  statusId               String?         @map("status_id")
-  bio                    String?
-  contactInfo            String?         @map("contact_info")
-  totalProjectsCompleted Int             @default(0) @map("total_projects_completed")
-  avgCommitmentScore     Float           @default(0) @map("avg_commitment_score")
-  createdAt              DateTime        @default(now()) @map("created_at")
-  updatedAt              DateTime        @updatedAt @map("updated_at")
+enum CollaborationMode {
+  ONLINE
+  OFFLINE
+  HYBRID
 
-  status                 Status?         @relation(fields: [statusId], references: [id], onDelete: SetNull)
+  @@map("collaboration_mode")
+}
+
+enum OnlinePlatform {
+  GOOGLE_MEET
+  ZOOM
+  MICROSOFT_TEAMS
+  DISCORD
+
+  @@map("online_platform")
+}
+
+enum OfflinePlace {
+  SEKOLAH
+  KAMPUS
+  RUANG_PUBLIK
+  KAFE
+
+  @@map("offline_place")
+}
+
+enum EducationLevel {
+  SMP
+  SMA
+  MAHASISWA
+
+  @@map("education_level")
+}
+
+enum ProjectRange {
+  ALL
+  INTERNAL
+  PROVINCE
+  CITY
+  INSTITUTIONS
+
+  @@map("project_range")
+}
+
+model User {
+  id                         String          @id
+  name                       String
+  institution                String?
+  institutionName            String?         @map("institution_name")
+  educationLevel             EducationLevel? @map("education_level")
+  studyProgram               String?         @map("study_program")
+  schoolGrade                String?         @map("school_grade")
+  entryYear                  Int?            @map("entry_year")
+  graduationYear             Int?            @map("graduation_year")
+  dateOfBirth                DateTime?       @map("date_of_birth")
+  bio                        String?
+  province                   String?
+  city                       String?
+  profileCloudId             String?         @map("profile_cloud_id")
+  portfolioLink              String?         @map("portfolio_link")
+  role                       AccountRole     @default(USER)
+  verified                   Boolean         @default(false)
+  verificationToken          String?         @unique @map("verification_token")
+  verificationTokenExpiresAt DateTime?       @map("verification_token_expires_at")
+  totalProjectsCompleted     Int             @default(0) @map("total_projects_completed")
+  avgCommitmentScore         Float           @default(0) @map("avg_commitment_score")
+  createdAt                  DateTime        @default(now()) @map("created_at")
+  updatedAt                  DateTime        @updatedAt @map("updated_at")
+
   userRoles              UserRole[]
+  contactInfos           ContactInfo[]
   ownedProjects          Project[]       @relation("ProjectOwner")
   applications           Application[]
   projectMembers         ProjectMember[]
   reviewsGiven           PeerReview[]    @relation("Reviewer")
   reviewsReceived        PeerReview[]    @relation("Reviewee")
   notifications          Notification[]
+  reportsMade            ProjectReport[]
+  verificationDocuments  VerificationDocument[]
 
   @@map("user")
-}
-
-model Status {
-  id                    String                  @id @default(uuid())
-  name            String                  @map("name")
-
-  users                 User[]
-  projectStatusCriteria ProjectStatusCriteria[]
-
-  @@map("status")
 }
 
 model Category {
@@ -91,32 +147,48 @@ model Project {
   title                 String
   description           String
   deadline              DateTime?
-  onSite                Boolean                 @default(false) @map("on_site")
+  collaborationMode     CollaborationMode       @default(ONLINE) @map("collaboration_mode")
+  onlinePlatform        OnlinePlatform?         @map("online_platform")
+  onlineLink            String?                 @map("online_link")
+  offlinePlace          OfflinePlace?           @map("offline_place")
+  offlineLink           String?                 @map("offline_link")
+  meetDescription       String                  @map("meet_description")
+  meetAt                DateTime?               @map("meet_at")
+  meetEndAt             DateTime?               @map("meet_end_at")
+  collaborationTool     String?                 @map("collaboration_tool")
   workHoursPerWeek      Int                     @map("work_hours_per_week")
+  educationLevels       EducationLevel[]        @map("education_levels")
+  range                 ProjectRange            @default(ALL) @map("audience_range")
+  allowedInstitutions   String[]                @default([]) @map("allowed_institutions")
+  extraCriteria         String?                 @map("extra_criteria")
+  sourceLink            String?                 @map("source_link")
   status                ProjectStatus           @default(OPEN_RECRUITMENT)
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
 
   owner                 User                    @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   category              Category                @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  projectStatusCriteria ProjectStatusCriteria[]
   projectRoles          ProjectRole[]
   applications          Application[]
   projectMembers        ProjectMember[]
   peerReviews           PeerReview[]
+  reports               ProjectReport[]
 
   @@map("project")
 }
 
-model ProjectStatusCriteria {
-  projectId String  @map("project_id")
-  statusId  String  @map("status_id")
+model ProjectReport {
+  id         String   @id @default(uuid())
+  projectId  String   @map("project_id")
+  reporterId String   @map("reporter_id")
+  reason     String
+  details    String?
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  status    Status  @relation(fields: [statusId], references: [id], onDelete: Cascade)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
-  @@id([projectId, statusId])
-  @@map("project_status_criteria")
+  @@map("project_report")
 }
 
 model ProjectRole {
@@ -137,7 +209,6 @@ model Application {
   applicantId   String            @map("applicant_id")
   roleId        String            @map("role_id")
   message       String?
-  portfolioLink String?           @map("portfolio_link")
 
   project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   applicant     User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
@@ -145,6 +216,17 @@ model Application {
 
   @@unique([projectId, applicantId])
   @@map("application")
+}
+
+model ContactInfo {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("contact_info")
 }
 
 model ProjectMember {
@@ -187,4 +269,31 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification")
+}
+
+model VerificationDocument {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  documentCloudId String   @map("document_cloud_id")
+  documentType    String?  @map("document_type")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("verification_document")
+}
+
+model schoolInstitution {
+  npsn String @id
+  name String
+
+  @@map("school_institution")
+}
+
+model universityInstitution {
+  npsn String @id
+  name String
+
+  @@map("university_institution")
 }

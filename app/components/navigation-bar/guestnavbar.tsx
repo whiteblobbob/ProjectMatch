@@ -10,8 +10,8 @@ import { createClient } from "@/app/lib/supabase/client";
 
 const navigation = [
   { href: "/", label: "Jelajah" },
-  { href: "/aktivitas", label: "Aktivitas" },
-  { href: "/profil", label: "Profil" },
+  { href: "/activity", label: "Aktivitas" },
+  { href: "/profile", label: "Profil" },
 ];
 
 const hasSupabaseConfig = Boolean(
@@ -191,7 +191,7 @@ export default function GuestNavbar() {
 
           <div className="flex items-center gap-2">
             <Link
-              href="/proyek/baru"
+              href="/project/create"
               className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               Cari anggota tim
@@ -264,7 +264,7 @@ export default function GuestNavbar() {
 
             <div className="mt-auto space-y-3 border-t border-slate-200 pt-5">
               <Link
-                href="/proyek/baru"
+                href="/project/create"
                 onClick={() => closeDrawer(false)}
                 className="flex min-h-12 items-center justify-center rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
               >

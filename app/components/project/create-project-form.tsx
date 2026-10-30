@@ -3,35 +3,57 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
-import { createProjectPosting } from "@/app/lib/ui/actions";
-import type { InstitutionOption } from "@/app/components/auth/registration/institution-combobox";
+import { createProject } from "@/app/actions/project";
+import type { InstitutionOption } from "@/app/lib/institution";
+import { educationLevelOptions } from "@/app/lib/ui/profile";
+import type { EducationLevel } from "@/app/lib/validator/profile";
+import type { ProjectRange } from "@/app/lib/validator/project";
 import {
   collaborationModes,
   getCollaborationModeLabel,
+  getOfflinePlaceLabel,
+  getOnlinePlatformLabel,
+  offlinePlaces,
+  onlinePlatforms,
   type CollaborationMode,
+  type OfflinePlace,
+  type OnlinePlatform,
 } from "@/app/components/ui/collaboration-mode";
-import type { ProjectFormOptions } from "@/app/lib/ui/project-form";
 import { MapPinIcon, PencilIcon, PlusIcon, TrashIcon, VideoIcon, WarningIcon, XIcon } from "../ui/icons";
 import { SelectControl } from "../ui/select-control";
 import ProjectAudienceScope, { type AudienceScope } from "./project-audience-scope";
 
+type CatalogOption = {
+  id: string;
+  name: string;
+};
+
 type Position = {
+  roleId: string;
   name: string;
   slotsAvailable: number;
 };
 
-const educationLevels = [
-  { value: "JUNIOR_SECONDARY", label: "SMP/sederajat" },
-  { value: "SENIOR_SECONDARY", label: "SMA/SMK/sederajat" },
-  { value: "HIGHER_EDUCATION", label: "Mahasiswa" },
-] as const;
+const rangeForScope: Record<AudienceScope, ProjectRange> = {
+  all: "ALL",
+  institution: "INTERNAL",
+  city: "CITY",
+  province: "PROVINCE",
+  selected: "INSTITUTIONS",
+};
 
-export default function CreateProjectForm({ options }: { options: ProjectFormOptions }) {
+export default function CreateProjectForm({
+  categories,
+  roles,
+}: {
+  categories: CatalogOption[];
+  roles: CatalogOption[];
+}) {
   const router = useRouter();
   const [positions, setPositions] = useState<Position[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
-  const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>("REMOTE");
+  const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>("ONLINE");
   const [positionDialogOpen, setPositionDialogOpen] = useState(false);
   const [editingPositionIndex, setEditingPositionIndex] = useState<number | null>(null);
   const [hasCustomRequirements, setHasCustomRequirements] = useState(false);
@@ -62,10 +84,8 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
     setError("");
 
     const formData = new FormData(event.currentTarget);
-    const selectedEducationLevels = formData.getAll("educationLevels").map(String) as Array<(typeof educationLevels)[number]["value"]>;
-    const selectedPositions = positions
-      .map((position) => ({ ...position, name: position.name.trim() }))
-      .filter((position) => position.name);
+    const selectedEducationLevels = formData.getAll("educationLevels").map(String) as EducationLevel[];
+    const selectedPositions = positions.filter((position) => position.roleId);
 
     if (selectedEducationLevels.length === 0) {
       setError("Pilih minimal satu jenjang pelajar.");
@@ -82,22 +102,47 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
       return;
     }
 
-    if (new Set(selectedPositions.map((position) => position.name.toLocaleLowerCase("id-ID"))).size !== selectedPositions.length) {
-      setError("Nama setiap posisi harus berbeda.");
+    if (new Set(selectedPositions.map((position) => position.roleId)).size !== selectedPositions.length) {
+      setError("Setiap posisi hanya boleh ditambahkan sekali.");
       return;
     }
 
     setIsPending(true);
     const deadlineValue = String(formData.get("deadline") ?? "");
-    const result = await createProjectPosting({
+    const hasOnline = collaborationMode === "ONLINE" || collaborationMode === "HYBRID";
+    const hasOffline = collaborationMode === "OFFLINE" || collaborationMode === "HYBRID";
+    const collaborationTool = String(formData.get("collaborationTools") ?? "").trim();
+    const extraCriteria = String(formData.get("customRequirements") ?? "").trim();
+    const sourceLink = String(formData.get("requirementsSourceUrl") ?? "").trim();
+    const meetingDate = String(formData.get("meetingDate") ?? "");
+    const meetingStart = String(formData.get("meetingStartTime") ?? "");
+    const meetingEnd = String(formData.get("meetingEndTime") ?? "");
+    const meetAt = meetingDate && meetingStart ? new Date(`${meetingDate}T${meetingStart}`) : undefined;
+    const meetEndAt = meetingDate && meetingEnd ? new Date(`${meetingDate}T${meetingEnd}`) : undefined;
+    const result = await createProject({
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? ""),
       deadline: new Date(`${deadlineValue}T23:59:59`),
       categoryId: String(formData.get("categoryId") ?? ""),
-      onSite: collaborationMode !== "REMOTE",
+      collaborationMode,
+      onlinePlatform: hasOnline ? (String(formData.get("meetingPlatform") ?? "") as OnlinePlatform) : undefined,
+      onlineLink: hasOnline ? String(formData.get("meetingUrl") ?? "") : undefined,
+      offlinePlace: hasOffline ? (String(formData.get("meetingPlaceCategory") ?? "") as OfflinePlace) : undefined,
+      offlineLink: hasOffline ? String(formData.get("meetingMapsUrl") ?? "") : undefined,
+      meetDescription: String(formData.get("meetingDescription") ?? ""),
+      meetAt,
+      meetEndAt,
+      collaborationTool: collaborationTool || undefined,
       workHoursPerWeek: Number(formData.get("workHoursPerWeek")),
       educationLevels: selectedEducationLevels,
-      positions: selectedPositions,
+      range: rangeForScope[audienceScope],
+      allowedInstitutions: selectedInstitutions.map((institution) => institution.npsn),
+      extraCriteria: extraCriteria || undefined,
+      sourceLink: sourceLink || undefined,
+      projectRoles: selectedPositions.map((position) => ({
+        roleId: position.roleId,
+        slotsAvailable: position.slotsAvailable,
+      })),
     });
 
     if (!result.success) {
@@ -106,7 +151,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
       return;
     }
 
-    router.push("/aktivitas");
+    router.push("/activity");
     router.refresh();
   }
 
@@ -128,7 +173,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
             <label htmlFor="project-category" className="block text-sm font-semibold text-slate-900">Jenis proyek</label>
             <SelectControl id="project-category" name="categoryId" required disabled={isPending} defaultValue="" containerClassName="mt-2">
               <option value="" disabled>Pilih jenis proyek</option>
-              {options.categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+              {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
             </SelectControl>
           </div>
           <div>
@@ -159,7 +204,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
       <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="meeting-plan-heading">
         <div className="flex items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-primary">
-            {collaborationMode === "ONSITE" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
+            {collaborationMode === "OFFLINE" ? <MapPinIcon className="size-5" /> : <VideoIcon className="size-5" />}
           </span>
           <div>
             <h2 id="meeting-plan-heading" className="text-lg font-bold text-slate-950">Rencana pertemuan</h2>
@@ -167,12 +212,12 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           </div>
         </div>
 
-        {(collaborationMode === "REMOTE" || collaborationMode === "HYBRID") ? (
+        {(collaborationMode === "ONLINE" || collaborationMode === "HYBRID") ? (
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Platform pertemuan</span>
-              <SelectControl name="meetingPlatform" defaultValue="Google Meet" disabled={isPending} containerClassName="mt-2">
-                <option>Google Meet</option><option>Zoom</option><option>Microsoft Teams</option><option>Discord</option>
+              <SelectControl name="meetingPlatform" defaultValue="GOOGLE_MEET" disabled={isPending} containerClassName="mt-2">
+                {onlinePlatforms.map((platform) => <option key={platform} value={platform}>{getOnlinePlatformLabel(platform)}</option>)}
               </SelectControl>
             </label>
             <label className="block">
@@ -182,13 +227,13 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           </div>
         ) : null}
 
-        {(collaborationMode === "ONSITE" || collaborationMode === "HYBRID") ? (
+        {(collaborationMode === "OFFLINE" || collaborationMode === "HYBRID") ? (
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">Kategori tempat aman</span>
               <SelectControl name="meetingPlaceCategory" defaultValue="" required disabled={isPending} containerClassName="mt-2">
                 <option value="" disabled>Pilih kategori</option>
-                <option>Sekolah</option><option>Kampus</option><option>Ruang publik</option><option>Kafe</option>
+                {offlinePlaces.map((place) => <option key={place} value={place}>{getOfflinePlaceLabel(place)}</option>)}
               </SelectControl>
             </label>
             <label className="block">
@@ -198,10 +243,25 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           </div>
         ) : null}
 
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Tanggal pertemuan</span>
+            <input name="meetingDate" type="date" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Mulai</span>
+            <input name="meetingStartTime" type="time" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Selesai</span>
+            <input name="meetingEndTime" type="time" disabled={isPending} className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          </label>
+        </div>
+
         <label className="mt-5 block">
           <span className="text-sm font-semibold text-slate-900">Deskripsi dan petunjuk pertemuan</span>
           <span className="mt-1 block text-xs leading-5 text-slate-500">Jelaskan agenda, patokan tempat, atau hal yang perlu disiapkan. Jangan mencantumkan alamat rumah atau data pribadi.</span>
-          <textarea key={collaborationMode} name="meetingDescription" required disabled={isPending} rows={3} placeholder={collaborationMode === "REMOTE" ? "Contoh: Masuk 10 menit lebih awal untuk perkenalan." : "Contoh: Bertemu di taman kampus dekat perpustakaan utama."} className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
+          <textarea key={collaborationMode} name="meetingDescription" required disabled={isPending} rows={3} placeholder={collaborationMode === "ONLINE" ? "Contoh: Masuk 10 menit lebih awal untuk perkenalan." : "Contoh: Bertemu di taman kampus dekat perpustakaan utama."} className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
         </label>
 
         <label className="mt-5 block">
@@ -210,7 +270,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
           <input name="collaborationTools" disabled={isPending} placeholder="Contoh: Figma, Google Drive, Notion" className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-4 focus:ring-blue-100" />
         </label>
 
-        {(collaborationMode === "ONSITE" || collaborationMode === "HYBRID") ? (
+        {(collaborationMode === "OFFLINE" || collaborationMode === "HYBRID") ? (
           <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-amber-900">
             <WarningIcon className="mt-0.5 size-5 shrink-0" />
             <p className="text-xs leading-5">Gunakan sekolah, kampus, ruang publik, atau kafe yang mudah diverifikasi. Hindari rumah pribadi dan tempat sepi.</p>
@@ -260,7 +320,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
         <h2 id="criteria-heading" className="text-lg font-bold text-slate-950">Jenjang pelajar</h2>
         <p className="mt-1 text-sm text-slate-600">ProjectMatch khusus pelajar. Pilih jenjang yang dapat mendaftar ke proyek ini.</p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          {educationLevels.map((level) => (
+          {educationLevelOptions.map((level) => (
             <label key={level.value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-slate-200 px-3 text-sm text-slate-700 hover:bg-slate-50 has-checked:border-brand-primary has-checked:bg-brand-soft">
               <input type="checkbox" name="educationLevels" value={level.value} disabled={isPending} className="size-4 rounded accent-blue-600" />
               {level.label}
@@ -322,6 +382,7 @@ export default function CreateProjectForm({ options }: { options: ProjectFormOpt
         initialPosition={editingPositionIndex === null ? undefined : positions[editingPositionIndex]}
         existingPositions={positions}
         editingIndex={editingPositionIndex}
+        roles={roles}
         onCancel={() => setPositionDialogOpen(false)}
         onSave={savePosition}
       />
@@ -334,27 +395,29 @@ type PositionDialogProps = {
   initialPosition?: Position;
   existingPositions: Position[];
   editingIndex: number | null;
+  roles: CatalogOption[];
   onCancel: () => void;
   onSave: (position: Position) => void;
 };
 
-function PositionDialog({ initialPosition, existingPositions, editingIndex, onCancel, onSave }: PositionDialogProps) {
-  const [name, setName] = useState(initialPosition?.name ?? "");
+function PositionDialog({ initialPosition, existingPositions, editingIndex, roles, onCancel, onSave }: PositionDialogProps) {
+  const [roleId, setRoleId] = useState(initialPosition?.roleId ?? "");
   const [slotsAvailable, setSlotsAvailable] = useState(initialPosition?.slotsAvailable ?? 1);
   const [dialogError, setDialogError] = useState("");
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const focusFrame = requestAnimationFrame(() => nameInputRef.current?.focus());
+    const focusFrame = requestAnimationFrame(() =>
+      dialogRef.current?.querySelector<HTMLElement>("select")?.focus(),
+    );
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onCancel();
       if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), input"));
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), input, select"));
       const first = focusable[0];
       const last = focusable.at(-1);
       if (!first || !last) return;
@@ -377,17 +440,17 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, onCa
 
   function handleDialogSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const normalizedName = name.trim();
-    if (normalizedName.length < 2) {
-      setDialogError("Nama posisi minimal 2 karakter.");
+    const role = roles.find((item) => item.id === roleId);
+    if (!role) {
+      setDialogError("Pilih posisi terlebih dahulu.");
       return;
     }
-    const isDuplicate = existingPositions.some((position, index) => index !== editingIndex && position.name.toLocaleLowerCase("id-ID") === normalizedName.toLocaleLowerCase("id-ID"));
+    const isDuplicate = existingPositions.some((position, index) => index !== editingIndex && position.roleId === roleId);
     if (isDuplicate) {
-      setDialogError("Posisi dengan nama tersebut sudah ditambahkan.");
+      setDialogError("Posisi tersebut sudah ditambahkan.");
       return;
     }
-    onSave({ name: normalizedName, slotsAvailable });
+    onSave({ roleId: role.id, name: role.name, slotsAvailable });
   }
 
   return (
@@ -401,8 +464,11 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, onCa
 
         <form onSubmit={handleDialogSubmit} className="mt-5 space-y-4">
           <label className="block">
-            <span className="text-sm font-semibold text-slate-900">Nama posisi</span>
-            <input ref={nameInputRef} value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={80} required placeholder="Contoh: UI/UX Designer" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
+            <span className="text-sm font-semibold text-slate-900">Posisi</span>
+            <SelectControl value={roleId} onChange={(event) => setRoleId(event.target.value)} required containerClassName="mt-2" className="rounded-xl">
+              <option value="" disabled>Pilih posisi</option>
+              {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+            </SelectControl>
           </label>
           <label className="block">
             <span className="text-sm font-semibold text-slate-900">Jumlah anggota</span>

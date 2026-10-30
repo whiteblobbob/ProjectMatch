@@ -1,17 +1,34 @@
 "use server"
-import { cookies } from "next/headers";
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "../lib/prisma";
+import prisma from "../lib/prisma";
 import { createClient } from "../lib/supabase/server";
 import { LoginForm, LoginValidator, SignupForm, SignupValidator } from "../lib/validator/auth";
 import { parseOrThrow } from "../lib/validator/global";
 import { ActionError } from "../lib/errors";
 import actionWrapper from "../lib/actionWrapper";
+import { validateRegion } from "../lib/regions";
+import { findInstitution, institutionKindForLevel } from "../lib/institution";
 
 export const signup = actionWrapper(async (formData: SignupForm) => {
   const data = parseOrThrow(SignupValidator, formData);
 
-  const supabase = createClient(await cookies());
+  const regionErrors = validateRegion(data.province, data.city);
+  if (Object.keys(regionErrors).length > 0) {
+    throw new ActionError("Please check your input", regionErrors);
+  }
+
+  const institution = await findInstitution(
+    data.institution,
+    institutionKindForLevel(data.educationLevel),
+  );
+
+  if (!institution) {
+    throw new ActionError("Please check your input", {
+      institution: ["Pilih institusi dari daftar"],
+    });
+  }
+
+  const supabase = await createClient();
   const { data: userData, error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
@@ -32,6 +49,17 @@ export const signup = actionWrapper(async (formData: SignupForm) => {
     await prisma.user.create({
       data: {
         id: userId,
+        name: data.name,
+        institution: institution.npsn,
+        institutionName: institution.name,
+        educationLevel: data.educationLevel,
+        province: data.province,
+        city: data.city,
+        studyProgram: data.studyProgram || null,
+        schoolGrade: data.schoolGrade || null,
+        entryYear: data.entryYear ?? null,
+        graduationYear: data.graduationYear ?? null,
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
       }
     });
   } catch (error) {
@@ -47,7 +75,7 @@ export const signup = actionWrapper(async (formData: SignupForm) => {
 export const login = actionWrapper(async (formData: LoginForm) => {
     const data = parseOrThrow(LoginValidator, formData);
 
-    const supabase = createClient(await cookies());
+    const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,

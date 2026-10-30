@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ActiveApplication } from "@/app/lib/ui/activity";
+import type { ActiveApplication } from "@/app/actions/activity";
 import { getCollaborationModeLabel } from "@/app/components/ui/collaboration-mode";
 import StatusBadge from "./status-badge";
 
@@ -18,11 +18,11 @@ export default function ApplicationCard({ application }: { application: ActiveAp
         <StatusBadge tone="attention">Menunggu</StatusBadge>
       </div>
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
-        <span>{getCollaborationModeLabel(application.onSite ? "ONSITE" : "REMOTE")}</span>
+        <span>{getCollaborationModeLabel(application.collaborationMode)}</span>
         <span>{application.workHoursPerWeek} jam/minggu</span>
       </div>
       <Link
-        href="/projectdetail"
+        href={`/project/${application.projectId}`}
         className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 transition-colors hover:border-brand-primary hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
       >
         Lihat proyek

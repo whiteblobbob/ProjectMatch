@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
+import type { CatalogOption } from "@/app/actions/catalog";
 import { SelectControl } from "@/app/components/ui/select-control";
 import { SearchIcon } from "@/app/components/ui/icons";
 
@@ -9,8 +10,8 @@ type ExploreHeroProps = {
   category: string;
   mode: string;
   role: string;
-  categories: string[];
-  roles: string[];
+  categories: CatalogOption[];
+  roles: CatalogOption[];
   onSearchInputChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onModeChange: (value: string) => void;
@@ -48,15 +49,15 @@ export default function ExploreHero({
         <form onSubmit={handleSubmit} className="mt-6 grid min-w-0 gap-2 rounded-xl border border-slate-300 bg-white p-2 shadow-sm sm:grid-cols-2 lg:grid-cols-[minmax(240px,1.5fr)_minmax(140px,.75fr)_minmax(140px,.75fr)_minmax(150px,.8fr)_auto] lg:items-center lg:gap-0 lg:p-1.5">
           <div className="relative min-w-0 rounded-lg border border-slate-200 transition focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-blue-100 sm:col-span-2 lg:col-span-1 lg:rounded-none lg:border-0 lg:border-r lg:border-slate-200">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
-            <label htmlFor="explore-search" className="sr-only">Cari proyek, posisi, topik, atau lomba</label>
-            <input id="explore-search" type="search" value={searchInput} onChange={(event) => onSearchInputChange(event.target.value)} placeholder="Cari proyek, posisi, topik, atau lomba" className="min-h-12 w-full bg-transparent py-2 pl-10 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400" />
+            <label htmlFor="explore-search" className="sr-only">Cari judul atau deskripsi proyek</label>
+            <input id="explore-search" type="search" value={searchInput} onChange={(event) => onSearchInputChange(event.target.value)} placeholder="Cari judul atau deskripsi proyek" className="min-h-12 w-full bg-transparent py-2 pl-10 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400" />
           </div>
 
           <div className="min-w-0 lg:border-r lg:border-slate-200">
             <label htmlFor="search-category" className="sr-only">Jenis proyek</label>
             <SelectControl id="search-category" value={category} onChange={(event) => onCategoryChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
               <option value="">Semua jenis</option>
-              {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+              {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </SelectControl>
           </div>
 
@@ -64,8 +65,8 @@ export default function ExploreHero({
             <label htmlFor="search-mode" className="sr-only">Mode kolaborasi</label>
             <SelectControl id="search-mode" value={mode} onChange={(event) => onModeChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
               <option value="">Semua mode</option>
-              <option value="REMOTE">Daring</option>
-              <option value="ONSITE">Luring</option>
+              <option value="ONLINE">Daring</option>
+              <option value="OFFLINE">Luring</option>
               <option value="HYBRID">Hybrid</option>
             </SelectControl>
           </div>
@@ -74,7 +75,7 @@ export default function ExploreHero({
             <label htmlFor="search-role" className="sr-only">Peran</label>
             <SelectControl id="search-role" value={role} onChange={(event) => onRoleChange(event.target.value)} className="lg:rounded-none lg:border-0 lg:bg-transparent">
               <option value="">Semua peran</option>
-              {roles.map((item) => <option key={item} value={item}>{item}</option>)}
+              {roles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </SelectControl>
           </div>
 

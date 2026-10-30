@@ -10,7 +10,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "ProjectMatch — Temukan Tim Kolaborasi",
+  title: "ProjectMatch",
   description: "Temukan rekan lintas kampus untuk kompetisi, riset, startup, dan proyek portofolio.",
 };
 

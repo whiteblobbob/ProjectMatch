@@ -2,13 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ActionError } from "../errors";
 
 const mocks = vi.hoisted(() => ({
-  cookies: vi.fn(),
   createClient: vi.fn(),
   getUser: vi.fn(),
-}));
-
-vi.mock("next/headers", () => ({
-  cookies: mocks.cookies,
 }));
 
 vi.mock("../supabase/server", () => ({
@@ -19,7 +14,6 @@ import actionWrapper from "../actionWrapper";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.cookies.mockResolvedValue("cookie-store");
   mocks.createClient.mockReturnValue({
     auth: {
       getUser: mocks.getUser,
@@ -41,8 +35,7 @@ describe("actionWrapper", () => {
     const result = await action("value");
 
     expect(result).toEqual({ success: true, data: "user-id:value" });
-    expect(mocks.cookies).toHaveBeenCalledOnce();
-    expect(mocks.createClient).toHaveBeenCalledWith("cookie-store");
+    expect(mocks.createClient).toHaveBeenCalledOnce();
     expect(mocks.getUser).toHaveBeenCalledOnce();
   });
 
@@ -64,7 +57,6 @@ describe("actionWrapper", () => {
     const result = await action("public");
 
     expect(result).toEqual({ success: true, data: "public" });
-    expect(mocks.cookies).not.toHaveBeenCalled();
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 

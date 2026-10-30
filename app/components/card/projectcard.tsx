@@ -9,6 +9,7 @@ import {
 import { getCollaborationModeLabel, type CollaborationMode } from "@/app/components/ui/collaboration-mode";
 
 type Props = {
+  id: string;
   title: string;
   description: string;
   category: string;
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export default function ProjectCard({
+  id,
   title,
   description,
   category,
@@ -59,7 +61,7 @@ export default function ProjectCard({
                 <span className="font-medium text-slate-500">{title}</span>
               </div>
               <h3 className="mt-3 text-lg font-bold leading-snug text-slate-950 sm:text-xl">
-                <Link href="/projectdetail" className="rounded-sm outline-none transition-colors group-hover:text-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">{primaryRole}</Link>
+                <Link href={`/project/${id}`} className="rounded-sm outline-none transition-colors group-hover:text-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">{primaryRole}</Link>
               </h3>
               {otherRoles.length > 0 && <p className="mt-1 text-xs leading-5 text-slate-500">Juga mencari {otherRoles.join(", ")}</p>}
             </div>
@@ -96,7 +98,7 @@ export default function ProjectCard({
               <p className="text-xs text-slate-500">Dibuat oleh</p>
               <p className="truncate text-sm font-semibold text-slate-800">{owner}{institution ? <span className="font-normal text-slate-500"> · {institution}</span> : null}</p>
             </div>
-            <Link href="/projectdetail" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">
+            <Link href={`/project/${id}`} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">
               Lihat detail
               <ArrowRightIcon className="size-4" />
             </Link>

@@ -1,5 +1,4 @@
 import { User } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 import { createClient } from "./supabase/server";
 import { ActionError } from "./errors";
 
@@ -30,13 +29,13 @@ export default function actionWrapper<Args extends unknown[], Result>(
       let data: Result | undefined;
 
       if (options.auth) {
-        const supabase = createClient(await cookies());
+        const supabase = await createClient();
         const {
           data: { user },
-          error,
+          error: authError,
         } = await supabase.auth.getUser();
 
-        if (error || !user) {
+        if (authError || !user) {
           return { success: false, error: "User is not authenticated" };
         }
 

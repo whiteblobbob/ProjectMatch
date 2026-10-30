@@ -7,7 +7,7 @@ import {
 
 type RequirementStatus = "met" | "unmet" | "review";
 
-type Requirement = {
+export type Requirement = {
     id: string;
     label: string;
     status: RequirementStatus;
@@ -15,18 +15,25 @@ type Requirement = {
 
 type CekPersyaratanProps = {
     requirements?: Requirement[];
+    extraCriteria?: string | null;
     sourceUrl?: string;
 };
 
 export default function CekPersyaratan({
     requirements,
+    extraCriteria,
     sourceUrl,
 }: CekPersyaratanProps) {
     if (!requirements?.length) return null;
 
-    const hasUnmetRequirement = requirements.some(
-        (requirement) => requirement.status === "unmet"
-    );
+    const hasUnmetRequirement =
+        requirements.length > 0 &&
+        requirements.every((requirement) => requirement.status === "unmet");
+    const criteriaLines =
+        extraCriteria
+            ?.split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean) ?? [];
 
     return (
         <section className="flex w-full min-w-0 flex-col rounded-xl border border-border-default bg-white p-3">
@@ -78,6 +85,14 @@ export default function CekPersyaratan({
                     );
                 })}
             </div>
+
+            {criteriaLines.length > 0 ? (
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-[13px] leading-5 text-text-heading">
+                    {criteriaLines.map((line, index) => (
+                        <li key={`${line}-${index}`}>{line}</li>
+                    ))}
+                </ul>
+            ) : null}
 
             {sourceUrl ? (
                 <a

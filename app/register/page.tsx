@@ -1,5 +1,6 @@
 import Navbar from "../components/navigation-bar/guestnavbar";
 import RegisterForm from "../components/auth/register-form";
+import { Suspense } from "react";
 import ProjectMatchLogo from "../components/brand/projectmatch-logo";
 import { CheckIcon } from "../components/ui/icons";
 
@@ -24,7 +25,7 @@ export default function RegisterPage() {
               ))}
             </ul>
             <div className="mt-8 rounded-xl border border-white/20 bg-white/10 p-4 text-xs leading-5 text-blue-50">
-              Data verifikasi pada alur ini belum dikirim atau disimpan. Integrasi backend akan dilakukan pada tahap terpisah.
+              Nama, email, kata sandi, dan data pendidikan akan membuat akunmu. Pilih sekolah atau kampus dari daftar resmi agar profilmu tepercaya.
             </div>
           </aside>
 
@@ -37,7 +38,9 @@ export default function RegisterPage() {
             <p className="text-sm font-semibold text-brand-primary">Buat akun ProjectMatch</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Daftar sebagai pelajar</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">Lengkapi setiap langkah. Kamu dapat kembali dan mengubah jawaban sebelum membuat akun.</p>
-            <RegisterForm />
+            <Suspense>
+              <RegisterForm />
+            </Suspense>
           </section>
         </div>
       </main>

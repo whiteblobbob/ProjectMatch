@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
 
+import { reportProject } from "@/app/actions/project";
 import { CheckIcon, WarningIcon, XIcon } from "../ui/icons";
 
 const reportReasons = [
@@ -12,9 +13,11 @@ const reportReasons = [
   "Alasan lainnya",
 ];
 
-export default function ReportProjectButton() {
+export default function ReportProjectButton({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState("");
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -50,8 +53,23 @@ export default function ReportProjectButton() {
     };
   }, [open]);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError("");
+
+    const formData = new FormData(event.currentTarget);
+    const reason = String(formData.get("reportReason") ?? "");
+    const details = String(formData.get("reportDetails") ?? "").trim();
+
+    setIsPending(true);
+    const result = await reportProject({ projectId, reason, details: details || undefined });
+    setIsPending(false);
+
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+
     setSubmitted(true);
     setOpen(false);
   }
@@ -85,7 +103,7 @@ export default function ReportProjectButton() {
                 <div className="mt-3 space-y-2">
                   {reportReasons.map((reason, index) => (
                     <label key={reason} className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm leading-5 text-slate-700 hover:bg-slate-50 has-checked:border-rose-300 has-checked:bg-rose-50">
-                      <input type="radio" name="reportReason" value={reason} required defaultChecked={index === 0} className="mt-0.5 size-4 accent-rose-600" />
+                      <input type="radio" name="reportReason" value={reason} required defaultChecked={index === 0} disabled={isPending} className="mt-0.5 size-4 accent-rose-600" />
                       {reason}
                     </label>
                   ))}
@@ -93,11 +111,16 @@ export default function ReportProjectButton() {
               </fieldset>
               <label className="mt-4 block">
                 <span className="text-sm font-semibold text-slate-900">Detail tambahan <span className="font-normal text-slate-400">(opsional)</span></span>
-                <textarea rows={3} maxLength={500} placeholder="Jelaskan hal yang membuatmu merasa tidak aman atau curiga." className="mt-2 w-full resize-y rounded-xl border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-100" />
+                <textarea name="reportDetails" rows={3} maxLength={500} disabled={isPending} placeholder="Jelaskan hal yang membuatmu merasa tidak aman atau curiga." className="mt-2 w-full resize-y rounded-xl border border-slate-300 px-4 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-100" />
               </label>
+
+              {error ? (
+                <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3.5 py-3 text-xs font-medium text-rose-700">{error}</p>
+              ) : null}
+
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <button ref={cancelRef} type="button" onClick={() => setOpen(false)} className="min-h-11 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-                <button type="submit" className="min-h-11 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2">Kirim laporan</button>
+                <button ref={cancelRef} type="button" onClick={() => setOpen(false)} disabled={isPending} className="min-h-11 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">Batal</button>
+                <button type="submit" disabled={isPending} className="min-h-11 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70">{isPending ? "Mengirim…" : "Kirim laporan"}</button>
               </div>
             </form>
           </div>

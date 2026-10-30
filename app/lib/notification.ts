@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import prisma from "./prisma";
 import { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { NotificationForm, NotificationValidator } from "./validator/notification";
 import { parseOrThrow } from "./validator/global";

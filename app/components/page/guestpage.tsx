@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { getProfileView, listGuestProjects } from "@/app/lib/ui/actions";
-import { institutionOptions } from "@/app/components/auth/registration/institution-combobox";
+import { fetchCategories, fetchRoles, type CatalogOption } from "@/app/actions/catalog";
+import { fetchProfile } from "@/app/actions/profile";
+import { queryProjects } from "@/app/actions/project";
 import { SelectControl } from "@/app/components/ui/select-control";
-import { decodeProfilePublicInfo } from "@/app/lib/ui/profile-public-info";
+import type { CollaborationMode } from "@/app/components/ui/collaboration-mode";
+import type { InstitutionOption } from "@/app/lib/institution";
 import ExploreHero from "../explore/explore-hero";
 import { EmptyProjectState, ProjectListSkeleton } from "../explore/explore-states";
 import {
@@ -21,12 +23,18 @@ type ProjectSummary = {
   title: string;
   description: string;
   deadline: Date | string | null;
-  onSite: boolean;
+  collaborationMode: CollaborationMode;
   workHoursPerWeek: number;
   createdAt: Date | string;
   totalAvailableSlot: number;
   category: { name: string };
-  owner: { name: string | null; instance: string | null };
+  owner: {
+    name: string | null;
+    institution: string | null;
+    institutionName: string | null;
+    province: string | null;
+    city: string | null;
+  };
   projectRoles: Array<{ role: { name: string } }>;
   _count: { projectMembers: number };
 };
@@ -35,31 +43,31 @@ type SortOption = "relevant" | "newest" | "deadline";
 
 const initialFilters: ExploreFilters = {
   search: "",
-  category: "",
-  topic: "",
-  role: "",
+  categoryId: "",
+  roleId: "",
+  collaborationTool: "",
   mode: "",
   commitment: "",
   proximity: "",
   institution: "",
 };
 
+const commitmentRanges: Record<string, { minWorkHours?: number; maxWorkHours?: number }> = {
+  light: { maxWorkHours: 5 },
+  medium: { minWorkHours: 6, maxWorkHours: 10 },
+  high: { minWorkHours: 11 },
+};
+
 function normalize(value?: string | null) {
   return value?.trim().toLocaleLowerCase("id-ID") ?? "";
 }
 
-function institutionLocation(name?: string | null) {
-  const normalizedName = normalize(name);
-  return institutionOptions.find((institution) => normalize(institution.name) === normalizedName) ?? null;
-}
-
 function projectRelevance(project: ProjectSummary, viewerContext: ExploreViewerContext | null) {
   if (!viewerContext) return 3;
-  if (viewerContext.institution && normalize(project.owner.instance) === normalize(viewerContext.institution)) return 0;
+  if (viewerContext.institution && normalize(project.owner.institution) === normalize(viewerContext.institution)) return 0;
 
-  const location = institutionLocation(project.owner.instance);
-  if (location?.city && normalize(location.city) === normalize(viewerContext.city)) return 1;
-  if (location?.province && normalize(location.province) === normalize(viewerContext.province)) return 2;
+  if (project.owner.city && normalize(project.owner.city) === normalize(viewerContext.city)) return 1;
+  if (project.owner.province && normalize(project.owner.province) === normalize(viewerContext.province)) return 2;
   return 3;
 }
 
@@ -74,9 +82,13 @@ function relevanceLabel(project: ProjectSummary, viewerContext: ExploreViewerCon
 export default function GuestPage() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [filters, setFilters] = useState<ExploreFilters>(initialFilters);
+  const [institutionOption, setInstitutionOption] = useState<InstitutionOption | null>(null);
+  const [categories, setCategories] = useState<CatalogOption[]>([]);
+  const [roles, setRoles] = useState<CatalogOption[]>([]);
   const [sort, setSort] = useState<SortOption>("relevant");
   const [viewerContext, setViewerContext] = useState<ExploreViewerContext | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -85,36 +97,61 @@ export default function GuestPage() {
   const filterCloseRef = useRef<HTMLButtonElement>(null);
   const filterDrawerRef = useRef<HTMLDivElement>(null);
 
-  const loadProjects = useCallback(async () => {
-    setIsLoading(true);
+  const fetchProjects = useCallback(async () => {
+    setIsRefreshing(true);
     setError("");
-    const result = await listGuestProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 });
+
+    const commitment = filters.commitment ? commitmentRanges[filters.commitment] : undefined;
+    const proximityInstitution = filters.proximity === "institution" ? viewerContext?.institution : undefined;
+    const ownerInstitution = institutionOption?.npsn ?? proximityInstitution ?? undefined;
+    const ownerCity = filters.proximity === "city" ? viewerContext?.city : undefined;
+    const ownerProvince = filters.proximity === "province" ? viewerContext?.province : undefined;
+
+    const result = await queryProjects({
+      status: "OPEN_RECRUITMENT",
+      pageSize: 50,
+      search: filters.search.trim() || undefined,
+      categoryId: filters.categoryId || undefined,
+      projectRoles: filters.roleId ? [filters.roleId] : undefined,
+      collaborationMode: (filters.mode || undefined) as CollaborationMode | undefined,
+      collaborationTool: filters.collaborationTool.trim() || undefined,
+      minWorkHours: commitment?.minWorkHours,
+      maxWorkHours: commitment?.maxWorkHours,
+      ownerInstitution,
+      ownerCity,
+      ownerProvince,
+    });
 
     if (!result.success || !("data" in result)) {
       setProjects([]);
       setError("Proyek belum dapat dimuat. Silakan coba lagi.");
       setIsLoading(false);
+      setIsRefreshing(false);
       return;
     }
 
     setProjects(result.data.projects as ProjectSummary[]);
     setIsLoading(false);
-  }, []);
+    setIsRefreshing(false);
+  }, [filters, institutionOption, viewerContext]);
 
   useEffect(() => {
     let cancelled = false;
 
-    void listGuestProjects({ status: "OPEN_RECRUITMENT", pageSize: 50 }).then((result) => {
+    void (async () => {
+      const [categoriesResult, rolesResult] = await Promise.all([
+        fetchCategories(),
+        fetchRoles(),
+      ]);
+
       if (cancelled) return;
-      if (!result.success || !("data" in result)) {
-        setProjects([]);
-        setError("Proyek belum dapat dimuat. Silakan coba lagi.");
-        setIsLoading(false);
-        return;
+      if (categoriesResult.success && "data" in categoriesResult) {
+        setCategories(categoriesResult.data);
       }
-      setProjects(result.data.projects as ProjectSummary[]);
-      setIsLoading(false);
-    });
+      if (rolesResult.success && "data" in rolesResult) {
+        setRoles(rolesResult.data);
+      }
+    })();
 
     return () => { cancelled = true; };
   }, []);
@@ -128,18 +165,15 @@ export default function GuestPage() {
         const session = await sessionResponse.json() as { authenticated: boolean };
         if (!session.authenticated || cancelled) return;
 
-        const profileResult = await getProfileView();
+        const profileResult = await fetchProfile();
         if (!profileResult.success || !("data" in profileResult) || cancelled) return;
 
         const profile = profileResult.data;
-        const publicInfo = decodeProfilePublicInfo(profile.contactInfo);
-        const locationParts = publicInfo.location.split(",").map((part) => part.trim()).filter(Boolean);
-        const catalogInstitution = institutionLocation(profile.instance);
 
         setViewerContext({
-          institution: profile.instance,
-          city: locationParts[0] ?? catalogInstitution?.city ?? "",
-          province: locationParts[1] ?? catalogInstitution?.province ?? "",
+          institution: profile.institution ?? "",
+          city: profile.city ?? "",
+          province: profile.province ?? "",
         });
       } catch {
         // Guests and incomplete profiles fall back to a neutral newest-first order.
@@ -148,6 +182,14 @@ export default function GuestPage() {
 
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      void fetchProjects();
+    }, 200);
+
+    return () => clearTimeout(timeout);
+  }, [fetchProjects]);
 
   const closeFilters = useCallback((restoreFocus = true) => {
     setFiltersOpen(false);
@@ -187,61 +229,20 @@ export default function GuestPage() {
     };
   }, [closeFilters, filtersOpen]);
 
-  const categories = useMemo(
-    () => [...new Set(projects.map((project) => project.category.name))].sort(),
-    [projects],
-  );
-  const roles = useMemo(
-    () => [...new Set(projects.flatMap((project) => project.projectRoles.map((item) => item.role.name)))].sort(),
-    [projects],
-  );
-  const institutions = useMemo(
-    () => [...new Set(projects.map((project) => project.owner.instance).filter((item): item is string => Boolean(item)))].sort(),
-    [projects],
-  );
-
-  const filteredProjects = useMemo(() => {
-    const searchTerm = filters.search.trim().toLocaleLowerCase("id-ID");
-    const topicTerm = filters.topic.trim().toLocaleLowerCase("id-ID");
-
-    return projects
-      .filter((project) => {
-        const projectRoles = project.projectRoles.map((item) => item.role.name);
-        const searchable = [project.title, project.description, project.category.name, project.owner.name ?? "", project.owner.instance ?? "", ...projectRoles].join(" ").toLocaleLowerCase("id-ID");
-        const matchesCommitment = !filters.commitment
-          || (filters.commitment === "light" && project.workHoursPerWeek <= 5)
-          || (filters.commitment === "medium" && project.workHoursPerWeek >= 6 && project.workHoursPerWeek <= 10)
-          || (filters.commitment === "high" && project.workHoursPerWeek > 10);
-        const location = institutionLocation(project.owner.instance);
-        const matchesProximity = !filters.proximity
-          || (filters.proximity === "institution" && normalize(project.owner.instance) === normalize(viewerContext?.institution))
-          || (filters.proximity === "city" && Boolean(viewerContext?.city) && normalize(location?.city) === normalize(viewerContext?.city))
-          || (filters.proximity === "province" && Boolean(viewerContext?.province) && normalize(location?.province) === normalize(viewerContext?.province));
-
-        return (
-          (!searchTerm || searchable.includes(searchTerm))
-          && (!topicTerm || searchable.includes(topicTerm))
-          && (!filters.category || project.category.name === filters.category)
-          && (!filters.role || projectRoles.includes(filters.role))
-          && (!filters.mode || (project.onSite ? "ONSITE" : "REMOTE") === filters.mode)
-          && (!filters.institution || project.owner.instance === filters.institution)
-          && matchesProximity
-          && matchesCommitment
-        );
-      })
-      .sort((a, b) => {
-        if (sort === "relevant") {
-          const relevanceDifference = projectRelevance(a, viewerContext) - projectRelevance(b, viewerContext);
-          if (relevanceDifference !== 0) return relevanceDifference;
-        }
-        if (sort === "deadline") {
-          if (!a.deadline) return 1;
-          if (!b.deadline) return -1;
-          return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-        }
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
-  }, [filters, projects, sort, viewerContext]);
+  const visibleProjects = useMemo(() => {
+    return [...projects].sort((a, b) => {
+      if (sort === "relevant") {
+        const relevanceDifference = projectRelevance(a, viewerContext) - projectRelevance(b, viewerContext);
+        if (relevanceDifference !== 0) return relevanceDifference;
+      }
+      if (sort === "deadline") {
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [projects, sort, viewerContext]);
 
   const hasFilters = Object.values(filters).some(Boolean);
 
@@ -249,13 +250,20 @@ export default function GuestPage() {
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
+  function handleInstitutionChange(value: InstitutionOption | null) {
+    setInstitutionOption(value);
+    updateFilter("institution", value?.npsn ?? "");
+  }
+
   function removeFilter(key: keyof ExploreFilters) {
+    if (key === "institution") setInstitutionOption(null);
     updateFilter(key, "");
     if (key === "search") setSearchInput("");
   }
 
   function resetFilters() {
     setFilters(initialFilters);
+    setInstitutionOption(null);
     setSearchInput("");
   }
 
@@ -263,15 +271,15 @@ export default function GuestPage() {
     <main className="min-h-screen bg-slate-50">
       <ExploreHero
         searchInput={searchInput}
-        category={filters.category}
+        category={filters.categoryId}
         mode={filters.mode}
-        role={filters.role}
+        role={filters.roleId}
         categories={categories}
         roles={roles}
         onSearchInputChange={setSearchInput}
-        onCategoryChange={(value) => updateFilter("category", value)}
+        onCategoryChange={(value) => updateFilter("categoryId", value)}
         onModeChange={(value) => updateFilter("mode", value)}
-        onRoleChange={(value) => updateFilter("role", value)}
+        onRoleChange={(value) => updateFilter("roleId", value)}
         onSubmit={() => updateFilter("search", searchInput.trim())}
       />
 
@@ -283,7 +291,16 @@ export default function GuestPage() {
                 <h2 className="font-bold text-slate-950">Filter proyek</h2>
                 {hasFilters && <button type="button" onClick={resetFilters} className="rounded px-1 text-xs font-semibold text-brand-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">Hapus semua</button>}
               </div>
-              <ProjectFilters idPrefix="desktop-filter" categories={categories} roles={roles} institutions={institutions} viewerContext={viewerContext} filters={filters} onChange={updateFilter} />
+              <ProjectFilters
+                idPrefix="desktop-filter"
+                categories={categories}
+                roles={roles}
+                viewerContext={viewerContext}
+                filters={filters}
+                institutionOption={institutionOption}
+                onChange={updateFilter}
+                onInstitutionChange={handleInstitutionChange}
+              />
             </div>
           </aside>
 
@@ -291,7 +308,9 @@ export default function GuestPage() {
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 id="results-heading" className="text-xl font-bold text-slate-950">Posisi terbuka</h2>
-                <p className="mt-1 text-sm text-slate-500" aria-live="polite">{isLoading ? "Mencari peluang…" : `${filteredProjects.length} proyek ditemukan`}</p>
+                <p className="mt-1 text-sm text-slate-500" aria-live="polite">
+                  {isLoading ? "Mencari peluang…" : `${visibleProjects.length} proyek ditemukan${isRefreshing ? " · memuat…" : ""}`}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
@@ -309,7 +328,14 @@ export default function GuestPage() {
               </div>
             </div>
 
-            <ActiveFilterChips filters={filters} onRemove={removeFilter} onClear={resetFilters} />
+            <ActiveFilterChips
+              filters={filters}
+              categories={categories}
+              roles={roles}
+              institutionOption={institutionOption}
+              onRemove={removeFilter}
+              onClear={resetFilters}
+            />
 
             {isLoading ? (
               <ProjectListSkeleton />
@@ -318,26 +344,27 @@ export default function GuestPage() {
                 <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-red-50 font-bold text-red-600" aria-hidden="true">!</div>
                 <h3 className="mt-4 font-bold text-slate-950">Gagal memuat proyek</h3>
                 <p className="mt-2 text-sm text-slate-600">{error}</p>
-                <button type="button" onClick={() => void loadProjects()} className="mt-5 min-h-11 rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Coba lagi</button>
+                <button type="button" onClick={() => void fetchProjects()} className="mt-5 min-h-11 rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Coba lagi</button>
               </div>
-            ) : filteredProjects.length === 0 ? (
+            ) : visibleProjects.length === 0 ? (
               <EmptyProjectState filtered={hasFilters} onClear={resetFilters} />
             ) : (
               <div className="space-y-4">
-                {filteredProjects.map((project) => (
+                {visibleProjects.map((project) => (
                   <ProjectCard
                     key={project.id}
+                    id={project.id}
                     title={project.title}
                     description={project.description}
                     category={project.category.name}
                     roles={project.projectRoles.map((item) => item.role.name)}
-                    collaborationMode={project.onSite ? "ONSITE" : "REMOTE"}
+                    collaborationMode={project.collaborationMode}
                     workHoursPerWeek={project.workHoursPerWeek}
                     deadline={project.deadline ? new Date(project.deadline) : null}
                     slotsAvailable={project.totalAvailableSlot}
                     teamSize={project._count.projectMembers}
                     owner={project.owner.name ?? "Pengguna ProjectMatch"}
-                    institution={project.owner.instance}
+                    institution={project.owner.institutionName}
                     relevanceLabel={relevanceLabel(project, viewerContext)}
                   />
                 ))}
@@ -355,10 +382,21 @@ export default function GuestPage() {
               <div><h2 id={`${filterDrawerId}-title`} className="text-lg font-bold text-slate-950">Filter proyek</h2><p className="mt-0.5 text-xs text-slate-500">Persempit peluang yang paling sesuai.</p></div>
               <button ref={filterCloseRef} type="button" onClick={() => closeFilters()} className="inline-flex size-11 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary" aria-label="Tutup filter"><XIcon className="size-5" /></button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><ProjectFilters idPrefix="mobile-filter" categories={categories} roles={roles} institutions={institutions} viewerContext={viewerContext} filters={filters} onChange={updateFilter} /></div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+              <ProjectFilters
+                idPrefix="mobile-filter"
+                categories={categories}
+                roles={roles}
+                viewerContext={viewerContext}
+                filters={filters}
+                institutionOption={institutionOption}
+                onChange={updateFilter}
+                onInstitutionChange={handleInstitutionChange}
+              />
+            </div>
             <div className="flex gap-3 border-t border-slate-200 bg-white p-4">
               <button type="button" onClick={resetFilters} className="min-h-11 flex-1 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">Reset</button>
-              <button type="button" onClick={() => closeFilters()} className="min-h-11 flex-1 rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Lihat {filteredProjects.length} hasil</button>
+              <button type="button" onClick={() => closeFilters()} className="min-h-11 flex-1 rounded-lg bg-brand-primary px-4 text-sm font-semibold text-white hover:bg-brand-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Lihat {visibleProjects.length} hasil</button>
             </div>
           </div>
         </div>

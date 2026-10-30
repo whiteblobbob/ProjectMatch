@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createClient } from "../supabase/server";
 
 export type SessionUser = {
@@ -16,7 +16,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  const supabase = createClient(await cookies());
+  const supabase = await createClient();
   const {
     data: { user },
     error,
@@ -30,4 +30,14 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     id: user.id,
     email: user.email ?? null,
   };
+}
+
+export async function requireSessionUser(): Promise<SessionUser> {
+  const user = await getSessionUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
 }
