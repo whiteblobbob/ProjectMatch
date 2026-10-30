@@ -75,7 +75,7 @@ const profile: Partial<ProfileForm> = {
   institution: "93145",
   bio: "A test profile",
   educationLevel: "MAHASISWA",
-  userRoles: [{ roleId: "role-id" }],
+  roles: ["Custom Developer"],
 };
 
 function avatarFile() {
@@ -110,9 +110,6 @@ describe("fetchProfile", () => {
     expect(mocks.userFindUnique).toHaveBeenCalledWith({
       where: { id: "test-user-id" },
       include: {
-        userRoles: {
-          include: { role: true },
-        },
         contactInfos: true,
       },
     });
@@ -155,6 +152,20 @@ describe("fetchReviews", () => {
 });
 
 describe("updateProfile", () => {
+  it("saves custom roles directly without a catalog relation", async () => {
+    expect(await updateProfile({ roles: ["  Robotics Mentor  "] })).toEqual({ success: true });
+    expect(mocks.userUpdate).toHaveBeenCalledWith({
+      where: { id: "test-user-id" },
+      data: expect.objectContaining({ roles: ["Robotics Mentor"] }),
+    });
+    expect(mocks.userUpdate.mock.calls[0][0].data).not.toHaveProperty("userRoles");
+  });
+
+  it("keeps existing roles when a partial update omits them", async () => {
+    expect(await updateProfile({ bio: "Updated bio" })).toEqual({ success: true });
+    expect(mocks.userUpdate.mock.calls[0][0].data.roles).toBeUndefined();
+  });
+
   it("updates the authenticated user's profile and roles in prisma", async () => {
     const result = await updateProfile(profile);
 
@@ -170,10 +181,7 @@ describe("updateProfile", () => {
         city: undefined,
         portfolioLink: undefined,
         educationLevel: "MAHASISWA",
-        userRoles: {
-          deleteMany: {},
-          create: [{ role: { connect: { id: "role-id" } } }],
-        },
+        roles: ["Custom Developer"],
         contactInfos: undefined,
       },
     });

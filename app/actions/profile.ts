@@ -13,9 +13,6 @@ export const fetchProfile = actionWrapper(async (user: User) => {
   const profile = await prisma.user.findUnique({
     where: { id: user.id },
     include: {
-      userRoles: {
-        include: { role: true },
-      },
       contactInfos: true,
     },
   });
@@ -46,9 +43,7 @@ export const fetchPublicProfile = actionWrapper(async (userId: string) => {
       educationLevel: true,
       avgCommitmentScore: true,
       totalProjectsCompleted: true,
-      userRoles: {
-        include: { role: true },
-      },
+      roles: true,
     },
   });
 
@@ -148,14 +143,7 @@ export const updateProfile = actionWrapper(async (
       portfolioLink: data.portfolioLink === undefined ? undefined : (data.portfolioLink || null),
       educationLevel: data.educationLevel,
       ...(profileCloudId !== undefined ? { profileCloudId } : {}),
-      userRoles: (data.userRoles) ? {
-        deleteMany: {},
-        create: data.userRoles.map(role => ({
-          role: {
-            connect: { id: role.roleId }
-          }
-        })),
-      } : undefined,
+      roles: data.roles,
       contactInfos: (data.contacts) ? {
         deleteMany: {},
         create: data.contacts.map(value => ({ value })),

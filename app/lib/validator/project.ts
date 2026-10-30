@@ -1,4 +1,5 @@
 import z from "zod";
+import { RoleNameValidator, hasUniqueRoleNames } from "./role";
 import { ActionError } from "../errors";
 import { EducationLevelValidator } from "./profile";
 
@@ -57,9 +58,12 @@ export const CreateProjectValidator = z.object({
     .array(EducationLevelValidator)
     .min(1, "At least one education level is required"),
   projectRoles: z.array(z.object({
-    roleId: z.string().min(1, "Role ID is required"),
+    roleName: RoleNameValidator,
     slotsAvailable: z.number().int().positive("Slots left must be a positive integer"),
-  })).min(1, "At least one project role is required"),
+  })).min(1, "At least one project role is required").refine(
+    (roles) => hasUniqueRoleNames(roles.map((role) => role.roleName)),
+    "Role names must be unique (ignoring capitalization)",
+  ),
   range: ProjectRangeValidator.optional(),
   allowedInstitutions: z.array(z.string().min(1)).optional(),
   extraCriteria: z.string().optional(),
@@ -127,7 +131,7 @@ export const QueryProjectsValidator = CreateProjectValidator.pick({
   educationLevels: true,
   collaborationMode: true,
 }).extend({
-  projectRoles: z.array(z.string().min(1, "Role ID is required"),).min(1),
+  projectRoles: z.array(RoleNameValidator).min(1),
   ownerId: z.string().min(1, "Owner ID is required"),
   status: z.enum(["OPEN_RECRUITMENT", "IN_PROGRESS", "COMPLETED"]),
   search: z.string(),
@@ -152,7 +156,7 @@ export type QueryProjectsForm = z.input<typeof QueryProjectsValidator>;
 // Other Project Related Validators
 
 export const ApplicationValidator = z.object({
-  roleId: z.string().min(1, "Role ID is required"),
+  roleName: RoleNameValidator,
   message: z.string().optional(),
 });
 export type ApplicationForm = z.infer<typeof ApplicationValidator>;

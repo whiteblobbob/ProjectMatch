@@ -35,7 +35,7 @@ type ProjectSummary = {
     province: string | null;
     city: string | null;
   };
-  projectRoles: Array<{ role: { name: string } }>;
+  projectRoles: Array<{ roleName: string }>;
   _count: { projectMembers: number };
 };
 
@@ -44,7 +44,7 @@ type SortOption = "relevant" | "newest" | "deadline";
 const initialFilters: ExploreFilters = {
   search: "",
   categoryId: "",
-  roleId: "",
+  roleName: "",
   collaborationTool: "",
   mode: "",
   commitment: "",
@@ -112,7 +112,7 @@ export default function GuestPage() {
       pageSize: 50,
       search: filters.search.trim() || undefined,
       categoryId: filters.categoryId || undefined,
-      projectRoles: filters.roleId ? [filters.roleId] : undefined,
+      projectRoles: filters.roleName.trim() ? [filters.roleName.trim()] : undefined,
       collaborationMode: (filters.mode || undefined) as CollaborationMode | undefined,
       collaborationTool: filters.collaborationTool.trim() || undefined,
       minWorkHours: commitment?.minWorkHours,
@@ -273,13 +273,13 @@ export default function GuestPage() {
         searchInput={searchInput}
         category={filters.categoryId}
         mode={filters.mode}
-        role={filters.roleId}
+        role={filters.roleName}
         categories={categories}
         roles={roles}
         onSearchInputChange={setSearchInput}
         onCategoryChange={(value) => updateFilter("categoryId", value)}
         onModeChange={(value) => updateFilter("mode", value)}
-        onRoleChange={(value) => updateFilter("roleId", value)}
+        onRoleChange={(value) => updateFilter("roleName", value)}
         onSubmit={() => updateFilter("search", searchInput.trim())}
       />
 
@@ -357,7 +357,7 @@ export default function GuestPage() {
                     title={project.title}
                     description={project.description}
                     category={project.category.name}
-                    roles={project.projectRoles.map((item) => item.role.name)}
+                    roles={project.projectRoles.map((item) => item.roleName)}
                     collaborationMode={project.collaborationMode}
                     workHoursPerWeek={project.workHoursPerWeek}
                     deadline={project.deadline ? new Date(project.deadline) : null}

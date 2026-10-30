@@ -28,7 +28,6 @@ type ProjectDetailProps = {
         verified: boolean;
         isOwner: boolean;
         educationLevel: EducationLevel | null;
-        roleIds: string[];
         institution: string | null;
         city: string | null;
         province: string | null;
@@ -57,7 +56,7 @@ type ProjectDetailProps = {
         allowedInstitutions: string[];
         extraCriteria: string | null;
         sourceLink: string | null;
-        projectRoles: Array<{ slotsAvailable: number; role: { id: string; name: string } }>;
+        projectRoles: Array<{ slotsAvailable: number; roleName: string }>;
         projectMembers: Array<{ user: { id: string; name: string | null } }>;
     };
 };
@@ -97,12 +96,10 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
             institution: viewer.institution,
             province: viewer.province,
             city: viewer.city,
-            roleIds: viewer.roleIds,
         },
         project,
     );
-    const ownedOpenRoles = openRoles.filter((role) => viewer.roleIds.includes(role.role.id));
-    const isEligible = eligibility.eligible && ownedOpenRoles.length > 0;
+    const isEligible = eligibility.eligible;
     const audienceLabel =
         project.range === "INTERNAL"
             ? "Terbuka hanya untuk institusi yang sama dengan pembuat proyek."
@@ -211,12 +208,12 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
                         <div className="flex flex-col gap-3">
                             {openRoles.map((role) => (
                                 <div
-                                    key={role.role.id}
+                                    key={role.roleName}
                                     className="flex min-w-0 flex-col gap-2 rounded-lg border border-border-default p-3"
                                 >
                                     <div className="flex items-center justify-between gap-3">
                                         <h2 className="text-[17px] font-semibold leading-tight text-text-heading">
-                                            {role.role.name}
+                                            {role.roleName}
                                         </h2>
 
                                         <span className="shrink-0 rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-semibold text-brand-primary">

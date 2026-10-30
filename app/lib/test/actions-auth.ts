@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   updateUser: vi.fn(),
   userCreate: vi.fn(),
+  userFindUnique: vi.fn(),
+  userFindUniqueOrThrow: vi.fn(),
   schoolInstitutionFindUnique: vi.fn(),
   universityInstitutionFindUnique: vi.fn(),
 }));
@@ -19,6 +21,8 @@ vi.mock("../prisma", () => {
   const prisma = {
     user: {
       create: mocks.userCreate,
+      findUnique: mocks.userFindUnique,
+      findUniqueOrThrow: mocks.userFindUniqueOrThrow,
     },
     schoolInstitution: {
       findUnique: mocks.schoolInstitutionFindUnique,
@@ -44,11 +48,12 @@ beforeEach(() => {
     },
   });
   mocks.signUp.mockResolvedValue({ data: { user: { id: "user-id" } }, error: null });
-  mocks.signInWithPassword.mockResolvedValue({ error: null });
+  mocks.signInWithPassword.mockResolvedValue({ data: { user: { id: "user-id", email: "user@example.com" } }, error: null });
   mocks.resetPasswordForEmail.mockResolvedValue({ error: null });
   mocks.getUser.mockResolvedValue({ data: { user: { id: "user-id" } }, error: null });
   mocks.updateUser.mockResolvedValue({ error: null });
   mocks.userCreate.mockResolvedValue({});
+  mocks.userFindUnique.mockResolvedValue(null);
   mocks.schoolInstitutionFindUnique.mockResolvedValue({
     npsn: "20100158",
     name: "SMKN 14 JAKARTA",
@@ -103,6 +108,8 @@ describe("resetPassword", () => {
     expect(await resetPassword(form)).toEqual({ success: true });
     expect(mocks.getUser).toHaveBeenCalled();
     expect(mocks.updateUser).toHaveBeenCalledWith({ password: form.password });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+    expect(mocks.userCreate).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -139,6 +146,17 @@ describe("signup", () => {
     expect(mocks.signUp).toHaveBeenCalledWith({
       email: "user@example.com",
       password: "password123",
+      options: {
+        data: {
+          registrationProfile: {
+            name: "Jane Doe",
+            educationLevel: "MAHASISWA",
+            institution: "93145",
+            province: "Jawa Barat",
+            city: "Kota Bandung",
+          },
+        },
+      },
     });
     expect(mocks.userCreate).toHaveBeenCalledWith({
       data: {
@@ -156,6 +174,55 @@ describe("signup", () => {
         dateOfBirth: null,
       },
     });
+  });
+
+  it("rejects an invalid calendar date before creating the Auth account", async () => {
+    const result = await signup({ name: "Jane", email: "user@example.com", password: "password123", educationLevel: "MAHASISWA", institution: "93145", province: "Jawa Barat", city: "Kota Bandung", dateOfBirth: "2025-02-30" });
+    expect(result).toMatchObject({ success: false, fieldErrors: { dateOfBirth: expect.any(Array) } });
+    expect(mocks.signUp).not.toHaveBeenCalled();
+  });
+
+  it("restores registration details at login after a partial signup without repeating signup", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const form = { name: "Jane Doe", email: "user@example.com", password: "password123", educationLevel: "MAHASISWA" as const, institution: "93145", province: "Jawa Barat", city: "Kota Bandung", dateOfBirth: "2000-02-29" };
+    mocks.userCreate.mockRejectedValueOnce(new Error("database unavailable"));
+
+    expect(await signup(form)).toEqual({ success: false, error: "Something went wrong. Please try again." });
+    const metadata = mocks.signUp.mock.calls[0][0].options.data;
+    expect(metadata).not.toHaveProperty("password");
+    expect(metadata.registrationProfile).not.toHaveProperty("password");
+    expect(metadata.registrationProfile).not.toHaveProperty("email");
+    mocks.signInWithPassword.mockResolvedValue({
+      data: { user: { id: "user-id", email: form.email, user_metadata: metadata } },
+      error: null,
+    });
+
+    expect(await login({ email: form.email, password: form.password })).toEqual({ success: true });
+    expect(mocks.signUp).toHaveBeenCalledOnce();
+    expect(mocks.userCreate).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({
+        id: "user-id",
+        name: form.name,
+        institution: form.institution,
+        province: form.province,
+        city: form.city,
+        dateOfBirth: new Date("2000-02-29"),
+      }),
+    });
+    errorSpy.mockRestore();
+  });
+
+  it("treats an existing local record as success without overwriting it", async () => {
+    mocks.userFindUnique.mockResolvedValue({ id: "user-id", name: "Edited name", verified: true });
+    expect(await signup({ name: "Jane", email: "user@example.com", password: "password123", educationLevel: "MAHASISWA", institution: "93145", province: "Jawa Barat", city: "Kota Bandung" })).toEqual({ success: true });
+    expect(mocks.userCreate).not.toHaveBeenCalled();
+  });
+
+  it("does not create a profile for an obfuscated duplicate-signup identity", async () => {
+    mocks.signUp.mockResolvedValue({ data: { user: { id: "placeholder-id", identities: [] } }, error: null });
+    expect(await signup({ name: "Jane", email: "user@example.com", password: "password123", educationLevel: "MAHASISWA", institution: "93145", province: "Jawa Barat", city: "Kota Bandung" })).toEqual({ success: true });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+    expect(mocks.userCreate).not.toHaveBeenCalled();
   });
 
   it("rejects invalid form data without calling external services", async () => {
@@ -244,6 +311,9 @@ describe("login", () => {
       email: "user@example.com",
       password: "password123",
     });
+    expect(mocks.userCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ id: "user-id", name: "user@example.com" }),
+    });
   });
 
   it("rejects invalid form data without calling Supabase", async () => {
@@ -266,5 +336,6 @@ describe("login", () => {
     const result = await login({ email: "user@example.com", password: "password123" });
 
     expect(result).toEqual({ success: false, error: "Invalid credentials" });
+    expect(mocks.userCreate).not.toHaveBeenCalled();
   });
 });

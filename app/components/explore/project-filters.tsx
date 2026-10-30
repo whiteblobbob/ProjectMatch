@@ -7,7 +7,7 @@ import { SelectControl } from "@/app/components/ui/select-control";
 export type ExploreFilters = {
   search: string;
   categoryId: string;
-  roleId: string;
+  roleName: string;
   collaborationTool: string;
   mode: string;
   commitment: string;
@@ -81,10 +81,10 @@ export function ProjectFilters({
 
       <div>
         <label htmlFor={`${idPrefix}-role`} className="text-sm font-semibold text-slate-900">Peran</label>
-        <SelectControl id={`${idPrefix}-role`} value={filters.roleId} onChange={(event) => onChange("roleId", event.target.value)} containerClassName="mt-2">
-          <option value="">Semua peran</option>
-          {roles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </SelectControl>
+        <input id={`${idPrefix}-role`} list={`${idPrefix}-role-suggestions`} value={filters.roleName} onChange={(event) => onChange("roleName", event.target.value)} placeholder="Semua peran" className={inputClass} />
+        <datalist id={`${idPrefix}-role-suggestions`}>
+          {roles.map((item) => <option key={item.id} value={item.name} />)}
+        </datalist>
       </div>
 
       <fieldset>
@@ -129,19 +129,18 @@ type ActiveFilterChipsProps = {
 export function ActiveFilterChips({
   filters,
   categories,
-  roles,
   institutionOption,
   onRemove,
   onClear,
 }: ActiveFilterChipsProps) {
   const categoryName = categories.find((item) => item.id === filters.categoryId)?.name;
-  const roleName = roles.find((item) => item.id === filters.roleId)?.name;
+  const roleName = filters.roleName.trim();
 
   const chips: Array<{ key: keyof ExploreFilters; label: string }> = [
     filters.search ? { key: "search", label: `Kata kunci: ${filters.search}` } : null,
     categoryName ? { key: "categoryId", label: `Jenis: ${categoryName}` } : null,
     filters.collaborationTool ? { key: "collaborationTool", label: `Alat kolaborasi: ${filters.collaborationTool}` } : null,
-    roleName ? { key: "roleId", label: `Peran: ${roleName}` } : null,
+    roleName ? { key: "roleName", label: `Peran: ${roleName}` } : null,
     filters.mode ? { key: "mode", label: filters.mode === "OFFLINE" ? "Luring" : filters.mode === "HYBRID" ? "Hybrid" : "Daring" } : null,
     filters.commitment ? {
       key: "commitment",

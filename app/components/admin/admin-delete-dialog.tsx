@@ -16,7 +16,7 @@ type AdminDeleteDialogProps = {
 const CASCADE_NOTE: Record<string, string> = {
   user: "Menghapus pengguna juga menghapus proyek, lamaran, keanggotaan, ulasan, kontak, notifikasi, dan laporan miliknya.",
   project: "Menghapus proyek juga menghapus posisi, lamaran, anggota, ulasan, dan laporan terkait proyek tersebut.",
-  role: "Menghapus peran juga menghapus relasi peran pengguna, posisi proyek, lamaran, dan anggota proyek yang memakainya.",
+  role: "Menghapus peran hanya menghapus saran dari katalog. Peran yang sudah disimpan tetap tersedia.",
   category: "Menghapus kategori juga menghapus seluruh proyek yang memakainya beserta posisi, lamaran, anggota, ulasan, dan laporannya.",
 };
 

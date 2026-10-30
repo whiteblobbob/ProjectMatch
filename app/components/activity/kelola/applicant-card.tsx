@@ -25,7 +25,7 @@ export default function ApplicantCard({ application, projectId }: ApplicantCardP
               </span>
             </div>
             <p className="mt-1 text-sm text-slate-500">
-              {application.applicant.institutionName || "Institusi belum diisi"} · {application.role.name}
+              {application.applicant.institutionName || "Institusi belum diisi"} · {application.roleName}
             </p>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-slate-500">
               <span>{application.applicant.avgCommitmentScore.toFixed(1)}/5 komitmen</span>

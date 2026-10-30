@@ -30,7 +30,6 @@ async function ProjectDetailContent({ params }: { params: Promise<{ id: string }
         verified: boolean;
         isOwner: boolean;
         educationLevel: EducationLevel | null;
-        roleIds: string[];
         institution: string | null;
         city: string | null;
         province: string | null;
@@ -40,7 +39,6 @@ async function ProjectDetailContent({ params }: { params: Promise<{ id: string }
         verified: false,
         isOwner: false,
         educationLevel: null,
-        roleIds: [],
         institution: null,
         city: null,
         province: null,
@@ -55,7 +53,6 @@ async function ProjectDetailContent({ params }: { params: Promise<{ id: string }
             verified: profileData?.verified ?? false,
             isOwner: sessionUser.id === result.data.ownerId,
             educationLevel: profileData?.educationLevel ?? null,
-            roleIds: profileData?.userRoles.map((userRole) => userRole.roleId) ?? [],
             institution: profileData?.institution ?? null,
             city: profileData?.city ?? null,
             province: profileData?.province ?? null,

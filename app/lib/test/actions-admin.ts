@@ -61,7 +61,6 @@ vi.mock("../prisma", () => {
     user: { ...delegate(), findUnique: mocks.userFindUnique },
     category: model(),
     role: model(),
-    userRole: model(),
     contactInfo: model(),
     project: model(),
     projectReport: model(),
@@ -180,13 +179,13 @@ describe("updateAdminRecord", () => {
   it("builds a compound where key and keeps primary keys out of the data", async () => {
     const result = await updateAdminRecord(
       "project_role",
-      { projectId: "project-1", roleId: "role-1" },
+      { projectId: "project-1", roleName: "role-1" },
       { slotsAvailable: "3" },
     );
 
     expect(result).toEqual({ success: true });
     expect(mocks.update).toHaveBeenCalledWith({
-      where: { projectId_roleId: { projectId: "project-1", roleId: "role-1" } },
+      where: { projectId_roleName: { projectId: "project-1", roleName: "role-1" } },
       data: { slotsAvailable: 3 },
     });
   });
@@ -269,16 +268,16 @@ describe("rejectVerificationDocument", () => {
 
 describe("deleteAdminRecord", () => {
   it("builds the compound unique key for join tables", async () => {
-    const result = await deleteAdminRecord("user_role", { userId: "user-1", roleId: "role-1" });
+    const result = await deleteAdminRecord("project_role", { projectId: "project-1", roleName: "role-1" });
 
     expect(result).toEqual({ success: true });
     expect(mocks.delete).toHaveBeenCalledWith({
-      where: { userId_roleId: { userId: "user-1", roleId: "role-1" } },
+      where: { projectId_roleName: { projectId: "project-1", roleName: "role-1" } },
     });
   });
 
   it("rejects missing primary key values", async () => {
-    const result = await deleteAdminRecord("user_role", { userId: "user-1" });
+    const result = await deleteAdminRecord("project_role", { projectId: "project-1" });
 
     expect(result.success).toBe(false);
     expect(mocks.delete).not.toHaveBeenCalled();

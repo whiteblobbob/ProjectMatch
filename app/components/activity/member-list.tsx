@@ -39,7 +39,7 @@ export default function MemberList({ project }: MemberListProps) {
       .map((member) => ({
         userId: member.userId,
         name: member.user.name, profileCloudId: member.user.profileCloudId,
-        roleName: member.role.name,
+        roleName: member.roleName,
         institutionName: member.user.institutionName,
         bio: member.user.bio,
         avgCommitmentScore: member.user.avgCommitmentScore,

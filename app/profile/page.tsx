@@ -37,18 +37,14 @@ async function ProfilAccess() {
     );
   }
 
-  if (
-    !("data" in profile) ||
-    !roles.success ||
-    !("data" in roles)
-  ) {
+  if (!("data" in profile)) {
     return null;
   }
 
   return (
     <Mainprofil
       initialProfile={toProfileView(profile.data, user.email ?? "")}
-      roles={roles.data}
+      roles={roles.success && "data" in roles ? roles.data : []}
       cloudName={getCloudinaryCloudName()}
     />
   );

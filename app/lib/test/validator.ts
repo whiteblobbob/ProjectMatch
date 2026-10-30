@@ -16,9 +16,9 @@ import {
 import { ActionError } from "../errors";
 
 describe("Validators", () => {
-  it("validates application payload with valid roleId and message", () => {
+  it("validates application payload with valid roleName and message", () => {
     const result = ApplicationValidator.safeParse({
-      roleId: "role-1",
+      roleName: "role-1",
       message: "Ready to contribute",
     });
 
@@ -37,7 +37,7 @@ describe("Validators", () => {
       meetDescription: "Weekly sync meeting",
       workHoursPerWeek: 15,
       educationLevels: ["SMP", "SMA"],
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 2 }],
     });
 
     expect(result.success).toBe(true);
@@ -46,7 +46,7 @@ describe("Validators", () => {
   it("does not retain project roles in project updates", () => {
     const result = UpdateProjectValidator.safeParse({
       title: "Updated Project",
-      projectRoles: [{ roleId: "role-id", slotsAvailable: 2 }],
+      projectRoles: [{ roleName: "Custom Developer", slotsAvailable: 2 }],
     });
 
     expect(result.success).toBe(true);
@@ -72,7 +72,7 @@ describe("Validators", () => {
       institution: "93145",
       bio: "Software developer",
       educationLevel: "MAHASISWA",
-      userRoles: [{ roleId: "role-id" }],
+      roles: ["Custom Developer"],
     });
 
     expect(result.success).toBe(true);
@@ -201,14 +201,14 @@ describe("Validators", () => {
   it("validates project query filters with role and pagination defaults", () => {
     const result = QueryProjectsValidator.safeParse({
       status: "OPEN_RECRUITMENT",
-      projectRoles: ["role-id"],
+      projectRoles: ["Custom Developer"],
     });
 
     expect(result).toEqual({
       success: true,
       data: {
         status: "OPEN_RECRUITMENT",
-        projectRoles: ["role-id"],
+        projectRoles: ["Custom Developer"],
         page: 1,
         pageSize: 10,
       },

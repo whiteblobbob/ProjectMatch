@@ -227,7 +227,7 @@ export default function Profil({ initialProfile, roles, cloudName }: ProfilProps
   function addSkill() {
     const skill = skillInput.trim();
     if (!skill) {
-      setError("Pilih keahlian terlebih dahulu.");
+      setError("Tulis keahlian terlebih dahulu.");
       return;
     }
     if (draft.skills.length >= 12) {
@@ -290,18 +290,6 @@ export default function Profil({ initialProfile, roles, cloudName }: ProfilProps
       return;
     }
 
-    const resolvedRoles = draft.skills
-      .map((skill) => roles.find((role) => role.name.toLocaleLowerCase("id-ID") === skill.toLocaleLowerCase("id-ID"))?.id)
-      .filter((roleId): roleId is string => Boolean(roleId));
-
-    if (resolvedRoles.length !== draft.skills.length) {
-      const unmatched = draft.skills.filter(
-        (skill) => !roles.some((role) => role.name.toLocaleLowerCase("id-ID") === skill.toLocaleLowerCase("id-ID")),
-      );
-      setError(`Keahlian berikut belum tersedia: ${unmatched.join(", ")}. Pilih dari daftar keahlian.`);
-      return;
-    }
-
     setIsPending(true);
 
     const province = draft.province.trim();
@@ -321,7 +309,7 @@ export default function Profil({ initialProfile, roles, cloudName }: ProfilProps
         portfolioLink,
         contacts,
         educationLevel: draft.educationLevel,
-        userRoles: resolvedRoles.map((roleId) => ({ roleId })),
+        roles: draft.skills,
       },
       { avatar: draftAvatar?.file, removeAvatar },
     );
@@ -725,12 +713,12 @@ export default function Profil({ initialProfile, roles, cloudName }: ProfilProps
 
                 <fieldset>
                   <legend className="text-sm font-semibold text-slate-900">Keahlian</legend>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">Pilih keahlian dari daftar, lalu tekan Tambah.</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Tulis keahlianmu atau pilih saran, lalu tekan Tambah.</p>
                   <div className="mt-2 flex gap-2">
-                    <SelectControl id="profile-skill-select" value={skillInput} onChange={(event) => setSkillInput(event.target.value)} disabled={isPending || draft.skills.length >= 12 || availableSkillOptions.length === 0} containerClassName="flex-1" className="rounded-xl" aria-label="Pilih keahlian">
-                      <option value="" disabled>Pilih keahlian</option>
-                      {availableSkillOptions.map((role) => <option key={role.id} value={role.name}>{role.name}</option>)}
-                    </SelectControl>
+                    <input id="profile-skill-select" list="profile-skill-suggestions" value={skillInput} onChange={(event) => setSkillInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addSkill(); } }} disabled={isPending || draft.skills.length >= 12} placeholder="Tulis keahlian atau pilih saran" className={`${inputClass} min-w-0 flex-1`} aria-label="Keahlian" />
+                    <datalist id="profile-skill-suggestions">
+                      {availableSkillOptions.map((role) => <option key={role.id} value={role.name} />)}
+                    </datalist>
                     <button type="button" onClick={addSkill} disabled={isPending || draft.skills.length >= 12} className="min-h-12 shrink-0 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50">Tambah</button>
                   </div>
                   <div className="mt-3 flex min-h-10 flex-wrap gap-2">

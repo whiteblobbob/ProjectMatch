@@ -94,7 +94,7 @@ model User {
   createdAt                  DateTime        @default(now()) @map("created_at")
   updatedAt                  DateTime        @updatedAt @map("updated_at")
 
-  userRoles              UserRole[]
+  roles                  String[]        @default([])
   contactInfos           ContactInfo[]
   ownedProjects          Project[]       @relation("ProjectOwner")
   applications           Application[]
@@ -117,27 +117,12 @@ model Category {
   @@map("category")
 }
 
+// Suggestions only; saved role names are independent of this catalog.
 model Role {
-  id             String          @id @default(uuid())
-  name       String          @map("name")
-
-  userRoles      UserRole[]
-  projectRoles   ProjectRole[]
-  applications   Application[]
-  projectMembers ProjectMember[]
+  id   String @id @default(uuid())
+  name String
 
   @@map("role")
-}
-
-model UserRole {
-  userId String @map("user_id")
-  roleId String @map("role_id")
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@id([userId, roleId])
-  @@map("user_role")
 }
 
 model Project {
@@ -193,13 +178,12 @@ model ProjectReport {
 
 model ProjectRole {
   projectId       String  @map("project_id")
-  roleId          String  @map("role_id")
+  roleName        String  @map("role_name")
   slotsAvailable  Int     @map("slots_available")
 
   project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  role            Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@id([projectId, roleId])
+  @@id([projectId, roleName])
   @@map("project_role")
 }
 
@@ -207,12 +191,11 @@ model Application {
   id            String            @id @default(uuid())
   projectId     String            @map("project_id")
   applicantId   String            @map("applicant_id")
-  roleId        String            @map("role_id")
+  roleName      String            @map("role_name")
   message       String?
 
   project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   applicant     User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  role          Role              @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, applicantId])
   @@map("application")
@@ -232,11 +215,10 @@ model ContactInfo {
 model ProjectMember {
   projectId String  @map("project_id")
   userId    String  @map("user_id")
-  roleId    String  @map("role_id")
+  roleName  String  @map("role_name")
 
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([projectId, userId])
   @@map("project_member")

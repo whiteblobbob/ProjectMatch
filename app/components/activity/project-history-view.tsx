@@ -27,7 +27,7 @@ export default function ProjectHistoryView({ project, currentUserId, reviews }: 
       .map((member) => ({
         userId: member.userId,
         name: member.user.name,
-        roleName: member.role.name,
+        roleName: member.roleName,
         isOwner: false,
       })),
   ];

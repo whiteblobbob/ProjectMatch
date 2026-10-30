@@ -6,7 +6,7 @@ const CredentialsValidator = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
-export const SignupValidator = CredentialsValidator.extend({
+export const RegistrationProfileValidator = z.object({
   name: z.string().min(1, "Name is required"),
   educationLevel: EducationLevelValidator,
   institution: z.string({ error: "Institution is required" }).min(1, "Institution is required"),
@@ -16,8 +16,11 @@ export const SignupValidator = CredentialsValidator.extend({
   schoolGrade: z.string().optional(),
   entryYear: z.number().int().optional(),
   graduationYear: z.number().int().optional(),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.iso.date("Date of birth must be a valid calendar date").optional(),
 });
+export type RegistrationProfile = z.infer<typeof RegistrationProfileValidator>;
+
+export const SignupValidator = CredentialsValidator.extend(RegistrationProfileValidator.shape);
 export type SignupForm = z.infer<typeof SignupValidator>;
 
 export const LoginValidator = CredentialsValidator;

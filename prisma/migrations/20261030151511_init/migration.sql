@@ -44,6 +44,7 @@ CREATE TABLE "user" (
     "avg_commitment_score" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "roles" TEXT[] DEFAULT ARRAY[]::TEXT[],
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 );
@@ -62,14 +63,6 @@ CREATE TABLE "role" (
     "name" TEXT NOT NULL,
 
     CONSTRAINT "role_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "user_role" (
-    "user_id" TEXT NOT NULL,
-    "role_id" TEXT NOT NULL,
-
-    CONSTRAINT "user_role_pkey" PRIMARY KEY ("user_id","role_id")
 );
 
 -- CreateTable
@@ -117,10 +110,10 @@ CREATE TABLE "project_report" (
 -- CreateTable
 CREATE TABLE "project_role" (
     "project_id" TEXT NOT NULL,
-    "role_id" TEXT NOT NULL,
+    "role_name" TEXT NOT NULL,
     "slots_available" INTEGER NOT NULL,
 
-    CONSTRAINT "project_role_pkey" PRIMARY KEY ("project_id","role_id")
+    CONSTRAINT "project_role_pkey" PRIMARY KEY ("project_id","role_name")
 );
 
 -- CreateTable
@@ -128,7 +121,7 @@ CREATE TABLE "application" (
     "id" TEXT NOT NULL,
     "project_id" TEXT NOT NULL,
     "applicant_id" TEXT NOT NULL,
-    "role_id" TEXT NOT NULL,
+    "role_name" TEXT NOT NULL,
     "message" TEXT,
 
     CONSTRAINT "application_pkey" PRIMARY KEY ("id")
@@ -148,7 +141,7 @@ CREATE TABLE "contact_info" (
 CREATE TABLE "project_member" (
     "project_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
-    "role_id" TEXT NOT NULL,
+    "role_name" TEXT NOT NULL,
 
     CONSTRAINT "project_member_pkey" PRIMARY KEY ("project_id","user_id")
 );
@@ -215,12 +208,6 @@ CREATE UNIQUE INDEX "peer_review_project_id_reviewer_id_reviewee_id_key" ON "pee
 CREATE UNIQUE INDEX "verification_document_user_id_key" ON "verification_document"("user_id");
 
 -- AddForeignKey
-ALTER TABLE "user_role" ADD CONSTRAINT "user_role_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_role" ADD CONSTRAINT "user_role_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "project" ADD CONSTRAINT "project_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -236,16 +223,10 @@ ALTER TABLE "project_report" ADD CONSTRAINT "project_report_reporter_id_fkey" FO
 ALTER TABLE "project_role" ADD CONSTRAINT "project_role_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "project_role" ADD CONSTRAINT "project_role_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "application" ADD CONSTRAINT "application_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "application" ADD CONSTRAINT "application_applicant_id_fkey" FOREIGN KEY ("applicant_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "application" ADD CONSTRAINT "application_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "contact_info" ADD CONSTRAINT "contact_info_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -255,9 +236,6 @@ ALTER TABLE "project_member" ADD CONSTRAINT "project_member_project_id_fkey" FOR
 
 -- AddForeignKey
 ALTER TABLE "project_member" ADD CONSTRAINT "project_member_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "project_member" ADD CONSTRAINT "project_member_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "peer_review" ADD CONSTRAINT "peer_review_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;

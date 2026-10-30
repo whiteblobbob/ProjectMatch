@@ -4,16 +4,21 @@ import { ActionError } from "../errors";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   getUser: vi.fn(),
+  ensureAppUser: vi.fn(),
 }));
 
 vi.mock("../supabase/server", () => ({
   createClient: mocks.createClient,
+}));
+vi.mock("../supabase/ensureAppUser", () => ({
+  ensureAppUser: mocks.ensureAppUser,
 }));
 
 import actionWrapper from "../actionWrapper";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.ensureAppUser.mockResolvedValue({ id: "user-id" });
   mocks.createClient.mockReturnValue({
     auth: {
       getUser: mocks.getUser,
@@ -37,6 +42,7 @@ describe("actionWrapper", () => {
     expect(result).toEqual({ success: true, data: "user-id:value" });
     expect(mocks.createClient).toHaveBeenCalledOnce();
     expect(mocks.getUser).toHaveBeenCalledOnce();
+    expect(mocks.ensureAppUser).toHaveBeenCalledWith({ id: "user-id" });
   });
 
   it("rejects authenticated actions when Supabase returns no user", async () => {
@@ -49,6 +55,27 @@ describe("actionWrapper", () => {
     const result = await action();
 
     expect(result).toEqual({ success: false, error: "User is not authenticated" });
+    expect(mocks.ensureAppUser).not.toHaveBeenCalled();
+  });
+
+  it("does not execute application actions if profile recovery fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.ensureAppUser.mockRejectedValue(new Error("database unavailable"));
+    const handler = vi.fn();
+    const action = actionWrapper(handler, { auth: true });
+
+    expect(await action()).toEqual({ success: false, error: "Something went wrong. Please try again." });
+    expect(handler).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it("authenticates auth-only actions without recovering a profile", async () => {
+    mocks.ensureAppUser.mockRejectedValue(new Error("database unavailable"));
+    const action = actionWrapper(async (user) => user.id, { auth: true, ensureProfile: false });
+
+    expect(await action()).toEqual({ success: true, data: "user-id" });
+    expect(mocks.getUser).toHaveBeenCalledOnce();
+    expect(mocks.ensureAppUser).not.toHaveBeenCalled();
   });
 
   it("does not initialize Supabase for public actions", async () => {
@@ -58,6 +85,7 @@ describe("actionWrapper", () => {
 
     expect(result).toEqual({ success: true, data: "public" });
     expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.ensureAppUser).not.toHaveBeenCalled();
   });
 
   it("returns expected ActionError messages and field errors", async () => {

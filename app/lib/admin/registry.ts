@@ -6,7 +6,6 @@ export type AdminTableKey =
   | "user"
   | "category"
   | "role"
-  | "user_role"
   | "contact_info"
   | "project"
   | "project_role"
@@ -17,7 +16,7 @@ export type AdminTableKey =
   | "notification"
   | "verification_document";
 
-export type AdminRelationTable = "user" | "category" | "role" | "project";
+export type AdminRelationTable = "user" | "category" | "project";
 
 export type AdminTableGroup = "Data master" | "Proyek" | "Aktivitas";
 
@@ -82,6 +81,7 @@ export const ADMIN_TABLES: AdminTableConfig[] = [
       { name: "id", label: "ID", type: "text", required: true, primaryKey: true, createOnly: true },
       { name: "name", label: "Nama", type: "text", required: true },
       { name: "role", label: "Peran akun", type: "enum", options: ACCOUNT_ROLES, displayOnly: true },
+      { name: "roles", label: "Keahlian", type: "stringArray" },
       { name: "institution", label: "NPSN institusi", type: "text" },
       { name: "institutionName", label: "Nama institusi", type: "text", displayOnly: true },
       { name: "educationLevel", label: "Jenjang", type: "enum", options: EDUCATION_LEVELS },
@@ -119,26 +119,13 @@ export const ADMIN_TABLES: AdminTableConfig[] = [
     key: "role",
     prismaModel: "role",
     label: "Peran",
-    description: "Katalog peran/keahlian yang dapat dipilih pengguna dan proyek.",
+    description: "Saran peran/keahlian untuk pengguna dan proyek.",
     group: "Data master",
     primaryKey: ["id"],
     defaultSort: "name",
     fields: [
       { name: "id", label: "ID", type: "text", primaryKey: true, readOnly: true },
       { name: "name", label: "Nama", type: "text", required: true },
-    ],
-  },
-  {
-    key: "user_role",
-    prismaModel: "userRole",
-    label: "Peran Pengguna",
-    description: "Relasi antara pengguna dan peran/keahlian yang dimilikinya.",
-    group: "Data master",
-    primaryKey: ["userId", "roleId"],
-    defaultSort: "userId",
-    fields: [
-      { name: "userId", label: "Pengguna", type: "relation", relation: { table: "user", labelField: "name" }, required: true, primaryKey: true },
-      { name: "roleId", label: "Peran", type: "relation", relation: { table: "role", labelField: "name" }, required: true, primaryKey: true },
     ],
   },
   {
@@ -197,11 +184,11 @@ export const ADMIN_TABLES: AdminTableConfig[] = [
     label: "Posisi Proyek",
     description: "Posisi yang dibuka pada sebuah proyek beserta jumlah slotnya.",
     group: "Proyek",
-    primaryKey: ["projectId", "roleId"],
+    primaryKey: ["projectId", "roleName"],
     defaultSort: "projectId",
     fields: [
       { name: "projectId", label: "Proyek", type: "relation", relation: { table: "project", labelField: "title" }, required: true, primaryKey: true },
-      { name: "roleId", label: "Peran", type: "relation", relation: { table: "role", labelField: "name" }, required: true, primaryKey: true },
+      { name: "roleName", label: "Peran", type: "text", required: true, primaryKey: true },
       { name: "slotsAvailable", label: "Slot tersedia", type: "number", required: true },
     ],
   },
@@ -216,7 +203,7 @@ export const ADMIN_TABLES: AdminTableConfig[] = [
     fields: [
       { name: "projectId", label: "Proyek", type: "relation", relation: { table: "project", labelField: "title" }, required: true, primaryKey: true },
       { name: "userId", label: "Pengguna", type: "relation", relation: { table: "user", labelField: "name" }, required: true, primaryKey: true },
-      { name: "roleId", label: "Peran", type: "relation", relation: { table: "role", labelField: "name" }, required: true },
+      { name: "roleName", label: "Peran", type: "text", required: true },
     ],
   },
   {
@@ -231,7 +218,7 @@ export const ADMIN_TABLES: AdminTableConfig[] = [
       { name: "id", label: "ID", type: "text", primaryKey: true, readOnly: true },
       { name: "projectId", label: "Proyek", type: "relation", relation: { table: "project", labelField: "title" }, required: true },
       { name: "applicantId", label: "Pelamar", type: "relation", relation: { table: "user", labelField: "name" }, required: true },
-      { name: "roleId", label: "Peran", type: "relation", relation: { table: "role", labelField: "name" }, required: true },
+      { name: "roleName", label: "Peran", type: "text", required: true },
       { name: "message", label: "Pesan", type: "textarea" },
     ],
   },

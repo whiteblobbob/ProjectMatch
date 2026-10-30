@@ -13,7 +13,7 @@ export default function ProjectSummaryCard({ project }: { project: ProjectDetail
   const memberCount = project.projectMembers.length + 1;
   const openSlots = project.projectRoles.reduce((total, projectRole) => total + projectRole.slotsAvailable, 0);
   const capacity = memberCount + openSlots;
-  const roleNames = project.projectRoles.map((projectRole) => projectRole.role.name).join(", ");
+  const roleNames = project.projectRoles.map((projectRole) => projectRole.roleName).join(", ");
 
   const facts = [
     { label: "Mode kolaborasi", value: getCollaborationModeLabel(project.collaborationMode), icon: LaptopIcon },

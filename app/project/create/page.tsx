@@ -29,7 +29,7 @@ async function CreateProjectAccess() {
   const isOk = (result: { success: boolean }): result is { success: true; data: CatalogOption[] } =>
     result.success && "data" in result;
 
-  if (!isOk(categories) || !isOk(roles) || !profile.success || !("data" in profile)) {
+  if (!isOk(categories) || !profile.success || !("data" in profile)) {
     console.error("Failed to load project form options");
     return (
       <main className="min-h-[calc(100dvh-4rem)] bg-slate-50 px-4 py-10 sm:px-6">
@@ -55,7 +55,7 @@ async function CreateProjectAccess() {
             Ceritakan proyekmu dan tentukan posisi yang dibutuhkan agar kandidat yang tepat dapat menemukannya.
           </p>
         </header>
-        <CreateProjectForm categories={categories.data} roles={roles.data} />
+        <CreateProjectForm categories={categories.data} roles={isOk(roles) ? roles.data : []} />
       </div>
     </main>
   );
