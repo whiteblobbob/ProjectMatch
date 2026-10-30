@@ -322,7 +322,7 @@ function SummaryItem({ term, detail }: { term: string; detail: string }) {
   return <div><dt className="text-xs font-medium text-slate-500">{term}</dt><dd className="mt-1 break-words font-semibold text-slate-800">{detail || "—"}</dd></div>;
 }
 
-function ConsentCheckbox({ checked, onChange, error, id, children }: { checked: boolean; onChange: (value: boolean) => void; error?: string; id: string; children: ReactNode }) {
+  function ConsentCheckbox({ checked, onChange, error, id, children }: { checked: boolean; onChange: (value: boolean) => void; error?: string; id: string; children: ReactNode }) {
   return (
     <div>
       <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-slate-700">
@@ -367,6 +367,14 @@ export function RegistrationReviewStep({ data, errors, onChange, onEdit }: StepP
         <ConsentCheckbox id="accepted-privacy" checked={data.acceptedPrivacy} onChange={(value) => onChange("acceptedPrivacy", value)} error={errors.acceptedPrivacy}>Saya memahami kebijakan privasi dan penggunaan data.</ConsentCheckbox>
         <ConsentCheckbox id="confirmed-accuracy" checked={data.confirmedAccuracy} onChange={(value) => onChange("confirmedAccuracy", value)} error={errors.confirmedAccuracy}>Saya memastikan seluruh informasi yang ditampilkan sudah benar.</ConsentCheckbox>
       </fieldset>
+
+      <p className="mt-6 text-sm text-slate-600">
+        Klik{" "}
+        <Link target="_blank" href="/legal" className="font-semibold text-brand-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary">
+          di sini
+        </Link>
+        {" "}untuk membaca syarat penggunaan, kebijakan privasi, dan penggunaan data.
+      </p>
     </section>
   );
 }
