@@ -76,7 +76,7 @@ export default function KelolaPostinganView({ project, applications }: KelolaPos
                     {openRoles.map((projectRole) => (
                       <OpenPositionCard
                         key={projectRole.roleName}
-                        role={{ name: projectRole.roleName, slotsAvailable: projectRole.slotsAvailable }}
+                        role={{ name: projectRole.roleName, slotsAvailable: projectRole.slotsAvailable, roleDetail: projectRole.roleDetail }}
                       />
                     ))}
                   </div>

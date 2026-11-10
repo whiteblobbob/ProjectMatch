@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import ApplicationForm from "../../components/project/application-form";
 import ProjectDetail from "../../components/detail/projectdetail";
+import OpenPositionCard from "../../components/activity/kelola/open-position-card";
 import { ActiveFilterChips } from "../../components/explore/project-filters";
 
 vi.mock("next/link", () => ({ default: "a" }));
@@ -23,8 +24,8 @@ const project: ComponentProps<typeof ProjectDetail>["project"] = {
   owner: { id: "owner", name: "Owner", institutionName: "School", institution: "school", province: null, city: null },
   educationLevels: ["SMA"], range: "ALL", allowedInstitutions: [], extraCriteria: null, sourceLink: null,
   projectRoles: [
-    { roleName: "Robotics Mentor", slotsAvailable: 1 },
-    { roleName: "Filled Position", slotsAvailable: 0 },
+    { roleName: "Robotics Mentor", slotsAvailable: 1, roleDetail: null },
+    { roleName: "Filled Position", slotsAvailable: 0, roleDetail: null },
   ],
   projectMembers: [],
 };
@@ -35,6 +36,29 @@ const viewer: ComponentProps<typeof ProjectDetail>["viewer"] = {
 };
 
 describe("role names in the UI", () => {
+  it("renders multiline role details as escaped text on public and owner cards", () => {
+    const roleDetail = "Teach robotics\n<script>alert(1)</script>";
+    const html = renderToStaticMarkup(createElement(ProjectDetail, {
+      project: { ...project, projectRoles: [{ ...project.projectRoles[0], roleDetail }] }, viewer,
+    }));
+    const card = renderToStaticMarkup(createElement(OpenPositionCard, {
+      role: { name: "Robotics Mentor", slotsAvailable: 1, roleDetail },
+    }));
+    for (const markup of [html, card]) {
+      expect(markup).toContain("Teach robotics\n&lt;script&gt;alert(1)&lt;/script&gt;");
+      expect(markup).toContain("whitespace-pre-wrap");
+      expect(markup).not.toContain("<script>");
+    }
+  });
+
+  it("omits empty details on owner cards", () => {
+    const html = renderToStaticMarkup(createElement(OpenPositionCard, {
+      role: { name: "Robotics Mentor", slotsAvailable: 1, roleDetail: null },
+    }));
+    expect(html).toContain("Robotics Mentor");
+    expect(html).not.toContain("whitespace-pre-wrap");
+  });
+
   it("offers all open positions to an applicant with no profile roles", () => {
     const html = renderToStaticMarkup(createElement(ApplicationForm, { project, profile }));
     expect(html).toContain('<option value="Robotics Mentor">');

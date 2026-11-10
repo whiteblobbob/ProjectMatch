@@ -56,7 +56,7 @@ type ProjectDetailProps = {
         allowedInstitutions: string[];
         extraCriteria: string | null;
         sourceLink: string | null;
-        projectRoles: Array<{ slotsAvailable: number; roleName: string }>;
+        projectRoles: Array<{ slotsAvailable: number; roleName: string; roleDetail: string | null }>;
         projectMembers: Array<{ user: { id: string; name: string | null } }>;
     };
 };
@@ -220,6 +220,8 @@ export default function ProjectDetail({ project, viewer }: ProjectDetailProps) {
                                             {role.slotsAvailable} slot
                                         </span>
                                     </div>
+
+                                    {role.roleDetail && <p className="whitespace-pre-wrap break-words text-[13px] leading-5 text-text-subheading">{role.roleDetail}</p>}
 
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                                         <div className="flex items-center gap-1.5">

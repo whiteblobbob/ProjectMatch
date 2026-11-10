@@ -1,5 +1,5 @@
 import z from "zod";
-import { RoleNameValidator, RoleNamesValidator } from "./role";
+import { RoleDetailValidator, RoleNameValidator, RoleNamesValidator } from "./role";
 import { editableFields, type AdminField, type AdminTableConfig } from "../admin/registry";
 
 const emptyToNull = <Schema extends z.ZodType>(schema: Schema) =>
@@ -53,6 +53,8 @@ export function buildAdminValidator(config: AdminTableConfig, mode: "create" | "
       shape[field.name] = RoleNamesValidator.optional();
     } else if (config.key === "project_role" && field.name === "slotsAvailable") {
       shape[field.name] = requiredNumber(true).pipe(z.number().min(0));
+    } else if (config.key === "project_role" && field.name === "roleDetail") {
+      shape[field.name] = RoleDetailValidator;
     } else {
       shape[field.name] = fieldValidator(field);
     }

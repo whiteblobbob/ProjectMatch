@@ -1,5 +1,5 @@
 import z from "zod";
-import { RoleNameValidator, hasUniqueRoleNames } from "./role";
+import { RoleDetailValidator, RoleNameValidator, hasUniqueRoleNames } from "./role";
 import { ActionError } from "../errors";
 import { EducationLevelValidator } from "./profile";
 
@@ -59,6 +59,7 @@ export const CreateProjectValidator = z.object({
     .min(1, "At least one education level is required"),
   projectRoles: z.array(z.object({
     roleName: RoleNameValidator,
+    roleDetail: RoleDetailValidator,
     slotsAvailable: z.number().int().positive("Slots left must be a positive integer"),
   })).min(1, "At least one project role is required").refine(
     (roles) => hasUniqueRoleNames(roles.map((role) => role.roleName)),

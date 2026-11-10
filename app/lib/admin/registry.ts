@@ -189,6 +189,7 @@ export const ADMIN_TABLES: AdminTableConfig[] = [
     fields: [
       { name: "projectId", label: "Proyek", type: "relation", relation: { table: "project", labelField: "title" }, required: true, primaryKey: true },
       { name: "roleName", label: "Peran", type: "text", required: true, primaryKey: true },
+      { name: "roleDetail", label: "Detail peran (opsional)", type: "textarea" },
       { name: "slotsAvailable", label: "Slot tersedia", type: "number", required: true },
     ],
   },

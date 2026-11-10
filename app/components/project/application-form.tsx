@@ -18,6 +18,7 @@ type ApplicationProject = {
     projectRoles: Array<{
         slotsAvailable: number;
         roleName: string;
+        roleDetail: string | null;
     }>;
 };
 
@@ -36,6 +37,7 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
 
     const publicInfo = { location: formatRegion(profile.city, profile.province), portfolioUrl: profile.portfolioLink };
     const openRoles = project.projectRoles.filter((projectRole) => projectRole.slotsAvailable > 0);
+    const selectedRole = openRoles.find((projectRole) => projectRole.roleName === roleName);
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -145,6 +147,7 @@ export default function ApplicationForm({ project, profile }: ApplicationFormPro
                                             </option>
                                         ))}
                                     </SelectControl>
+                                    {selectedRole?.roleDetail && <p className="whitespace-pre-wrap break-words text-sm leading-6 text-text-subheading">{selectedRole.roleDetail}</p>}
                                 </div>
                             ) : (
                                 <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">

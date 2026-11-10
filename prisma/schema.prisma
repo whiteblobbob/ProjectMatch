@@ -179,6 +179,7 @@ model ProjectReport {
 model ProjectRole {
   projectId       String  @map("project_id")
   roleName        String  @map("role_name")
+  roleDetail      String? @map("role_detail")
   slotsAvailable  Int     @map("slots_available")
 
   project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)

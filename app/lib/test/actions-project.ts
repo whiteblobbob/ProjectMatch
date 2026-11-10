@@ -367,6 +367,24 @@ describe("fetchProject", () => {
 });
 
 describe("createProject", () => {
+  it("stores details independently for each project role", async () => {
+    const result = await createProject({ ...project(), projectRoles: [
+      { roleName: "Mentor", slotsAvailable: 1, roleDetail: "  Plan lessons\nTeach students  " },
+      { roleName: "Designer", slotsAvailable: 2, roleDetail: "Design posters" },
+      { roleName: "Helper", slotsAvailable: 1, roleDetail: "  " },
+      { roleName: "Writer", slotsAvailable: 1 },
+    ] });
+    expect(result.success).toBe(true);
+    expect(mocks.projectCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
+      projectRoles: { create: [
+        { roleName: "Mentor", slotsAvailable: 1, roleDetail: "Plan lessons\nTeach students" },
+        { roleName: "Designer", slotsAvailable: 2, roleDetail: "Design posters" },
+        { roleName: "Helper", slotsAvailable: 1, roleDetail: null },
+        { roleName: "Writer", slotsAvailable: 1, roleDetail: undefined },
+      ] },
+    }) });
+  });
+
   it("creates a project owned by the authenticated user", async () => {
     const result = await createProject(project());
 

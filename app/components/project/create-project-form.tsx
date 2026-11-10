@@ -30,6 +30,7 @@ type CatalogOption = {
 
 type Position = {
   roleName: string;
+  roleDetail: string;
   slotsAvailable: number;
 };
 
@@ -140,6 +141,7 @@ export default function CreateProjectForm({
       sourceLink: sourceLink || undefined,
       projectRoles: selectedPositions.map((position) => ({
         roleName: position.roleName,
+        roleDetail: position.roleDetail,
         slotsAvailable: position.slotsAvailable,
       })),
     });
@@ -300,6 +302,7 @@ export default function CreateProjectForm({
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-slate-950">{position.roleName}</p>
                   <p className="mt-1 text-xs text-slate-500">Membutuhkan {position.slotsAvailable} orang</p>
+                  {position.roleDetail && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-600">{position.roleDetail}</p>}
                 </div>
                 <div className="flex gap-2 sm:shrink-0">
                   <button type="button" disabled={isPending} onClick={() => openEditPositionDialog(index)} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-brand-primary hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary sm:flex-none">
@@ -401,6 +404,7 @@ type PositionDialogProps = {
 
 function PositionDialog({ initialPosition, existingPositions, editingIndex, roles, onCancel, onSave }: PositionDialogProps) {
   const [roleName, setRoleName] = useState(initialPosition?.roleName ?? "");
+  const [roleDetail, setRoleDetail] = useState(initialPosition?.roleDetail ?? "");
   const [slotsAvailable, setSlotsAvailable] = useState(initialPosition?.slotsAvailable ?? 1);
   const [dialogError, setDialogError] = useState("");
   const titleId = useId();
@@ -416,7 +420,7 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, role
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onCancel();
       if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), input, select"));
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), input, select, textarea"));
       const first = focusable[0];
       const last = focusable.at(-1);
       if (!first || !last) return;
@@ -449,7 +453,7 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, role
       setDialogError("Posisi tersebut sudah ditambahkan.");
       return;
     }
-    onSave({ roleName: name, slotsAvailable });
+    onSave({ roleName: name, roleDetail: roleDetail.trim(), slotsAvailable });
   }
 
   return (
@@ -472,6 +476,10 @@ function PositionDialog({ initialPosition, existingPositions, editingIndex, role
           <label className="block">
             <span className="text-sm font-semibold text-slate-900">Jumlah anggota</span>
             <input type="number" min={1} max={20} value={slotsAvailable} onChange={(event) => setSlotsAvailable(Number(event.target.value))} required className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-900">Detail peran (opsional)</span>
+            <textarea value={roleDetail} onChange={(event) => setRoleDetail(event.target.value)} rows={3} placeholder="Jelaskan tugas atau tanggung jawab peran ini" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-blue-100" />
           </label>
           {dialogError ? <p role="alert" className="rounded-xl bg-rose-50 px-3.5 py-3 text-xs font-medium text-rose-700">{dialogError}</p> : null}
           <div className="grid grid-cols-2 gap-3 pt-2">
