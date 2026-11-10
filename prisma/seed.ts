@@ -36,6 +36,9 @@ const seed = async () => {
     data: [
       { name: "Proyek" },
       { name: "Lomba" },
+      { name: "Karya Ilimiah dan Riset" },
+      { name: "Sosial dan Pengabdian" },
+      { name: "Startup" },
     ],
     skipDuplicates: true,
   });
