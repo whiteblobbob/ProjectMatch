@@ -153,7 +153,7 @@ export async function uploadImage(
     !allowedFormats.includes(String(result?.format).toLowerCase()) ||
     !publicId.startsWith(`${folder}/`)
   ) {
-    console.error("[cloudinary] upload returned an unexpected asset", response.status, result);
+    console.error("[cloudinary] upload returned an unexpected asset", response.status, result, publicId, `${folder}/`);
     throw new ActionError("File gagal diunggah. Coba lagi.");
   }
 

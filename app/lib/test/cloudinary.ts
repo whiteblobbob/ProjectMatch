@@ -30,7 +30,7 @@ beforeEach(() => {
     ok: true,
     status: 200,
     json: async () => ({
-      public_id: "projectmatch/avatars/test-user-id/avatar",
+      public_id: "projectmatch/dev/avatars/test-user-id/avatar",
       format: "png",
     }),
   });
@@ -125,10 +125,10 @@ describe("assertPngOrJpeg", () => {
 
 describe("cloudinaryAvatarUrl", () => {
   it("builds a delivery URL from the public id and cloud name", () => {
-    const url = cloudinaryAvatarUrl("projectmatch/avatars/test-user-id/avatar", "test-cloud");
+    const url = cloudinaryAvatarUrl("projectmatch/dev/avatars/test-user-id/avatar", "test-cloud");
 
     expect(url).toContain("https://res.cloudinary.com/test-cloud/image/upload");
-    expect(url).toContain("projectmatch/avatars/test-user-id/avatar");
+    expect(url).toContain("projectmatch/dev/avatars/test-user-id/avatar");
   });
 });
 
@@ -138,7 +138,7 @@ describe("uploadImage", () => {
 
     const publicId = await uploadImage(file, { userId: "test-user-id", kind: "avatar" });
 
-    expect(publicId).toBe("projectmatch/avatars/test-user-id/avatar");
+    expect(publicId).toBe("projectmatch/dev/avatars/test-user-id/avatar");
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, options] = fetchMock.mock.calls[0];
@@ -148,7 +148,7 @@ describe("uploadImage", () => {
     const folder = String(body.get("folder"));
     const timestamp = String(body.get("timestamp"));
 
-    expect(folder).toBe("projectmatch/avatars/test-user-id");
+    expect(folder).toBe("projectmatch/dev/avatars/test-user-id");
     expect(body.get("api_key")).toBe("test-key");
     expect(body.get("signature")).toBe(buildSignature({ folder, timestamp }, "test-secret"));
   });
@@ -158,7 +158,7 @@ describe("uploadImage", () => {
       ok: true,
       status: 200,
       json: async () => ({
-        public_id: "projectmatch/verification-documents/test-user-id/card",
+        public_id: "projectmatch/dev/verification-documents/test-user-id/card",
         format: "png",
       }),
     });
@@ -169,8 +169,8 @@ describe("uploadImage", () => {
     });
 
     const body = fetchMock.mock.calls[0][1].body as FormData;
-    expect(body.get("folder")).toBe("projectmatch/verification-documents/test-user-id");
-    expect(publicId).toBe("projectmatch/verification-documents/test-user-id/card");
+    expect(body.get("folder")).toBe("projectmatch/dev/verification-documents/test-user-id");
+    expect(publicId).toBe("projectmatch/dev/verification-documents/test-user-id/card");
   });
 
   it("rejects a non-PNG/JPEG asset reported by Cloudinary", async () => {
@@ -178,7 +178,7 @@ describe("uploadImage", () => {
       ok: true,
       status: 200,
       json: async () => ({
-        public_id: "projectmatch/avatars/test-user-id/avatar",
+        public_id: "projectmatch/dev/avatars/test-user-id/avatar",
         format: "webp",
       }),
     });
@@ -193,7 +193,7 @@ describe("uploadImage", () => {
       ok: true,
       status: 200,
       json: async () => ({
-        public_id: "projectmatch/avatars/another-user/avatar",
+        public_id: "projectmatch/dev/avatars/another-user/avatar",
         format: "png",
       }),
     });
