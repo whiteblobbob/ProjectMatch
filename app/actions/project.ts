@@ -273,6 +273,7 @@ export const createProject = actionWrapper(async (user: User, formData: CreatePr
         create: data.projectRoles.map(role => ({
           slotsAvailable: role.slotsAvailable,
           roleName: role.roleName,
+          roleDetail: role.roleDetail,
         })),
       },
     }

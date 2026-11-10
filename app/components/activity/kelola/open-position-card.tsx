@@ -3,6 +3,7 @@ import { UsersIcon } from "../../ui/icons";
 type OpenPositionCardProps = {
   role: {
     name: string;
+    roleDetail: string | null;
     slotsAvailable: number;
   };
 };
@@ -24,6 +25,7 @@ export default function OpenPositionCard({ role }: OpenPositionCardProps) {
           <p className="mt-1 text-sm leading-6 text-slate-500">
             Butuh {role.slotsAvailable} anggota untuk posisi ini.
           </p>
+          {role.roleDetail && <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">{role.roleDetail}</p>}
         </div>
       </div>
     </article>

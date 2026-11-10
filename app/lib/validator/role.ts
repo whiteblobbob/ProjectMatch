@@ -6,6 +6,8 @@ export function roleNameKey(name: string) {
 
 export const RoleNameValidator = z.string().trim().min(1, "Role name is required");
 
+export const RoleDetailValidator = z.string().trim().nullable().transform((value) => value || null).optional();
+
 export function hasUniqueRoleNames(names: string[]) {
   return new Set(names.map(roleNameKey)).size === names.length;
 }

@@ -34,6 +34,26 @@ describe("free-text role names", () => {
     ] }).success).toBe(false);
   });
 
+  it.each([
+    [undefined, undefined],
+    [null, null],
+    ["", null],
+    [" \n ", null],
+    ["  Plan lessons\nMentor students  ", "Plan lessons\nMentor students"],
+  ])("normalizes optional role details %j", (input, expected) => {
+    const role = { roleName: "Mentor", slotsAvailable: 1, roleDetail: input };
+    expect(positions.parse({ projectRoles: [role] }).projectRoles[0].roleDetail).toBe(expected);
+    const admin = buildAdminValidator(getAdminTable("project_role")!, "create");
+    expect(admin.parse({ projectId: "project", ...role }).roleDetail).toBe(expected);
+  });
+
+  it.each([42, true, [], {}])("rejects non-text role details %j", (roleDetail) => {
+    const role = { roleName: "Mentor", slotsAvailable: 1, roleDetail };
+    expect(positions.safeParse({ projectRoles: [role] }).success).toBe(false);
+    const admin = buildAdminValidator(getAdminTable("project_role")!, "create");
+    expect(admin.safeParse({ projectId: "project", ...role }).success).toBe(false);
+  });
+
   it("validates application names without requiring a catalog ID", () => {
     expect(ApplicationValidator.parse({ roleName: " Robotics Mentor " })).toEqual({ roleName: "Robotics Mentor" });
     expect(ApplicationValidator.safeParse({ roleName: " " }).success).toBe(false);

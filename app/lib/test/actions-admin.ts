@@ -137,6 +137,16 @@ describe("admin access control", () => {
 });
 
 describe("createAdminRecord", () => {
+  it("creates project roles with optional details", async () => {
+    const result = await createAdminRecord("project_role", {
+      projectId: "project-1", roleName: "Mentor", slotsAvailable: "2", roleDetail: "  Teach students  ",
+    });
+    expect(result.success).toBe(true);
+    expect(mocks.create).toHaveBeenCalledWith({ data: {
+      projectId: "project-1", roleName: "Mentor", slotsAvailable: 2, roleDetail: "Teach students",
+    } });
+  });
+
   it("never writes the user role, even when it is supplied", async () => {
     const result = await createAdminRecord("user", {
       id: "supabase-user-id",
@@ -163,6 +173,31 @@ describe("createAdminRecord", () => {
 });
 
 describe("updateAdminRecord", () => {
+  it.each([
+    ["  Updated duties  ", { roleDetail: "Updated duties" }],
+    [" \n ", { roleDetail: null }],
+    [null, { roleDetail: null }],
+    [undefined, {}],
+  ])("updates, clears, or preserves role details for %j", async (roleDetail, details) => {
+    const result = await updateAdminRecord("project_role", { projectId: "project-1", roleName: "Mentor" }, {
+      slotsAvailable: "2", ...(roleDetail === undefined ? {} : { roleDetail }),
+    });
+    expect(result.success).toBe(true);
+    expect(mocks.update).toHaveBeenCalledWith({
+      where: { projectId_roleName: { projectId: "project-1", roleName: "Mentor" } },
+      data: { slotsAvailable: 2, ...details },
+    });
+  });
+
+  it("rejects role detail edits from non-admins", async () => {
+    mocks.userFindUnique.mockResolvedValue({ role: "USER" });
+    const result = await updateAdminRecord("project_role", { projectId: "project-1", roleName: "Mentor" }, {
+      slotsAvailable: 2, roleDetail: "Changed duties",
+    });
+    expect(result.success).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
   it("never writes the user role on update", async () => {
     const result = await updateAdminRecord("user", { id: "supabase-user-id" }, {
       name: "Grace Hopper",
