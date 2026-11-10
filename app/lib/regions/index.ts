@@ -1,5 +1,13 @@
 import rawData from "./data.json";
-export const regionData: Record<string, string[]> = rawData;
+
+const normalizeKey = (value: string) => value.trim();
+
+export const regionData: Record<string, string[]> = Object.fromEntries(
+  Object.entries(rawData).map(([province, cities]) => [
+    normalizeKey(province),
+    cities.map(normalizeKey),
+  ]),
+);
 
 export const provinces: string[] = Object.keys(regionData).sort((a, b) => a.localeCompare(b, "id-ID"));
 

@@ -45,6 +45,12 @@ describe("regions", () => {
     expect(validateRegion("Jawa Barat", "Kota Bandung")).toEqual({});
   });
 
+  it("trims whitespace from stored region data", () => {
+    expect(citiesOf("Sumatera Selatan")).toContain("Kab. Ogan Ilir");
+    expect(validateRegion("Sumatera Selatan", "Kab. Ogan Ilir")).toEqual({});
+    expect(validateRegion("Sumatera Selatan", "  Kab. Ogan Ilir  ")).toEqual({});
+  });
+
   it("formats a region for display", () => {
     expect(formatRegion("Kota Bandung", "Jawa Barat")).toBe("Kota Bandung, Jawa Barat");
     expect(formatRegion("", "Jawa Barat")).toBe("Jawa Barat");
