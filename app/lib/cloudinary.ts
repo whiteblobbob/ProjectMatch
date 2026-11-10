@@ -118,7 +118,7 @@ export async function uploadImage(
 ): Promise<string> {
   const format = await assertPngOrJpeg(file, kind === "avatar" ? "avatar" : "document");
   const config = getCloudinaryConfig();
-  const folder = `projectmatch/${FOLDER_BY_KIND[kind]}/${userId}`;
+  const folder = `${process.env.NEXT_CLOUDINARY_FOLDER}/${FOLDER_BY_KIND[kind]}/${userId}`;
   const timestamp = Math.floor(Date.now() / 1000);
   const signature = buildSignature({ folder, timestamp }, config.apiSecret);
 
